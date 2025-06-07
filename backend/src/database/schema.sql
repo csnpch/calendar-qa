@@ -19,10 +19,23 @@ CREATE TABLE IF NOT EXISTS events (
     FOREIGN KEY (employee_id) REFERENCES employees (id) ON DELETE CASCADE
 );
 
+-- Cronjob configuration table
+CREATE TABLE IF NOT EXISTS cronjob_config (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL UNIQUE,
+    enabled BOOLEAN NOT NULL DEFAULT 1,
+    schedule_time TEXT NOT NULL, -- Format: "HH:MM"
+    webhook_url TEXT NOT NULL,
+    notification_days INTEGER NOT NULL DEFAULT 1, -- Days ahead to notify (0=today, 1=tomorrow)
+    created_at TEXT NOT NULL DEFAULT (datetime('now')),
+    updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
 -- Create indexes for better performance
 CREATE INDEX IF NOT EXISTS idx_events_employee_id ON events(employee_id);
 CREATE INDEX IF NOT EXISTS idx_events_date ON events(date);
 CREATE INDEX IF NOT EXISTS idx_events_leave_type ON events(leave_type);
+CREATE INDEX IF NOT EXISTS idx_cronjob_config_enabled ON cronjob_config(enabled);
 
 -- Insert default employees
 INSERT OR IGNORE INTO employees (id, name) VALUES 
@@ -31,3 +44,8 @@ INSERT OR IGNORE INTO employees (id, name) VALUES
 (3, 'Michael Brown'),
 (4, 'Emily Davis'),
 (5, 'David Wilson');
+
+-- Insert default cronjob configurations
+INSERT OR IGNORE INTO cronjob_config (id, name, enabled, schedule_time, webhook_url, notification_days) VALUES 
+(1, 'Morning Notification', 1, '09:00', 'https://prod-56.southeastasia.logic.azure.com:443/workflows/8f1f48a580794efeb7f5363a94366e20/triggers/manual/paths/invoke?api-version=2016-06-01', 1),
+(2, 'Evening Notification', 1, '17:30', 'https://prod-56.southeastasia.logic.azure.com:443/workflows/8f1f48a580794efeb7f5363a94366e20/triggers/manual/paths/invoke?api-version=2016-06-01', 0);

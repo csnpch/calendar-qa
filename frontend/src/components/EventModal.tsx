@@ -8,6 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Combobox } from '@/components/ui/combobox';
 import { Textarea } from '@/components/ui/textarea';
 import { Event } from '@/services/apiDatabase';
+import { LEAVE_TYPE_LABELS } from '@/lib/utils';
 
 interface EventModalProps {
   isOpen: boolean;
@@ -23,21 +24,30 @@ interface EventModalProps {
   editingEvent?: Event | null;
 }
 
-const LEAVE_TYPES = [
-  { value: 'vacation', label: 'ลาพักร้อน (Vacation Leave)', color: 'text-blue-600' },
-  { value: 'personal', label: 'ลากิจ (Personal Leave)', color: 'text-green-600' },
-  { value: 'sick', label: 'ลาป่วย (Sick Leave)', color: 'text-red-600' },
-  { value: 'absent', label: 'ขาดงาน (Absent)', color: 'text-red-700' },
-  { value: 'maternity', label: 'ลาคลอด (Maternity Leave)', color: 'text-pink-600' },
-  { value: 'paternity', label: 'ลาบิดา (Paternity Leave)', color: 'text-cyan-600' },
-  { value: 'bereavement', label: 'ลาฌาปนกิจ (Bereavement Leave)', color: 'text-gray-600' },
-  { value: 'study', label: 'ลาศึกษา (Study Leave)', color: 'text-orange-600' },
-  { value: 'military', label: 'ลาทหาร (Military Leave)', color: 'text-teal-600' },
-  { value: 'sabbatical', label: 'ลาพักผ่อนพิเศษ (Sabbatical Leave)', color: 'text-indigo-600' },
-  { value: 'unpaid', label: 'ลาไม่ได้รับเงินเดือน (Unpaid Leave)', color: 'text-slate-600' },
-  { value: 'compensatory', label: 'ลาชดเชย (Compensatory Leave)', color: 'text-emerald-600' },
-  { value: 'other', label: 'อื่นๆ (Other)', color: 'text-purple-600' }
-];
+const LEAVE_TYPES = Object.entries(LEAVE_TYPE_LABELS).map(([value, label]) => ({
+  value,
+  label,
+  color: getLeaveTypeColor(value)
+}));
+
+function getLeaveTypeColor(type: string) {
+  switch (type) {
+    case 'vacation': return 'text-blue-600';
+    case 'personal': return 'text-green-600';
+    case 'sick': return 'text-red-600';
+    case 'absent': return 'text-red-700';
+    case 'maternity': return 'text-pink-600';
+    case 'paternity': return 'text-cyan-600';
+    case 'bereavement': return 'text-gray-600';
+    case 'study': return 'text-orange-600';
+    case 'military': return 'text-teal-600';
+    case 'sabbatical': return 'text-indigo-600';
+    case 'unpaid': return 'text-slate-600';
+    case 'compensatory': return 'text-emerald-600';
+    case 'other': return 'text-purple-600';
+    default: return 'text-gray-600';
+  }
+}
 
 export const EventModal: React.FC<EventModalProps> = ({
   isOpen,
@@ -104,12 +114,12 @@ export const EventModal: React.FC<EventModalProps> = ({
 
   return createPortal(
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[1000] p-2 sm:p-4">
-      <div className="bg-white dark:bg-gray-600 rounded-xl shadow-2xl w-full max-w-xs sm:max-w-sm md:max-w-md transform transition-all max-h-[90vh] overflow-y-auto">
+      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl w-full max-w-xs sm:max-w-sm md:max-w-md transform transition-all max-h-[90vh] overflow-y-auto">
         {/* Header */}
-        <div className="p-3 sm:p-4 md:p-6 border-b border-gray-200 dark:border-gray-500 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-gray-500 dark:to-gray-400">
+        <div className="p-3 sm:p-4 md:p-6 border-b border-gray-200 dark:border-gray-600 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-gray-700 dark:to-gray-600">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-2 sm:space-x-3">
-              <Calendar className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 text-blue-600 dark:text-blue-400" />
+              <Calendar className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 text-blue-600 dark:text-gray-200" />
               <h3 className="text-sm sm:text-base md:text-lg lg:text-xl font-bold text-gray-900 dark:text-white">
                 {editingEvent ? 'แก้ไขเหตุการณ์' : 'สร้างเหตุการณ์ใหม่'}
               </h3>
@@ -174,14 +184,14 @@ export const EventModal: React.FC<EventModalProps> = ({
         </div>
 
         {/* Footer */}
-        <div className="p-3 sm:p-4 md:p-6 border-t border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-600 flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-3">
+        <div className="p-3 sm:p-4 md:p-6 border-t border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-800 flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-3">
           <Button variant="outline" onClick={onClose} className="flex-1 text-xs sm:text-sm h-8 sm:h-9">
             ยกเลิก
           </Button>
           <Button 
             onClick={handleSave} 
             disabled={!employeeName || !leaveType}
-            className="flex-1 bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white text-xs sm:text-sm h-8 sm:h-9"
+            className="flex-1 bg-blue-600 hover:bg-blue-700 dark:bg-gray-700 dark:hover:bg-gray-800 text-white text-xs sm:text-sm h-8 sm:h-9"
           >
             {editingEvent ? 'อัพเดท' : 'บันทึก'}
           </Button>

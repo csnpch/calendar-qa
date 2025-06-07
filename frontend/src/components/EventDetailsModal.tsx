@@ -1,7 +1,7 @@
 
 import React, { useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { X, Calendar, User, FileText, Clock, Plus, Edit, Trash2 } from 'lucide-react';
+import { X, Calendar, User, FileText, MessageSquare, Plus, Edit, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Event } from '@/services/apiDatabase';
 
@@ -32,7 +32,7 @@ const LEAVE_TYPE_LABELS = {
 };
 
 const LEAVE_TYPE_COLORS = {
-  'vacation': 'bg-blue-100 text-blue-800 border-blue-200 dark:bg-blue-900 dark:text-blue-200 dark:border-blue-700',
+  'vacation': 'bg-blue-100 text-blue-800 border-blue-200 dark:bg-gray-900 dark:text-gray-200 dark:border-gray-700',
   'personal': 'bg-green-100 text-green-800 border-green-200 dark:bg-green-900 dark:text-green-200 dark:border-green-700',
   'sick': 'bg-red-100 text-red-800 border-red-200 dark:bg-red-900 dark:text-red-200 dark:border-red-700',
   'absent': 'bg-red-200 text-red-900 border-red-300 dark:bg-red-800 dark:text-red-100 dark:border-red-600',
@@ -84,12 +84,12 @@ export const EventDetailsModal: React.FC<EventDetailsModalProps> = ({
 
   return createPortal(
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[1000] p-2 sm:p-4">
-      <div className="bg-white dark:bg-gray-600 rounded-xl shadow-2xl w-full max-w-xs sm:max-w-sm md:max-w-md lg:max-w-lg transform transition-all max-h-[90vh] overflow-hidden">
+      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl w-full max-w-xs sm:max-w-sm md:max-w-md lg:max-w-lg transform transition-all max-h-[90vh] overflow-hidden">
         {/* Header */}
-        <div className="p-3 sm:p-4 md:p-6 border-b border-gray-200 dark:border-gray-500 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-gray-500 dark:to-gray-400">
+        <div className="p-3 sm:p-4 md:p-6 border-b border-gray-200 dark:border-gray-600 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-gray-700 dark:to-gray-600">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-2 sm:space-x-3">
-              <Calendar className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 text-blue-600 dark:text-blue-400" />
+              <Calendar className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 text-blue-600 dark:text-gray-200" />
               <h3 className="text-sm sm:text-base md:text-lg lg:text-xl font-bold text-gray-900 dark:text-white">เหตุการณ์ในวันนี้</h3>
             </div>
             <Button variant="ghost" size="sm" onClick={onClose} className="h-7 w-7 sm:h-8 sm:w-8 p-0">
@@ -124,7 +124,7 @@ export const EventDetailsModal: React.FC<EventDetailsModalProps> = ({
 
                       {event.description && (
                         <div className="flex items-start space-x-2">
-                          <Clock className="w-3 h-3 mt-0.5 flex-shrink-0" />
+                          <MessageSquare className="w-3 h-3 mt-0.5 flex-shrink-0" />
                           <span className="text-xs text-gray-600 dark:text-gray-300 line-clamp-2">{event.description}</span>
                         </div>
                       )}
@@ -136,7 +136,7 @@ export const EventDetailsModal: React.FC<EventDetailsModalProps> = ({
                           variant="ghost"
                           size="sm"
                           onClick={() => onEditEvent(event)}
-                          className="h-7 w-7 p-0 text-gray-500 hover:text-blue-600 dark:text-gray-400 dark:hover:text-blue-400"
+                          className="h-7 w-7 p-0 text-gray-500 hover:text-blue-600 dark:text-gray-400 dark:hover:text-gray-200"
                         >
                           <Edit className="w-3 h-3" />
                         </Button>
@@ -165,10 +165,10 @@ export const EventDetailsModal: React.FC<EventDetailsModalProps> = ({
         </div>
 
         {/* Footer */}
-        <div className="p-3 sm:p-4 md:p-6 border-t border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-600 flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-3">
+        <div className="p-3 sm:p-4 md:p-6 border-t border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-800 flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-3">
           <Button 
             onClick={handleCreateEvent}
-            className="w-full bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white text-xs sm:text-sm h-8 sm:h-9"
+            className="w-full bg-blue-600 hover:bg-blue-700 dark:bg-gray-700 dark:hover:bg-gray-800 text-white text-xs sm:text-sm h-8 sm:h-9"
           >
             <Plus className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
             สร้างเหตุการณ์ใหม่

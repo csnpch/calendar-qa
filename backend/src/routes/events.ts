@@ -194,4 +194,27 @@ export const eventsRoutes = new Elysia({ prefix: '/events' })
   
   .get('/stats/overview', () => {
     return eventService.getEventStats();
+  })
+
+  .get('/dashboard/summary', ({ query }) => {
+    try {
+      Logger.debug('Fetching dashboard summary with query:', query);
+      const { startDate, endDate, eventType } = query;
+      const summary = eventService.getDashboardSummary(
+        startDate as string,
+        endDate as string,
+        eventType as string
+      );
+      Logger.debug('Dashboard summary retrieved successfully');
+      return summary;
+    } catch (error) {
+      Logger.error('Error fetching dashboard summary:', error);
+      throw error;
+    }
+  }, {
+    query: t.Object({
+      startDate: t.Optional(t.String()),
+      endDate: t.Optional(t.String()),
+      eventType: t.Optional(t.String())
+    })
   });

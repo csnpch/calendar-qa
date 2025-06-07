@@ -21,7 +21,7 @@ const MONTHS = [
 ];
 
 const LEAVE_TYPE_COLORS = {
-  'vacation': 'bg-blue-100 dark:bg-blue-800/40 text-blue-800 dark:text-blue-200 border-blue-200 dark:border-blue-600',
+  'vacation': 'bg-blue-100 dark:bg-gray-800/40 text-blue-800 dark:text-gray-200 border-blue-200 dark:border-gray-600',
   'personal': 'bg-green-100 dark:bg-green-800/40 text-green-800 dark:text-green-200 border-green-200 dark:border-green-600',
   'sick': 'bg-red-100 dark:bg-red-800/40 text-red-800 dark:text-red-200 border-red-200 dark:border-red-600',
   'absent': 'bg-red-100 dark:bg-red-800/40 text-red-800 dark:text-red-200 border-red-200 dark:border-red-600',
@@ -129,10 +129,10 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({
   return (
     <div className="bg-white dark:bg-gray-700 rounded-lg shadow-lg border border-gray-200 dark:border-gray-600 overflow-hidden">
       {/* Header */}
-      <div className="p-2 sm:p-3 md:p-4 border-b border-gray-200 dark:border-gray-600 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-800/30 dark:to-indigo-800/30">
+      <div className="p-2 sm:p-3 md:p-4 border-b border-gray-200 dark:border-gray-600 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-gray-700 dark:to-gray-600">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-2">
-            <Calendar className="w-4 h-4 sm:w-5 sm:h-5 text-blue-600 dark:text-blue-400" />
+            <Calendar className="w-4 h-4 sm:w-5 sm:h-5 text-blue-600 dark:text-gray-200" />
             <h2 className="text-sm sm:text-base md:text-lg lg:text-xl font-bold text-gray-900 dark:text-white">
               {MONTHS[month]} {year}
             </h2>
@@ -198,18 +198,25 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({
 
                   // Today's styling (overrides previous settings for the current day)
                   if (isTodayDate) {
-                    borderColor = 'ring-2 ring-blue-500 dark:ring-blue-400 ring-offset-1';
-                    bgColor = 'bg-blue-50 dark:bg-blue-800/30';
-                    textColor = 'text-blue-700 dark:text-blue-300';
+                    borderColor = 'ring-2 ring-blue-500 dark:ring-gray-400 ring-offset-1';
+                    // Don't override background - keep original (default or weekend/holiday)
+                    // Keep text color as white in dark mode, but preserve the appropriate color in light mode
+                    if (weekend) {
+                      textColor = 'text-red-700 dark:text-white';
+                    } else if (holiday) {
+                      textColor = 'text-red-600 dark:text-white';
+                    } else {
+                      textColor = 'text-blue-700 dark:text-white';
+                    }
                   }
 
                   // Event styling (modifies border and bgColor if it's a plain day with events)
                   if (hasEvents) {
-                    borderColor = 'border-blue-400 dark:border-blue-500';
+                    borderColor = 'border-blue-400 dark:border-gray-500';
                     // Only change bgColor for events if it's not today, not a weekend,
                     // and not a non-weekend holiday (which now has default background).
                     if (!isTodayDate && !weekend && !holiday) {
-                      bgColor = 'bg-blue-25 dark:bg-blue-800/20';
+                      bgColor = 'bg-blue-25 dark:bg-gray-800/20';
                     }
                   }
                 }
@@ -221,12 +228,12 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({
                       min-h-[45px] sm:min-h-[60px] md:min-h-[75px] lg:min-h-[90px] 
                       p-0.5 sm:p-1 border rounded cursor-pointer transition-all duration-200
                       hover:shadow-sm hover:scale-[1.01] transform
-                      ${!isOtherMonth ? 'hover:bg-blue-50 dark:hover:bg-blue-800/30 hover:border-blue-300 dark:hover:border-blue-500' : 'hover:bg-gray-200 dark:hover:bg-gray-700'}
+                      ${!isOtherMonth ? 'hover:bg-blue-50 dark:hover:bg-gray-800/30 hover:border-blue-300 dark:hover:border-gray-500' : 'hover:bg-gray-200 dark:hover:bg-gray-700'}
                       ${bgColor} ${textColor} ${borderColor}
                     `}
                     onClick={() => handleDateClick(date)}
                   >
-                    <div className={`text-xs font-semibold mb-0.5 ${isTodayDate && !isOtherMonth ? 'text-blue-700' : ''}`}>
+                    <div className={`text-xs font-semibold mb-0.5 ${isTodayDate && !isOtherMonth ? 'dark:text-white' : ''}`}>
                       {date.getDate()}
                     </div>
                     

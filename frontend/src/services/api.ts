@@ -49,3 +49,87 @@ export class ApiClient {
 }
 
 export const apiClient = new ApiClient();
+
+export interface DashboardSummary {
+  monthlyStats: {
+    totalEvents: number;
+    totalEmployees: number;
+    mostCommonType: string;
+  };
+  employeeRanking: Array<{
+    name: string;
+    totalEvents: number;
+    eventTypes: { [key: string]: number };
+  }>;
+}
+
+export const getDashboardSummary = async (params?: {
+  startDate?: string;
+  endDate?: string;
+  eventType?: string;
+}): Promise<DashboardSummary> => {
+  const queryParams = new URLSearchParams();
+  
+  if (params?.startDate) queryParams.append('startDate', params.startDate);
+  if (params?.endDate) queryParams.append('endDate', params.endDate);
+  if (params?.eventType) queryParams.append('eventType', params.eventType);
+  
+  const query = queryParams.toString();
+  const endpoint = `/events/dashboard/summary${query ? `?${query}` : ''}`;
+  
+  return apiClient.get<DashboardSummary>(endpoint);
+};
+
+export interface CronjobConfig {
+  id: number;
+  name: string;
+  enabled: boolean;
+  schedule_time: string;
+  webhook_url: string;
+  notification_days: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CronjobStatus {
+  id: number;
+  name: string;
+  enabled: boolean;
+  schedule_time: string;
+  running: boolean;
+}
+
+export interface ApiResponse<T> {
+  success: boolean;
+  data?: T;
+  error?: string;
+  message?: string;
+}
+
+export const getCronjobConfigs = async (): Promise<ApiResponse<CronjobConfig[]>> => {
+  return apiClient.get<ApiResponse<CronjobConfig[]>>('/cronjobs');
+};
+
+export const getCronjobStatus = async (): Promise<ApiResponse<CronjobStatus[]>> => {
+  return apiClient.get<ApiResponse<CronjobStatus[]>>('/cronjobs/status');
+};
+
+export const getCronjobConfig = async (id: number): Promise<ApiResponse<CronjobConfig>> => {
+  return apiClient.get<ApiResponse<CronjobConfig>>(`/cronjobs/${id}`);
+};
+
+export const createCronjobConfig = async (config: Omit<CronjobConfig, 'id' | 'created_at' | 'updated_at'>): Promise<ApiResponse<CronjobConfig>> => {
+  return apiClient.post<ApiResponse<CronjobConfig>>('/cronjobs', config);
+};
+
+export const updateCronjobConfig = async (id: number, config: Partial<Omit<CronjobConfig, 'id' | 'created_at' | 'updated_at'>>): Promise<ApiResponse<CronjobConfig>> => {
+  return apiClient.put<ApiResponse<CronjobConfig>>(`/cronjobs/${id}`, config);
+};
+
+export const deleteCronjobConfig = async (id: number): Promise<ApiResponse<null>> => {
+  return apiClient.delete<ApiResponse<null>>(`/cronjobs/${id}`);
+};
+
+export const testCronjobNotification = async (id: number): Promise<ApiResponse<null>> => {
+  return apiClient.post<ApiResponse<null>>(`/cronjobs/${id}/test`, {});
+};

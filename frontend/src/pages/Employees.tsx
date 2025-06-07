@@ -4,20 +4,17 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Edit, Trash2, Search, Users, ArrowLeft, Moon, Sun } from 'lucide-react';
+import { Plus, Edit, Trash2, Search, Users } from 'lucide-react';
 import { useCalendarData } from '@/hooks/useCalendarData';
 import { Employee } from '@/services/apiDatabase';
 import { useToast } from '@/hooks/use-toast';
-import { useNavigate } from 'react-router-dom';
-import { useTheme } from '@/contexts/ThemeContext';
+import { Layout } from '@/components/Layout';
 
 interface EmployeeFormData {
   name: string;
 }
 
 export const Employees = () => {
-  const navigate = useNavigate();
-  const { theme, toggleTheme } = useTheme();
   const { employees, addEmployee, updateEmployee, deleteEmployee, searchEmployees } = useCalendarData();
   const { toast } = useToast();
   
@@ -117,42 +114,13 @@ export const Employees = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50 dark:from-gray-700 dark:via-gray-600 dark:to-blue-700">
-      {/* Header */}
-      <div className="bg-white dark:bg-gray-600 shadow-sm border-b border-gray-200 dark:border-gray-500">
-        <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-3 sm:py-4 md:py-6">
-          <div className="flex items-center space-x-2 sm:space-x-3 md:space-x-4">
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              onClick={() => navigate('/')}
-              className="p-2"
-            >
-              <ArrowLeft className="w-5 h-5" />
-            </Button>
-            <div className="p-1.5 sm:p-2 md:p-3 bg-blue-100 dark:bg-blue-900 rounded-lg">
-              <Users className="w-5 h-5 sm:w-6 sm:h-6 md:w-8 md:h-8 text-blue-600 dark:text-blue-400" />
-            </div>
-            <div className="flex-1">
-              <h1 className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold text-gray-900 dark:text-white">จัดการข้อมูลพนักงาน</h1>
-              <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">เพิ่ม แก้ไข และลบข้อมูลพนักงาน</p>
-            </div>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={toggleTheme}
-              className="p-2"
-            >
-              {theme === 'dark' ? 
-                <Sun className="w-4 h-4" /> : 
-                <Moon className="w-4 h-4" />
-              }
-            </Button>
-          </div>
+    <Layout currentPage="employees">
+      <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-4">
+        <div className="mb-6">
+          <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">จัดการข้อมูลพนักงาน</h2>
+          <p className="text-sm text-gray-600 dark:text-gray-400">เพิ่ม แก้ไข และลบข้อมูลพนักงาน</p>
         </div>
-      </div>
 
-      <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-6">
         <div className="space-y-6">
           {/* Search and Add Button */}
           <div className="flex gap-2">
@@ -167,7 +135,7 @@ export const Employees = () => {
             </div>
             <Button 
               onClick={() => setIsFormOpen(true)}
-              className="bg-blue-600 hover:bg-blue-700"
+              className="bg-blue-600 hover:bg-blue-700 dark:bg-gray-700 dark:hover:bg-gray-800 text-white"
             >
               <Plus className="w-4 h-4 mr-2" />
               เพิ่มพนักงาน
@@ -226,8 +194,8 @@ export const Employees = () => {
                       className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
                     >
                       <div className="flex items-center space-x-3">
-                        <div className="w-10 h-10 bg-blue-100 dark:bg-blue-900 rounded-full flex items-center justify-center">
-                          <Users className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                        <div className="w-10 h-10 bg-blue-100 dark:bg-gray-900 rounded-full flex items-center justify-center">
+                          <Users className="w-5 h-5 text-blue-600 dark:text-gray-400" />
                         </div>
                         <div>
                           <p className="font-medium text-gray-900 dark:text-white">{employee.name}</p>
@@ -266,7 +234,7 @@ export const Employees = () => {
           </Card>
 
           {/* Summary */}
-          <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+          <div className="bg-blue-50 dark:bg-gray-900/20 border border-blue-200 dark:border-gray-800 rounded-lg p-4">
             <p className="text-sm text-gray-600 dark:text-gray-400">
               จำนวนพนักงานทั้งหมด: {employees.length} คน
               {searchQuery && ` (แสดง ${filteredEmployees.length} คน)`}
@@ -274,6 +242,6 @@ export const Employees = () => {
           </div>
         </div>
       </div>
-    </div>
+    </Layout>
   );
 };
