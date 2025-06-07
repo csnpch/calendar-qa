@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Combobox } from '@/components/ui/combobox';
 import { Textarea } from '@/components/ui/textarea';
+import { Event } from '@/services/apiDatabase';
 
 interface EventModalProps {
   isOpen: boolean;
@@ -19,13 +20,7 @@ interface EventModalProps {
   }) => void;
   selectedDate: Date | null;
   employees: string[];
-  editingEvent?: {
-    id: string;
-    employeeName: string;
-    leaveType: string;
-    date: string;
-    description?: string;
-  } | null;
+  editingEvent?: Event | null;
 }
 
 const LEAVE_TYPES = [

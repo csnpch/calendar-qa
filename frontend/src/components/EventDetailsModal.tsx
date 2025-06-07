@@ -3,21 +3,14 @@ import React, { useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { X, Calendar, User, FileText, Clock, Plus, Edit, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-
-interface Event {
-  id: string;
-  employeeName: string;
-  leaveType: string;
-  date: string;
-  description?: string;
-}
+import { Event } from '@/services/apiDatabase';
 
 interface EventDetailsModalProps {
   isOpen: boolean;
   onClose: () => void;
   onCreateEvent: () => void;
   onEditEvent?: (event: Event) => void;
-  onDeleteEvent?: (eventId: string) => void;
+  onDeleteEvent?: (eventId: number) => void;
   events: Event[];
   selectedDate: Date | null;
 }

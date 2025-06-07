@@ -21,7 +21,13 @@ export class HolidayService {
         throw new Error('Failed to fetch holidays');
       }
       
-      const holidays = await response.json() as ThaiHolidayApiResponse[];
+      const holidays = await response.json() as ThaiHolidayApiResponse[] | null;
+      
+      // Check if the response is null or not an array
+      if (!holidays || !Array.isArray(holidays)) {
+        console.warn('API returned null or invalid data, using fallback holidays');
+        return this.getDefaultThaiHolidays(year);
+      }
       
       return holidays.map(holiday => ({
         date: holiday.date,

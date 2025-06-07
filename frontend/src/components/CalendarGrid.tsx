@@ -3,14 +3,7 @@ import { Calendar, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { CreateEventPopover } from '@/components/CreateEventPopover';
 import { useHolidays } from '@/hooks/useHolidays';
-
-interface Event {
-  id: string;
-  employeeName: string;
-  leaveType: string;
-  date: string;
-  description?: string;
-}
+import { Event } from '@/services/apiDatabase';
 
 interface CalendarGridProps {
   currentDate: Date;

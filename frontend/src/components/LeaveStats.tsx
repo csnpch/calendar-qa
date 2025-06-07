@@ -1,14 +1,8 @@
 
 import React from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Event } from '@/services/apiDatabase';
 import { BarChart3, TrendingUp } from 'lucide-react';
-
-interface Event {
-  id: string;
-  employeeName: string;
-  leaveType: string;
-  date: string;
-  description?: string;
-}
 
 interface LeaveStatsProps {
   events: Event[];

@@ -60,10 +60,10 @@ const Index = () => {
     setIsModalOpen(true);
   };
 
-  const handleDeleteEvent = async (eventId: string) => {
+  const handleDeleteEvent = async (eventId: number) => {
     if (window.confirm('คุณต้องการลบเหตุการณ์นี้หรือไม่?')) {
       try {
-        await deleteEvent(parseInt(eventId));
+        await deleteEvent(eventId);
         // Reload all data to ensure consistency
         await loadData();
         // Update selected date events
@@ -94,7 +94,7 @@ const Index = () => {
 
       if (editingEvent) {
         // Update existing event
-        await updateEvent(parseInt(editingEvent.id), {
+        await updateEvent(editingEvent.id, {
           employeeId: employee.id,
           employeeName: eventData.employeeName,
           leaveType: eventData.leaveType as any,
