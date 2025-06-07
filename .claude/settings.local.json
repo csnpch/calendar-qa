@@ -1,0 +1,23 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(mkdir:*)",
+      "Bash(bun init:*)",
+      "Bash(bun add:*)",
+      "Bash(timeout:*)",
+      "Bash(bun run:*)",
+      "Bash(rm:*)",
+      "Bash(npm install)",
+      "Bash(npm install:*)",
+      "Bash(npm run start:*)",
+      "Bash(~/.bun/bin/bun:*)",
+      "Bash(rg:*)",
+      "Bash(/Users/chitsanuphong.cha.adm/.bun/install/global/node_modules/@anthropic-ai/claude-code/vendor/ripgrep/arm64-darwin/rg \"z-\\d+|z-\\[\" -n)",
+      "Bash(ls:*)",
+      "Bash(npm test)",
+      "Bash(true)",
+      "Bash(gtimeout:*)"
+    ],
+    "deny": []
+  }
+}
