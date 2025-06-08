@@ -23,7 +23,12 @@
       "Bash(NODE_ENV=development npx vite --host --port 3000)",
       "Bash(python3:*)",
       "WebFetch(domain:adaptivecards.io)",
-      "WebFetch(domain:learn.microsoft.com)"
+      "WebFetch(domain:learn.microsoft.com)",
+      "Bash(docker-compose up:*)",
+      "Bash(docker-compose down:*)",
+      "Bash(docker-compose:*)",
+      "Bash(git rm:*)",
+      "Bash(ls:*)"
     ],
     "deny": []
   }
