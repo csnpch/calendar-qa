@@ -152,9 +152,9 @@ export class CronjobService {
       
       console.log(`Found ${events.length} events for ${notificationDate}`);
       
-      if (events.length > 0 || config.notification_days === 0) {
+      if (events.length > 0 || config.notification_days === -1) {
         // Send notification for events or daily summary
-        const isToday = config.notification_days === 0;
+        const isToday = config.notification_days === -1;
         const success = await NotificationService.sendEventsNotification(
           events,
           config.webhook_url,
@@ -190,9 +190,9 @@ export class CronjobService {
       
       console.log(`Found ${events.length} events for ${notificationDate}`);
       
-      if (events.length > 0 || config.notification_days === 0) {
+      if (events.length > 0 || config.notification_days === -1) {
         // Send notification for events or daily summary
-        const isToday = config.notification_days === 0;
+        const isToday = config.notification_days === -1;
         const result = await NotificationService.sendEventsNotificationWithError(
           events,
           config.webhook_url,
@@ -245,7 +245,7 @@ export class CronjobService {
     // }
     
     // Always send test notification (even with 0 events) to validate webhook
-    const isToday = config.notification_days === 0;
+    const isToday = config.notification_days === -1;
     const result = await NotificationService.sendEventsNotificationWithError(
       events,
       config.webhook_url,
