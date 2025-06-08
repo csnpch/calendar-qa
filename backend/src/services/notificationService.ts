@@ -90,6 +90,66 @@ export class NotificationService {
     }).format(date);
   }
 
+  private static isValidWebhookResponse(webhookUrl: string, responseText: string, status: number): boolean {
+    // Check for known webhook domains
+    const validWebhookDomains = [
+      'hooks.slack.com',
+      'outlook.office.com',
+      'hooks.teams.microsoft.com',
+      'discord.com',
+      'discordapp.com',
+      'hooks.zapier.com',
+      'httpbin.org' // For testing
+    ];
+
+    const urlDomain = new URL(webhookUrl).hostname;
+    const isKnownWebhookDomain = validWebhookDomains.some(domain => urlDomain.includes(domain));
+
+    // If it's a known webhook domain, trust it
+    if (isKnownWebhookDomain) {
+      return true;
+    }
+
+    // For unknown domains, check response characteristics
+    if (status === 200) {
+      const lowerResponse = responseText.toLowerCase();
+      
+      // Check for signs it's NOT a webhook (common website responses)
+      const invalidWebhookIndicators = [
+        '<html', '<!doctype', '<head>', '<body>', '<title>',
+        'google', 'search', 'javascript', '<script', '<style',
+        'facebook', 'twitter', 'instagram', 'youtube',
+        'privacy policy', 'terms of service', 'cookies'
+      ];
+
+      const hasInvalidIndicators = invalidWebhookIndicators.some(indicator => 
+        lowerResponse.includes(indicator)
+      );
+
+      if (hasInvalidIndicators) {
+        return false;
+      }
+
+      // Check for webhook success indicators
+      const validWebhookIndicators = [
+        'success', 'accepted', 'received', 'ok', 'webhook',
+        'notification', 'message sent', 'delivered'
+      ];
+
+      const hasValidIndicators = validWebhookIndicators.some(indicator => 
+        lowerResponse.includes(indicator)
+      );
+
+      // If response is very short and doesn't contain HTML, might be valid
+      const isShortResponse = responseText.length < 100;
+      const noHtmlContent = !lowerResponse.includes('<');
+
+      return hasValidIndicators || (isShortResponse && noHtmlContent);
+    }
+
+    return false;
+  }
+
   static createTeamsPayload(events: Event[], notificationDate: string, isToday: boolean = false): TeamsNotificationPayload {
     const dateLabel = isToday ? 'วันนี้' : 'พรุ่งนี้';
     const dateFormatted = this.formatDate(notificationDate);
@@ -274,9 +334,23 @@ export class NotificationService {
       console.log('Response status:', response.status);
       console.log('Response text:', responseText);
 
+      // Check for common non-webhook HTTP status codes
+      if (response.status === 405) {
+        const errorMessage = `Method not allowed: ${webhookUrl} does not accept POST requests (405 Method Not Allowed)`;
+        console.error('Method not allowed:', errorMessage);
+        return { success: false, error: errorMessage };
+      }
+
       if (!response.ok) {
         const errorMessage = `Webhook failed with status ${response.status}: ${response.statusText}. Response: ${responseText}`;
         console.error('Failed to send Teams notification:', errorMessage);
+        return { success: false, error: errorMessage };
+      }
+
+      // Additional validation for proper webhook endpoints
+      if (!this.isValidWebhookResponse(webhookUrl, responseText, response.status)) {
+        const errorMessage = `Invalid webhook endpoint: ${webhookUrl} does not appear to be a valid webhook. Response: ${responseText.substring(0, 200)}${responseText.length > 200 ? '...' : ''}`;
+        console.error('Invalid webhook endpoint:', errorMessage);
         return { success: false, error: errorMessage };
       }
 
