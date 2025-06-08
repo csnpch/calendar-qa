@@ -1,5 +1,5 @@
 import type { Database } from 'bun:sqlite';
-import { Event } from '../types';
+import type { Event } from '../types';
 import { NotificationService } from './notificationService';
 
 export interface CronjobConfig {
@@ -125,11 +125,11 @@ export class CronjobService {
   private getNotificationDate(notificationDays: number): string {
     const date = new Date();
     date.setDate(date.getDate() + notificationDays);
-    return date.toISOString().split('T')[0];
+    return date.toISOString().split('T')[0]!;
   }
 
   // Execute cronjob notification
-  async executeNotification(config: CronjobConfig): Promise<void> {
+  async executeNotification(config: CronjobConfig): Promise<boolean> {
     try {
       console.log(`Executing cronjob: ${config.name} at ${new Date().toISOString()}`);
       
@@ -146,31 +146,77 @@ export class CronjobService {
           notificationDate,
           config.notification_days === 0
         );
+        console.log('Notification success:', success);
         
         if (success) {
           console.log(`Notification sent successfully for ${config.name}`);
+          return true;
         } else {
           console.error(`Failed to send notification for ${config.name}`);
+          return false;
         }
       } else {
         console.log(`No events found for ${notificationDate}, skipping notification`);
+        return true; // No events to send is considered successful
       }
     } catch (error) {
       console.error(`Error executing cronjob ${config.name}:`, error);
+      return false;
+    }
+  }
+
+  // Execute cronjob notification with detailed error reporting
+  async executeNotificationWithError(config: CronjobConfig): Promise<{ success: boolean; error?: string }> {
+    try {
+      console.log(`Executing cronjob: ${config.name} at ${new Date().toISOString()}`);
+      
+      const notificationDate = this.getNotificationDate(config.notification_days);
+      const events = this.getEventsForDate(notificationDate);
+      
+      console.log(`Found ${events.length} events for ${notificationDate}`);
+      
+      if (events.length > 0 || config.notification_days === 0) {
+        // Send notification for events or daily summary
+        const result = await NotificationService.sendEventsNotificationWithError(
+          events,
+          config.webhook_url,
+          notificationDate,
+          config.notification_days === 0
+        );
+        console.log('Notification result:', result);
+        
+        if (result.success) {
+          console.log(`Notification sent successfully for ${config.name}`);
+          return { success: true };
+        } else {
+          console.error(`Failed to send notification for ${config.name}:`, result.error);
+          return { success: false, error: result.error };
+        }
+      } else {
+        console.log(`No events found for ${notificationDate}, skipping notification`);
+        return { success: true }; // No events to send is considered successful
+      }
+    } catch (error) {
+      console.error(`Error executing cronjob ${config.name}:`, error);
+      return { 
+        success: false, 
+        error: error instanceof Error ? error.message : 'Unknown error occurred' 
+      };
     }
   }
 
   // Test notification (for testing purposes)
-  async testNotification(id: number): Promise<boolean> {
+  async testNotification(id: number): Promise<{ success: boolean; error?: string }> {
     const config = this.getConfigById(id);
     if (!config) {
       console.error(`Cronjob config ${id} not found`);
-      return false;
+      return { success: false, error: `Cronjob configuration ${id} not found` };
     }
 
     console.log(`Testing notification for ${config.name}`);
-    await this.executeNotification(config);
-    return true;
+    const result = await this.executeNotificationWithError(config);
+    console.log(`Test notification result for ${config.name}:`, result);
+    return result;
   }
 
   // Execute all enabled notifications (called by cron jobs)
@@ -178,7 +224,8 @@ export class CronjobService {
     const configs = this.getEnabledConfigs();
     
     for (const config of configs) {
-      await this.executeNotification(config);
+      const success = await this.executeNotification(config);
+      console.log(`Notification for ${config.name}: ${success ? 'success' : 'failed'}`);
     }
   }
 
@@ -187,7 +234,8 @@ export class CronjobService {
     const configs = this.getEnabledConfigs().filter(config => config.schedule_time === time);
     
     for (const config of configs) {
-      await this.executeNotification(config);
+      const success = await this.executeNotification(config);
+      console.log(`Notification for ${config.name} at ${time}: ${success ? 'success' : 'failed'}`);
     }
   }
 
@@ -213,9 +261,10 @@ export class CronjobService {
       
       for (const config of configs) {
         console.log(`Executing scheduled notification: ${config.name}`);
-        await this.executeNotification(config);
+        const success = await this.executeNotification(config);
+        console.log(`Scheduled notification for ${config.name}: ${success ? 'success' : 'failed'}`);
         
-        // Mark as executed for this minute
+        // Mark as executed for this minute regardless of success
         this.lastExecutionTimes.set(config.id, currentDateTimeKey);
       }
     }

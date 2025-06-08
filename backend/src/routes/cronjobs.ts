@@ -113,7 +113,11 @@ export const cronjobRoutes = new Elysia({ prefix: '/cronjobs' })
         name: t.String({ minLength: 1, maxLength: 100 }),
         enabled: t.Boolean(),
         schedule_time: t.String({ pattern: '^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$' }), // HH:MM format
-        webhook_url: t.String({ format: 'uri' }),
+        webhook_url: t.String({ 
+          minLength: 1,
+          pattern: '^https?:\\/\\/.+',
+          error: 'webhook_url must be a valid HTTP or HTTPS URL'
+        }),
         notification_days: t.Number({ minimum: 0, maximum: 7 })
       }),
       detail: {
@@ -154,7 +158,11 @@ export const cronjobRoutes = new Elysia({ prefix: '/cronjobs' })
         name: t.Optional(t.String({ minLength: 1, maxLength: 100 })),
         enabled: t.Optional(t.Boolean()),
         schedule_time: t.Optional(t.String({ pattern: '^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$' })),
-        webhook_url: t.Optional(t.String({ format: 'uri' })),
+        webhook_url: t.Optional(t.String({ 
+          minLength: 1,
+          pattern: '^https?:\\/\\/.+',
+          error: 'webhook_url must be a valid HTTP or HTTPS URL'
+        })),
         notification_days: t.Optional(t.Number({ minimum: 0, maximum: 7 }))
       }),
       detail: {
@@ -201,17 +209,24 @@ export const cronjobRoutes = new Elysia({ prefix: '/cronjobs' })
     .post('/:id/test', async ({ params }) => {
       try {
         const id = parseInt(params.id);
-        const success = await cronjobService.testNotification(id);
+        const result = await cronjobService.testNotification(id);
         
-        return {
-          success,
-          message: success ? 'Test notification sent successfully' : 'Failed to send test notification'
-        };
+        if (result.success) {
+          return {
+            success: true,
+            message: 'Test notification sent successfully'
+          };
+        } else {
+          return {
+            success: false,
+            error: result.error || 'Failed to send test notification'
+          };
+        }
       } catch (error) {
         console.error('Error testing cronjob notification:', error);
         return {
           success: false,
-          error: 'Failed to send test notification'
+          error: error instanceof Error ? error.message : 'Failed to send test notification'
         };
       }
     }, {

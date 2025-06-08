@@ -1,27 +1,34 @@
-import { Event } from '../types';
+import type { Event } from '../types';
 
 export interface TeamsNotificationPayload {
-  '@type': 'MessageCard';
-  '@context': 'http://schema.org/extensions';
-  themeColor: string;
-  summary: string;
-  sections: Array<{
-    activityTitle: string;
-    activitySubtitle: string;
-    activityImage?: string;
-    facts: Array<{
-      name: string;
-      value: string;
-    }>;
-    markdown: boolean;
-  }>;
-  potentialAction?: Array<{
-    '@type': string;
-    name: string;
-    targets: Array<{
-      os: string;
-      uri: string;
-    }>;
+  type: 'AdaptiveCard';
+  attachments: Array<{
+    contentType: 'application/vnd.microsoft.card.adaptive';
+    contentUrl: null;
+    content: {
+      type: 'AdaptiveCard';
+      body: Array<{
+        type: string;
+        size?: string;
+        weight?: string;
+        text?: string;
+        spacing?: string;
+        wrap?: boolean;
+        color?: string;
+        columns?: Array<{
+          type: string;
+          items: Array<{
+            type: string;
+            spacing?: string;
+            text: string;
+            wrap?: boolean;
+            color?: string;
+            weight?: string;
+          }>;
+          width: string;
+        }>;
+      }>;
+    };
   }>;
 }
 
@@ -89,25 +96,52 @@ export class NotificationService {
     
     if (events.length === 0) {
       return {
-        '@type': 'MessageCard',
-        '@context': 'http://schema.org/extensions',
-        themeColor: '#107c10',
-        summary: `ไม่มีเหตุการณ์${dateLabel}`,
-        sections: [{
-          activityTitle: `📅 แจ้งเตือนปฏิทิน - ${dateLabel}`,
-          activitySubtitle: dateFormatted,
-          facts: [{
-            name: 'สถานะ',
-            value: `ไม่มีเหตุการณ์${dateLabel} ✅`
-          }],
-          markdown: true
-        }]
+        type: 'AdaptiveCard',
+        attachments: [{
+          contentType: 'application/vnd.microsoft.card.adaptive',
+          contentUrl: null,
+          content: {
+            type: 'AdaptiveCard',
+            body: [
+              {
+                type: 'TextBlock',
+                size: 'Medium',
+                weight: 'Bolder',
+                text: 'Calendar QA System',
+              },
+              {
+                type: 'ColumnSet',
+                columns: [{
+                  type: 'Column',
+                  items: [
+                    {
+                      type: 'TextBlock',
+                      spacing: 'None',
+                      text: `📅 แจ้งเตือนปฏิทิน - ${dateLabel}`,
+                      wrap: true,
+                      color: 'good',
+                      weight: 'Bolder',
+                    },
+                    {
+                      type: 'TextBlock',
+                      spacing: 'None',
+                      text: `${dateFormatted} | ไม่มีเหตุการณ์${dateLabel} ✅`,
+                      wrap: true,
+                      color: 'accent',
+                    },  
+                  ],
+                  width: 'stretch',
+                }],
+              },
+            ],
+          },
+        }],
       };
     }
 
     // Group events by leave type
     const eventsByType = events.reduce((acc, event) => {
-      const thaiType = this.getLeaveTypeInThai(event.leaveType);
+      const thaiType = this.getLeaveTypeInThai(event.leaveType || 'other');
       if (!acc[thaiType]) {
         acc[thaiType] = [];
       }
@@ -115,53 +149,76 @@ export class NotificationService {
       return acc;
     }, {} as { [key: string]: Event[] });
 
-    const facts = [];
+    // Build event details text with proper information
+    let eventDetails = `${dateFormatted} | ${events.length} เหตุการณ์\n\n`;
+    eventDetails += `📊 จำนวนรวม: ${events.length} เหตุการณ์\n\n`;
     
-    // Add summary
-    facts.push({
-      name: 'จำนวนรวม',
-      value: `${events.length} เหตุการณ์`
-    });
-
-    // Add details by type
+    // Add detailed information for today and tomorrow
+    if (isToday) {
+      eventDetails += `📅 วันนี้มีเหตุการณ์:\n`;
+    } else {
+      eventDetails += `📅 พรุ่งนี้มีเหตุการณ์:\n`;
+    }
+    
     Object.entries(eventsByType).forEach(([type, typeEvents]) => {
-      const employees = typeEvents.map(e => e.employeeName).join(', ');
-      facts.push({
-        name: `${type} (${typeEvents.length})`,
-        value: employees
+      eventDetails += `\n🔸 ${type} (${typeEvents.length} คน):\n`;
+      typeEvents.forEach(event => {
+        const employeeName = event.employeeName || 'ไม่ระบุชื่อ';
+        const description = event.description || 'ไม่ได้ระบุรายละเอียด';
+        eventDetails += `   • ${employeeName} - ${description}\n`;
       });
     });
 
-    // Determine primary theme color (use the most common event type's color)
-    const mostCommonType = Object.entries(eventsByType)
-      .sort((a, b) => b[1].length - a[1].length)[0];
-    const primaryEvent = mostCommonType[1][0];
-    const themeColor = this.getThemeColor(primaryEvent.leaveType);
-
     return {
-      '@type': 'MessageCard',
-      '@context': 'http://schema.org/extensions',
-      themeColor,
-      summary: `${events.length} เหตุการณ์${dateLabel}`,
-      sections: [{
-        activityTitle: `📅 แจ้งเตือนปฏิทิน - ${dateLabel}`,
-        activitySubtitle: `${dateFormatted} | ${events.length} เหตุการณ์`,
-        facts,
-        markdown: true
+      type: 'AdaptiveCard',
+      attachments: [{
+        contentType: 'application/vnd.microsoft.card.adaptive',
+        contentUrl: null,
+        content: {
+          type: 'AdaptiveCard',
+          body: [
+            {
+              type: 'TextBlock',
+              size: 'Medium',
+              weight: 'Bolder',
+              text: 'Calendar QA System',
+            },
+            {
+              type: 'ColumnSet',
+              columns: [{
+                type: 'Column',
+                items: [
+                  {
+                    type: 'TextBlock',
+                    spacing: 'None',
+                    text: `📅 แจ้งเตือนปฏิทิน - ${dateLabel}`,
+                    wrap: true,
+                    color: 'good',
+                    weight: 'Bolder',
+                  },
+                  {
+                    type: 'TextBlock',
+                    spacing: 'None',
+                    text: eventDetails.trim(),
+                    wrap: true,
+                    color: 'accent',
+                  },
+                ],
+                width: 'stretch',
+              }],
+            },
+          ],
+        },
       }],
-      potentialAction: [{
-        '@type': 'OpenUri',
-        name: 'ดูรายละเอียดในปฏิทิน',
-        targets: [{
-          os: 'default',
-          uri: 'http://localhost:5173/calendar-events'
-        }]
-      }]
     };
   }
 
   static async sendTeamsNotification(webhookUrl: string, payload: TeamsNotificationPayload): Promise<boolean> {
     try {
+      console.log('Sending Teams notification to:', webhookUrl);
+      console.log('Payload:', JSON.stringify(payload, null, 2));
+      
+      // Use the same approach as the working example
       const response = await fetch(webhookUrl, {
         method: 'POST',
         headers: {
@@ -170,8 +227,19 @@ export class NotificationService {
         body: JSON.stringify(payload)
       });
 
+      let responseText = '';
+      try {
+        responseText = await response.text();
+      } catch (e) {
+        console.log('Could not read response text:', e);
+      }
+      
+      console.log('Response status:', response.status);
+      console.log('Response text:', responseText);
+
       if (!response.ok) {
         console.error('Failed to send Teams notification:', response.status, response.statusText);
+        console.error('Response body:', responseText);
         return false;
       }
 
@@ -183,6 +251,44 @@ export class NotificationService {
     }
   }
 
+  static async sendTeamsNotificationWithError(webhookUrl: string, payload: TeamsNotificationPayload): Promise<{ success: boolean; error?: string }> {
+    try {
+      console.log('Sending Teams notification to:', webhookUrl);
+      console.log('Payload:', JSON.stringify(payload, null, 2));
+      
+      const response = await fetch(webhookUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload)
+      });
+
+      let responseText = '';
+      try {
+        responseText = await response.text();
+      } catch (e) {
+        console.log('Could not read response text:', e);
+      }
+      
+      console.log('Response status:', response.status);
+      console.log('Response text:', responseText);
+
+      if (!response.ok) {
+        const errorMessage = `Webhook failed with status ${response.status}: ${response.statusText}. Response: ${responseText}`;
+        console.error('Failed to send Teams notification:', errorMessage);
+        return { success: false, error: errorMessage };
+      }
+
+      console.log('Teams notification sent successfully');
+      return { success: true };
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown network error';
+      console.error('Error sending Teams notification:', error);
+      return { success: false, error: `Network error: ${errorMessage}` };
+    }
+  }
+
   static async sendEventsNotification(
     events: Event[], 
     webhookUrl: string, 
@@ -191,5 +297,15 @@ export class NotificationService {
   ): Promise<boolean> {
     const payload = this.createTeamsPayload(events, notificationDate, isToday);
     return this.sendTeamsNotification(webhookUrl, payload);
+  }
+
+  static async sendEventsNotificationWithError(
+    events: Event[], 
+    webhookUrl: string, 
+    notificationDate: string, 
+    isToday: boolean = false
+  ): Promise<{ success: boolean; error?: string }> {
+    const payload = this.createTeamsPayload(events, notificationDate, isToday);
+    return this.sendTeamsNotificationWithError(webhookUrl, payload);
   }
 }
