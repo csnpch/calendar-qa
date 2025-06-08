@@ -99,6 +99,7 @@ export class NotificationService {
       'discord.com',
       'discordapp.com',
       'hooks.zapier.com',
+      'logic.azure.com', // Azure Logic Apps
       'httpbin.org' // For testing
     ];
 
@@ -211,7 +212,6 @@ export class NotificationService {
 
     // Build event details text with proper information
     let eventDetails = `${dateFormatted} | ${events.length} เหตุการณ์\n\n`;
-    eventDetails += `📊 จำนวนรวม: ${events.length} เหตุการณ์\n\n`;
     
     // Add detailed information for today and tomorrow
     if (isToday) {
@@ -313,8 +313,6 @@ export class NotificationService {
 
   static async sendTeamsNotificationWithError(webhookUrl: string, payload: TeamsNotificationPayload): Promise<{ success: boolean; error?: string }> {
     try {
-      console.log('Sending Teams notification to:', webhookUrl);
-      console.log('Payload:', JSON.stringify(payload, null, 2));
       
       const response = await fetch(webhookUrl, {
         method: 'POST',
@@ -330,14 +328,15 @@ export class NotificationService {
       } catch (e) {
         console.log('Could not read response text:', e);
       }
-      
-      console.log('Response status:', response.status);
-      console.log('Response text:', responseText);
 
-      // Check for common non-webhook HTTP status codes
+      // Check for common non-webhook HTTP status codes first
       if (response.status === 405) {
         const errorMessage = `Method not allowed: ${webhookUrl} does not accept POST requests (405 Method Not Allowed)`;
-        console.error('Method not allowed:', errorMessage);
+        return { success: false, error: errorMessage };
+      }
+
+      if (response.status === 404) {
+        const errorMessage = `Not found: ${webhookUrl} endpoint does not exist (404 Not Found)`;
         return { success: false, error: errorMessage };
       }
 

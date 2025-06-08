@@ -1,0 +1,3 @@
+- This project base on typescript and backend use "bun+elysia" and frontend use "react".
+- When have change any in frontend please thinks if have duplicate then move to component.  
+- When have change any in backend and have to install new lib, please looking lib from elysia official first.

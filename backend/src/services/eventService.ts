@@ -1,11 +1,12 @@
 import { getDatabase } from '../database/connection';
 import type { Event, CreateEventRequest, UpdateEventRequest } from '../types';
+import moment from 'moment';
 
 export class EventService {
   private db = getDatabase();
 
   createEvent(data: CreateEventRequest): Event {
-    const now = new Date().toISOString();
+    const now = moment().utcOffset('+07:00').format();
     const stmt = this.db.prepare(`
       INSERT INTO events (employee_id, employee_name, leave_type, date, description, created_at, updated_at)
       VALUES (?, ?, ?, ?, ?, ?, ?)
@@ -129,6 +130,34 @@ export class EventService {
     return stmt.all(employeeId) as Event[];
   }
 
+  getEventsByEmployeeName(employeeName: string, startDate?: string, endDate?: string): Event[] {
+    let query = `
+      SELECT 
+        id,
+        employee_id as employeeId,
+        employee_name as employeeName,
+        leave_type as leaveType,
+        date,
+        description,
+        created_at as createdAt,
+        updated_at as updatedAt
+      FROM events
+      WHERE employee_name = ?
+    `;
+    
+    const params: any[] = [employeeName];
+    
+    if (startDate && endDate) {
+      query += ' AND date >= ? AND date <= ?';
+      params.push(startDate, endDate);
+    }
+    
+    query += ' ORDER BY date DESC';
+    
+    const stmt = this.db.prepare(query);
+    return stmt.all(...params) as Event[];
+  }
+
   getEventsByLeaveType(leaveType: string): Event[] {
     const stmt = this.db.prepare(`
       SELECT 
@@ -160,7 +189,7 @@ export class EventService {
     const existing = this.getEventById(id);
     if (!existing) return null;
 
-    const now = new Date().toISOString();
+    const now = moment().utcOffset('+07:00').format();
     const stmt = this.db.prepare(`
       UPDATE events
       SET 
@@ -328,25 +357,8 @@ export class EventService {
       const employee = employeeMap.get(row.employeeId);
       employee.totalEvents += row.count;
       
-      // Map backend leave types to frontend display names
-      const typeMapping: { [key: string]: string } = {
-        'sick': 'ลาป่วย',
-        'personal': 'ลากิจ',
-        'vacation': 'ลาพักร้อน',
-        'absent': 'ขาดงาน',
-        'maternity': 'ลาคลอด',
-        'paternity': 'ลาคลอด',
-        'bereavement': 'ลากิจส่วนตัว',
-        'study': 'ลาเรียน',
-        'military': 'ลาทหาร',
-        'sabbatical': 'ลาศึกษา',
-        'unpaid': 'ลาไม่รับเงิน',
-        'compensatory': 'ลาชดเชย',
-        'other': 'อื่นๆ'
-      };
-      
-      const displayType = typeMapping[row.leaveType] || row.leaveType;
-      employee.eventTypes[displayType] = row.count;
+      // Keep the original leave type as key for consistency with frontend
+      employee.eventTypes[row.leaveType] = row.count;
     });
 
     const employeeRanking = Array.from(employeeMap.values())

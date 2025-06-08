@@ -30,6 +30,17 @@ global.mockDatabase.exec(`
     date DATE NOT NULL,
     type TEXT DEFAULT 'public'
   );
+
+  CREATE TABLE cronjob_config (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL,
+    enabled INTEGER NOT NULL DEFAULT 1,
+    schedule_time TEXT NOT NULL,
+    webhook_url TEXT NOT NULL,
+    notification_days INTEGER NOT NULL DEFAULT 0,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+  );
 `);
 
 // Insert test data  
@@ -44,8 +55,9 @@ global.mockDatabase.exec(`
 `);
 
 beforeEach(() => {
-  // Clean events table before each test
+  // Clean events and cronjob_config tables before each test
   global.mockDatabase.exec('DELETE FROM events');
+  global.mockDatabase.exec('DELETE FROM cronjob_config');
 });
 
 afterAll(() => {

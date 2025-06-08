@@ -158,6 +158,36 @@ export const eventsRoutes = new Elysia({ prefix: '/events' })
       employeeId: t.String()
     })
   })
+
+  .get('/employee', ({ query }) => {
+    try {
+      Logger.debug('Fetching events by employee name with query:', query);
+      const { employeeName, startDate, endDate } = query;
+      
+      if (!employeeName) {
+        Logger.warn('Employee name is required');
+        throw new Error('Employee name is required');
+      }
+      
+      const events = eventService.getEventsByEmployeeName(
+        employeeName as string,
+        startDate as string,
+        endDate as string
+      );
+      
+      Logger.debug(`Retrieved ${events.length} events for employee: ${employeeName}`);
+      return events;
+    } catch (error) {
+      Logger.error('Error fetching events by employee name:', error);
+      throw error;
+    }
+  }, {
+    query: t.Object({
+      employeeName: t.String(),
+      startDate: t.Optional(t.String()),
+      endDate: t.Optional(t.String())
+    })
+  })
   
   .get('/leave-type/:leaveType', ({ params: { leaveType } }) => {
     return eventService.getEventsByLeaveType(leaveType);

@@ -245,7 +245,7 @@ describe('EventService', () => {
       });
 
       // Wait a bit to ensure different timestamp
-      await new Promise(resolve => setTimeout(resolve, 10));
+      await new Promise(resolve => setTimeout(resolve, 1100));
 
       const updateData: UpdateEventRequest = {
         leaveType: 'sick',

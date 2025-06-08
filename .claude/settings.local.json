@@ -3,11 +3,25 @@
     "allow": [
       "Bash(npm run build:*)",
       "Bash(pkill:*)",
-      "Bash(npm uninstall:*)",
+      "Bash(npm:*)",
+      "Bash(npm run:*)",
       "Bash(curl:*)",
       "Bash(grep:*)",
       "Bash(rg:*)",
-      "Bash(find:*)"
+      "Bash(find:*)",
+      "Bash(rm:*)",
+      "Bash(npx:*)",
+      "Bash(sudo rm:*)",
+      "Bash(git add:*)",
+      "Bash(~/.bun/bin/bun --watch index.ts)",
+      "Bash(bun:*)",
+      "Bash(true)",
+      "Bash(sqlite3:*)",
+      "Bash(node:*)",
+      "Bash(jest)",
+      "Bash(killall:*)",
+      "Bash(NODE_ENV=development npx vite --host --port 3000)",
+      "Bash(python3:*)"
     ],
     "deny": []
   }

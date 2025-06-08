@@ -1,6 +1,7 @@
 import type { Database } from 'bun:sqlite';
 import type { Event } from '../types';
 import { NotificationService } from './notificationService';
+import moment from 'moment';
 
 export interface CronjobConfig {
   id: number;
@@ -117,21 +118,34 @@ export class CronjobService {
 
   // Get events for a specific date
   private getEventsForDate(dateString: string): Event[] {
-    const stmt = this.db.prepare('SELECT * FROM events WHERE date = ? ORDER BY employee_name');
+    const stmt = this.db.prepare(`
+      SELECT 
+        id,
+        employee_id as employeeId,
+        employee_name as employeeName,
+        leave_type as leaveType,
+        date,
+        description,
+        created_at as createdAt,
+        updated_at as updatedAt
+      FROM events 
+      WHERE date = ? 
+      ORDER BY employee_name
+    `);
     return stmt.all(dateString) as Event[];
   }
 
-  // Get date string for notification (today or tomorrow based on config)
+  // Get date string for notification (today or advance days based on config)
   private getNotificationDate(notificationDays: number): string {
-    const date = new Date();
-    date.setDate(date.getDate() + notificationDays);
-    return date.toISOString().split('T')[0]!;
+    // notification_days = 0 means today's events
+    // notification_days = 1 means tomorrow's events (1 day advance notification)
+    return moment().utcOffset('+07:00').add(notificationDays, 'days').format('YYYY-MM-DD');
   }
 
   // Execute cronjob notification
   async executeNotification(config: CronjobConfig): Promise<boolean> {
     try {
-      console.log(`Executing cronjob: ${config.name} at ${new Date().toISOString()}`);
+      console.log(`Executing cronjob: ${config.name} at ${moment().utcOffset('+07:00').format()}`);
       
       const notificationDate = this.getNotificationDate(config.notification_days);
       const events = this.getEventsForDate(notificationDate);
@@ -140,11 +154,12 @@ export class CronjobService {
       
       if (events.length > 0 || config.notification_days === 0) {
         // Send notification for events or daily summary
+        const isToday = config.notification_days === 0;
         const success = await NotificationService.sendEventsNotification(
           events,
           config.webhook_url,
           notificationDate,
-          config.notification_days === 0
+          isToday
         );
         console.log('Notification success:', success);
         
@@ -168,7 +183,7 @@ export class CronjobService {
   // Execute cronjob notification with detailed error reporting
   async executeNotificationWithError(config: CronjobConfig): Promise<{ success: boolean; error?: string }> {
     try {
-      console.log(`Executing cronjob: ${config.name} at ${new Date().toISOString()}`);
+      console.log(`Executing cronjob: ${config.name} at ${moment().utcOffset('+07:00').format()}`);
       
       const notificationDate = this.getNotificationDate(config.notification_days);
       const events = this.getEventsForDate(notificationDate);
@@ -177,11 +192,12 @@ export class CronjobService {
       
       if (events.length > 0 || config.notification_days === 0) {
         // Send notification for events or daily summary
+        const isToday = config.notification_days === 0;
         const result = await NotificationService.sendEventsNotificationWithError(
           events,
           config.webhook_url,
           notificationDate,
-          config.notification_days === 0
+          isToday
         );
         console.log('Notification result:', result);
         
@@ -209,13 +225,33 @@ export class CronjobService {
   async testNotification(id: number): Promise<{ success: boolean; error?: string }> {
     const config = this.getConfigById(id);
     if (!config) {
-      console.error(`Cronjob config ${id} not found`);
+      // console.error(`Cronjob config ${id} not found`);
       return { success: false, error: `Cronjob configuration ${id} not found` };
     }
 
-    console.log(`Testing notification for ${config.name}`);
-    const result = await this.executeNotificationWithError(config);
-    console.log(`Test notification result for ${config.name}:`, result);
+    // For testing, always send a notification regardless of events
+    // This ensures the webhook URL is validated even when no events exist
+    const notificationDate = this.getNotificationDate(config.notification_days);
+    const events = this.getEventsForDate(notificationDate);
+    
+    // console.log(`Test notification - Config: ${config.name}`);
+    // console.log(`Notification days: ${config.notification_days}`);
+    // console.log(`Target date: ${notificationDate}`);
+    // console.log(`Found events: ${events.length}`);
+    // if (events.length > 0) {
+    //   events.forEach(event => {
+    //     console.log(`- ${event.employeeName}: ${event.leaveType} on ${event.date}`);
+    //   });
+    // }
+    
+    // Always send test notification (even with 0 events) to validate webhook
+    const isToday = config.notification_days === 0;
+    const result = await NotificationService.sendEventsNotificationWithError(
+      events,
+      config.webhook_url,
+      notificationDate,
+      isToday
+    );
     return result;
   }
 
@@ -241,14 +277,10 @@ export class CronjobService {
 
   // Check current time and execute any scheduled notifications
   async checkAndExecuteScheduledNotifications(): Promise<void> {
-    const now = new Date();
-    const currentTime = now.toLocaleTimeString('en-GB', { 
-      hour: '2-digit', 
-      minute: '2-digit',
-      timeZone: 'Asia/Bangkok'
-    }); // Format: HH:MM
+    const now = moment().utcOffset('+07:00');
+    const currentTime = now.format('HH:mm'); // Format: HH:MM
     
-    const currentDateTimeKey = `${now.toDateString()}-${currentTime}`; // Include date to reset daily
+    const currentDateTimeKey = `${now.format('YYYY-MM-DD')}-${currentTime}`; // Include date to reset daily
     
     // Get all enabled configs that match current time
     const configs = this.getEnabledConfigs().filter(config => {

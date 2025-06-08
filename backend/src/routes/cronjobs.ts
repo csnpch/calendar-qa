@@ -118,7 +118,7 @@ export const cronjobRoutes = new Elysia({ prefix: '/cronjobs' })
           pattern: '^https?:\\/\\/.+',
           error: 'webhook_url must be a valid HTTP or HTTPS URL'
         }),
-        notification_days: t.Number({ minimum: 0, maximum: 7 })
+        notification_days: t.Number({ minimum: -1, maximum: 7 })
       }),
       detail: {
         summary: 'Create new cronjob configuration',
@@ -163,7 +163,7 @@ export const cronjobRoutes = new Elysia({ prefix: '/cronjobs' })
           pattern: '^https?:\\/\\/.+',
           error: 'webhook_url must be a valid HTTP or HTTPS URL'
         })),
-        notification_days: t.Optional(t.Number({ minimum: 0, maximum: 7 }))
+        notification_days: t.Optional(t.Number({ minimum: -1, maximum: 7 }))
       }),
       detail: {
         summary: 'Update cronjob configuration',

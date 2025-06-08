@@ -26,7 +26,8 @@ import {
   Edit, 
   Play, 
   Plus, 
-  RotateCcw
+  RotateCcw,
+  Loader2
 } from 'lucide-react';
 
 export default function CronjobConfig() {
@@ -34,6 +35,7 @@ export default function CronjobConfig() {
   const [configs, setConfigs] = useState<CronjobConfig[]>([]);
   const [statuses, setStatuses] = useState<CronjobStatus[]>([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [editingConfig, setEditingConfig] = useState<CronjobConfig | null>(null);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
@@ -71,17 +73,58 @@ export default function CronjobConfig() {
     }
   };
 
+  const handleRefresh = async () => {
+    try {
+      setRefreshing(true);
+      const [configResponse, statusResponse] = await Promise.all([
+        getCronjobConfigs(),
+        getCronjobStatus()
+      ]);
+
+      if (configResponse.success && configResponse.data) {
+        setConfigs(configResponse.data);
+      }
+
+      if (statusResponse.success && statusResponse.data) {
+        setStatuses(statusResponse.data);
+      }
+
+      // Show success notification that auto-closes in 2 seconds
+      toast({
+        title: 'Refreshed',
+        description: 'Cronjob configurations refreshed successfully',
+        variant: 'success',
+        duration: 2000
+      });
+
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: 'Failed to refresh cronjob configurations',
+        variant: 'destructive'
+      });
+    } finally {
+      setRefreshing(false);
+    }
+  };
+
   useEffect(() => {
     loadConfigs();
   }, []);
 
   const handleCreate = async () => {
     try {
-      const response = await createCronjobConfig(formData);
+      // Adjust notification_days: UI shows "Today"=0, "Tomorrow"=1 but backend needs "Today"=-1, "Tomorrow"=0
+      const adjustedFormData = {
+        ...formData,
+        notification_days: formData.notification_days - 1
+      };
+      const response = await createCronjobConfig(adjustedFormData);
       if (response.success) {
         toast({
           title: 'Success',
-          description: 'Cronjob configuration created successfully'
+          description: 'Cronjob configuration created successfully',
+          variant: 'success'
         });
         setIsCreateDialogOpen(false);
         resetForm();
@@ -102,11 +145,17 @@ export default function CronjobConfig() {
     if (!editingConfig) return;
 
     try {
-      const response = await updateCronjobConfig(editingConfig.id, formData);
+      // Adjust notification_days: UI shows "Today"=0, "Tomorrow"=1 but backend needs "Today"=-1, "Tomorrow"=0
+      const adjustedFormData = {
+        ...formData,
+        notification_days: formData.notification_days - 1
+      };
+      const response = await updateCronjobConfig(editingConfig.id, adjustedFormData);
       if (response.success) {
         toast({
           title: 'Success',
-          description: 'Cronjob configuration updated successfully'
+          description: 'Cronjob configuration updated successfully',
+          variant: 'success'
         });
         setIsEditDialogOpen(false);
         setEditingConfig(null);
@@ -132,7 +181,8 @@ export default function CronjobConfig() {
       if (response.success) {
         toast({
           title: 'Success',
-          description: 'Cronjob configuration deleted successfully'
+          description: 'Cronjob configuration deleted successfully',
+          variant: 'success'
         });
         loadConfigs();
       } else {
@@ -153,7 +203,8 @@ export default function CronjobConfig() {
       if (response.success) {
         toast({
           title: 'Success',
-          description: 'Test notification sent successfully'
+          description: 'Test notification sent successfully',
+          variant: 'success'
         });
       } else {
         throw new Error(response.error || 'Failed to send test notification');
@@ -173,7 +224,8 @@ export default function CronjobConfig() {
       if (response.success) {
         toast({
           title: 'Success',
-          description: `Cronjob ${enabled ? 'enabled' : 'disabled'} successfully`
+          description: `Cronjob ${enabled ? 'enabled' : 'disabled'} successfully`,
+          variant: 'success'
         });
         loadConfigs();
       } else {
@@ -192,10 +244,11 @@ export default function CronjobConfig() {
     setEditingConfig(config);
     setFormData({
       name: config.name,
-      enabled: config.enabled,
+      enabled: Boolean(config.enabled),
       schedule_time: config.schedule_time,
       webhook_url: config.webhook_url,
-      notification_days: config.notification_days
+      // Convert backend value to UI value: backend "Today"=-1, "Tomorrow"=0 → UI "Today"=0, "Tomorrow"=1
+      notification_days: config.notification_days + 1
     });
     setIsEditDialogOpen(true);
   };
@@ -240,9 +293,13 @@ export default function CronjobConfig() {
             <p className="text-gray-600 dark:text-gray-300 mt-2">Manage notification schedules and webhooks</p>
           </div>
         <div className="flex gap-2">
-          <Button variant="outline" onClick={loadConfigs}>
-            <RotateCcw className="w-4 h-4 mr-2" />
-            Refresh
+          <Button variant="outline" onClick={handleRefresh} disabled={refreshing}>
+            {refreshing ? (
+              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+            ) : (
+              <RotateCcw className="w-4 h-4 mr-2" />
+            )}
+            {refreshing ? 'Refreshing...' : 'Refresh'}
           </Button>
           <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
             <DialogTrigger asChild>
@@ -341,7 +398,9 @@ export default function CronjobConfig() {
               </CardContent>
             </Card>
           ) : (
-            configs.map((config) => (
+            configs
+              .sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime())
+              .map((config) => (
               <Card key={config.id} className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-600">
                 <CardHeader>
                   <div className="flex items-center justify-between">
@@ -375,9 +434,9 @@ export default function CronjobConfig() {
                   <div>
                     <p className="font-medium text-gray-700 dark:text-gray-300">Notification Days</p>
                     <p className="text-gray-900 dark:text-white">
-                      {config.notification_days === 0 ? 'Today' : 
-                       config.notification_days === 1 ? 'Tomorrow' : 
-                       `${config.notification_days} days ahead`}
+                      {config.notification_days === -1 ? 'Today' : 
+                       config.notification_days === 0 ? 'Tomorrow' : 
+                       `${config.notification_days + 1} days ahead`}
                     </p>
                   </div>
                   <div>

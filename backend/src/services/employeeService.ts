@@ -1,11 +1,12 @@
 import { getDatabase } from '../database/connection';
 import type { Employee, CreateEmployeeRequest, UpdateEmployeeRequest } from '../types';
+import moment from 'moment';
 
 export class EmployeeService {
   private db = getDatabase();
 
   createEmployee(data: CreateEmployeeRequest): Employee {
-    const now = new Date().toISOString();
+    const now = moment().utcOffset('+07:00').format();
     const stmt = this.db.prepare(`
       INSERT INTO employees (name, created_at, updated_at)
       VALUES (?, ?, ?)
@@ -47,7 +48,7 @@ export class EmployeeService {
     const existing = this.getEmployeeById(id);
     if (!existing) return null;
 
-    const now = new Date().toISOString();
+    const now = moment().utcOffset('+07:00').format();
     const stmt = this.db.prepare(`
       UPDATE employees
       SET name = ?, updated_at = ?

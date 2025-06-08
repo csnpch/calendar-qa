@@ -73,12 +73,14 @@ export const Employees = () => {
         toast({
           title: "อัพเดทข้อมูลเรียบร้อย",
           description: `อัพเดทข้อมูลของ ${formData.name} เรียบร้อยแล้ว`,
+          variant: "success",
         });
       } else {
         await addEmployee(formData);
         toast({
           title: "เพิ่มพนักงานเรียบร้อย",
           description: `เพิ่ม ${formData.name} เข้าระบบเรียบร้อยแล้ว`,
+          variant: "success",
         });
       }
       resetForm();
@@ -98,6 +100,7 @@ export const Employees = () => {
         toast({
           title: "ลบข้อมูลเรียบร้อย",
           description: `ลบข้อมูลของ ${employee.name} เรียบร้อยแล้ว`,
+          variant: "success",
         });
       } catch (error) {
         toast({
@@ -152,7 +155,7 @@ export const Employees = () => {
               </CardHeader>
               <CardContent>
                 <form onSubmit={handleSubmit} className="space-y-4">
-                  <div>
+                  <div className='flex flex-col gap-y-2'>
                     <Label htmlFor="name">ชื่อ-นามสกุล</Label>
                     <Input
                       id="name"

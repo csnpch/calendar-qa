@@ -80,6 +80,34 @@ export const getDashboardSummary = async (params?: {
   return apiClient.get<DashboardSummary>(endpoint);
 };
 
+export interface EmployeeEvent {
+  id: number;
+  employeeId: number;
+  employeeName: string;
+  leaveType: string;
+  date: string;
+  description?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export const getEventsByEmployee = async (params: {
+  employeeName: string;
+  startDate?: string;
+  endDate?: string;
+}): Promise<EmployeeEvent[]> => {
+  const queryParams = new URLSearchParams();
+  
+  queryParams.append('employeeName', params.employeeName);
+  if (params.startDate) queryParams.append('startDate', params.startDate);
+  if (params.endDate) queryParams.append('endDate', params.endDate);
+  
+  const query = queryParams.toString();
+  const endpoint = `/events/employee?${query}`;
+  
+  return apiClient.get<EmployeeEvent[]>(endpoint);
+};
+
 export interface CronjobConfig {
   id: number;
   name: string;

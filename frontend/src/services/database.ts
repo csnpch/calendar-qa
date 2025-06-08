@@ -1,3 +1,5 @@
+import moment from 'moment';
+
 export interface Employee {
   id: number;
   name: string;
@@ -75,7 +77,7 @@ class DatabaseService {
     ];
 
     for (const empData of defaultEmployees) {
-      const now = new Date().toISOString();
+      const now = moment().format();
       const employee: Employee = {
         id: ++this.data.lastEmployeeId,
         ...empData,
@@ -90,7 +92,7 @@ class DatabaseService {
 
   // Employee operations
   createEmployee(employee: Omit<Employee, 'id' | 'createdAt' | 'updatedAt'>): Employee {
-    const now = new Date().toISOString();
+    const now = moment().format();
     const newEmployee: Employee = {
       id: ++this.data.lastEmployeeId,
       name: employee.name,
@@ -119,7 +121,7 @@ class DatabaseService {
     const updatedEmployee = {
       ...this.data.employees[index],
       ...updates,
-      updatedAt: new Date().toISOString()
+      updatedAt: moment().format()
     };
     
     this.data.employees[index] = updatedEmployee;
@@ -140,7 +142,7 @@ class DatabaseService {
 
   // Event operations
   createEvent(event: Omit<Event, 'id' | 'createdAt' | 'updatedAt'>): Event {
-    const now = new Date().toISOString();
+    const now = moment().format();
     const newEvent: Event = {
       id: ++this.data.lastEventId,
       ...event,
@@ -154,7 +156,7 @@ class DatabaseService {
   }
 
   getAllEvents(): Event[] {
-    return [...this.data.events].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+    return [...this.data.events].sort((a, b) => moment(b.date).unix() - moment(a.date).unix());
   }
 
   getEventById(id: number): Event | null {
@@ -176,7 +178,7 @@ class DatabaseService {
     const updatedEvent = {
       ...this.data.events[index],
       ...updates,
-      updatedAt: new Date().toISOString()
+      updatedAt: moment().format()
     };
     
     this.data.events[index] = updatedEvent;

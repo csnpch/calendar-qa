@@ -1,13 +1,16 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import moment from 'moment';
 import { TrendingUp, Calendar, Award, Users } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Combobox } from '@/components/ui/combobox';
 import { Input } from '@/components/ui/input';
 import { useTheme } from '@/contexts/ThemeContext';
 import { getDashboardSummary, DashboardSummary } from '@/services/api';
 import { LEAVE_TYPE_LABELS } from '@/lib/utils';
 import { Layout } from '@/components/Layout';
+import { UserDetailsModal } from '@/components/UserDetailsModal';
 
 const getEventTypeColor = (type: string) => {
   switch (type) {
@@ -51,9 +54,11 @@ const Index = () => {
   const [dashboardData, setDashboardData] = useState<DashboardSummary | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [selectedEmployee, setSelectedEmployee] = useState<string | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   // Get current date info for display
-  const currentDate = useMemo(() => new Date(), []);
+  const currentDate = useMemo(() => moment().toDate(), []);
   const currentMonth = currentDate.toLocaleDateString('th-TH', { month: 'long', year: 'numeric' });
   const currentYear = currentDate.getFullYear().toString();
 
@@ -107,6 +112,39 @@ const Index = () => {
     const bCount = b.eventTypes[selectedEventType as keyof typeof b.eventTypes] || 0;
     return bCount - aCount;
   }) || [];
+
+  const handleEmployeeClick = (employeeName: string) => {
+    setSelectedEmployee(employeeName);
+    setIsModalOpen(true);
+  };
+
+  const handleModalClose = () => {
+    setIsModalOpen(false);
+    setSelectedEmployee(null);
+  };
+
+  const getDateRange = () => {
+    if (selectedPeriod === 'custom') {
+      return { from: dateFrom, to: dateTo };
+    } else if (selectedPeriod === 'month') {
+      const startOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
+      const endOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0);
+      return {
+        from: startOfMonth.toISOString().split('T')[0],
+        to: endOfMonth.toISOString().split('T')[0]
+      };
+    } else if (selectedPeriod === 'year') {
+      return {
+        from: `${currentDate.getFullYear()}-01-01`,
+        to: `${currentDate.getFullYear()}-12-31`
+      };
+    }
+    return undefined;
+  };
+
+  const selectedEmployeeData = selectedEmployee && dashboardData 
+    ? dashboardData.employeeRanking.find(emp => emp.name === selectedEmployee)
+    : null;
 
   return (
     <Layout currentPage="home">
@@ -197,17 +235,17 @@ const Index = () => {
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               ประเภทเหตุการณ์
             </label>
-            <Select value={selectedEventType} onValueChange={setSelectedEventType}>
-              <SelectTrigger>
-                <SelectValue placeholder="เลือกประเภท" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">ทุกประเภท</SelectItem>
-                {Object.entries(LEAVE_TYPE_LABELS).map(([value, label]) => (
-                  <SelectItem key={value} value={value}>{label}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <Combobox
+              options={[
+                { value: 'all', label: 'ทุกประเภท' },
+                ...Object.entries(LEAVE_TYPE_LABELS).map(([value, label]) => ({ value, label }))
+              ]}
+              value={selectedEventType}
+              onValueChange={setSelectedEventType}
+              placeholder="เลือกประเภท"
+              searchPlaceholder="ค้นหาประเภท..."
+              emptyMessage="ไม่พบประเภทเหตุการณ์"
+            />
           </div>
 
           {selectedPeriod === 'custom' && (
@@ -275,7 +313,11 @@ const Index = () => {
                   </div>
                 ) : (
                   filteredRanking.map((employee, index) => (
-                    <div key={employee.name} className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                    <div 
+                      key={employee.name} 
+                      className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700 rounded-lg cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors"
+                      onClick={() => handleEmployeeClick(employee.name)}
+                    >
                       <div className="flex items-center gap-3">
                         <div className="flex items-center justify-center w-8 h-8 bg-blue-100 dark:bg-gray-800 text-blue-600 dark:text-gray-400 rounded-full font-bold">
                           {index + 1}
@@ -303,6 +345,14 @@ const Index = () => {
             </CardContent>
           </Card>
         )}
+
+        <UserDetailsModal
+          isOpen={isModalOpen}
+          onClose={handleModalClose}
+          employeeName={selectedEmployee || ''}
+          employeeData={selectedEmployeeData}
+          dateRange={getDateRange()}
+        />
       </div>
     </Layout>
   );
