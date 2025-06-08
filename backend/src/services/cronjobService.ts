@@ -152,8 +152,8 @@ export class CronjobService {
       
       console.log(`Found ${events.length} events for ${notificationDate}`);
       
-      if (events.length > 0 || config.notification_days === -1) {
-        // Send notification for events or daily summary
+      if (events.length > 0) {
+        // Send notification only when there are events
         const success = await NotificationService.sendEventsNotification(
           events,
           config.webhook_url,
@@ -189,8 +189,8 @@ export class CronjobService {
       
       console.log(`Found ${events.length} events for ${notificationDate}`);
       
-      if (events.length > 0 || config.notification_days === -1) {
-        // Send notification for events or daily summary
+      if (events.length > 0) {
+        // Send notification only when there are events
         const result = await NotificationService.sendEventsNotificationWithError(
           events,
           config.webhook_url,
