@@ -21,7 +21,9 @@
       "Bash(jest)",
       "Bash(killall:*)",
       "Bash(NODE_ENV=development npx vite --host --port 3000)",
-      "Bash(python3:*)"
+      "Bash(python3:*)",
+      "WebFetch(domain:adaptivecards.io)",
+      "WebFetch(domain:learn.microsoft.com)"
     ],
     "deny": []
   }

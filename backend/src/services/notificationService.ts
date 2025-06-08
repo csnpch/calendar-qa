@@ -151,8 +151,23 @@ export class NotificationService {
     return false;
   }
 
-  static createTeamsPayload(events: Event[], notificationDate: string, isToday: boolean = false): TeamsNotificationPayload {
-    const dateLabel = isToday ? 'วันนี้' : 'พรุ่งนี้';
+  static createTeamsPayload(events: Event[], notificationDate: string, notificationDays: number): TeamsNotificationPayload {
+    let dateLabel: string;
+    if (notificationDays === -1) {
+      dateLabel = 'วันนี้';
+    } else if (notificationDays === 0) {
+      dateLabel = 'พรุ่งนี้';
+    } else if (notificationDays === 1) {
+      dateLabel = '2 วันข้างหน้า';
+    } else if (notificationDays === 2) {
+      dateLabel = '3 วันข้างหน้า';
+    } else if (notificationDays === 6) {
+      dateLabel = '1 สัปดาห์ข้างหน้า';
+    } else {
+      dateLabel = `${notificationDays + 1} วันข้างหน้า`;
+    }
+    
+    const isToday = notificationDays === -1;
     const dateFormatted = this.formatDate(notificationDate);
     
     if (events.length === 0) {
@@ -168,7 +183,7 @@ export class NotificationService {
                 type: 'TextBlock',
                 size: 'Medium',
                 weight: 'Bolder',
-                text: 'Calendar QA System',
+                text: '🗓️ **Calendar QA**',
               },
               {
                 type: 'ColumnSet',
@@ -211,23 +226,25 @@ export class NotificationService {
     }, {} as { [key: string]: Event[] });
 
     // Build event details text with proper information
-    let eventDetails = `${dateFormatted} | ${events.length} เหตุการณ์\n\n`;
+    let eventDetails = `**${dateFormatted}** | **${events.length} เหตุการณ์**`;
     
-    // Add detailed information for today and tomorrow
-    if (isToday) {
-      eventDetails += `📅 วันนี้มีเหตุการณ์:\n`;
-    } else {
-      eventDetails += `📅 พรุ่งนี้มีเหตุการณ์:\n`;
-    }
-    
+    // Build event list only
+    let eventList = '';
     Object.entries(eventsByType).forEach(([type, typeEvents]) => {
-      eventDetails += `\n🔸 ${type} (${typeEvents.length} คน):\n`;
+      eventList += `\n- **${type}** (${typeEvents.length} คน):\n`;
       typeEvents.forEach(event => {
         const employeeName = event.employeeName || 'ไม่ระบุชื่อ';
-        const description = event.description || 'ไม่ได้ระบุรายละเอียด';
-        eventDetails += `   • ${employeeName} - ${description}\n`;
+        const description = event.description;
+        if (description && description.trim()) {
+          eventList += `  - ${employeeName} - *${description}*\n`;
+        } else {
+          eventList += `  - ${employeeName}\n`;
+        }
       });
     });
+    
+    // Create event header text
+    const eventHeader = isToday ? '⏰ วันนี้มีเหตุการณ์:' : '⏰ พรุ่งนี้มีเหตุการณ์:';
 
     return {
       type: 'AdaptiveCard',
@@ -241,7 +258,7 @@ export class NotificationService {
               type: 'TextBlock',
               size: 'Medium',
               weight: 'Bolder',
-              text: 'Calendar QA System',
+              text: '🗓️ **Calendar QA**',
             },
             {
               type: 'ColumnSet',
@@ -251,9 +268,9 @@ export class NotificationService {
                   {
                     type: 'TextBlock',
                     spacing: 'None',
-                    text: `📅 แจ้งเตือนปฏิทิน - ${dateLabel}`,
+                    text: `🔔 แจ้งเตือนปฏิทิน - ${dateLabel}`,
                     wrap: true,
-                    color: 'good',
+                    color: 'default',
                     weight: 'Bolder',
                   },
                   {
@@ -261,7 +278,22 @@ export class NotificationService {
                     spacing: 'None',
                     text: eventDetails.trim(),
                     wrap: true,
-                    color: 'accent',
+                    color: 'default',
+                  },
+                  {
+                    type: 'TextBlock',
+                    spacing: 'Small',
+                    text: eventHeader,
+                    wrap: true,
+                    color: 'default',
+                    weight: 'Bolder',
+                  },
+                  {
+                    type: 'TextBlock',
+                    spacing: 'None',
+                    text: eventList.trim(),
+                    wrap: true,
+                    color: 'default',
                   },
                 ],
                 width: 'stretch',
@@ -366,9 +398,9 @@ export class NotificationService {
     events: Event[], 
     webhookUrl: string, 
     notificationDate: string, 
-    isToday: boolean = false
+    notificationDays: number
   ): Promise<boolean> {
-    const payload = this.createTeamsPayload(events, notificationDate, isToday);
+    const payload = this.createTeamsPayload(events, notificationDate, notificationDays);
     return this.sendTeamsNotification(webhookUrl, payload);
   }
 
@@ -376,9 +408,9 @@ export class NotificationService {
     events: Event[], 
     webhookUrl: string, 
     notificationDate: string, 
-    isToday: boolean = false
+    notificationDays: number
   ): Promise<{ success: boolean; error?: string }> {
-    const payload = this.createTeamsPayload(events, notificationDate, isToday);
+    const payload = this.createTeamsPayload(events, notificationDate, notificationDays);
     return this.sendTeamsNotificationWithError(webhookUrl, payload);
   }
 }
