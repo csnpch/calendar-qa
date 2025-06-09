@@ -9,8 +9,8 @@ services:
     ports:
       - "3000:3001"
     volumes:
-      - ./backend/calendar.db:/app/calendar.db
-      - ./backend/logs:/app/logs
+      - calendar-data:/app/data
+      - calendar-logs:/app/logs
     environment:
       - NODE_ENV=production
     restart: unless-stopped

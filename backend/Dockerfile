@@ -24,8 +24,8 @@ COPY --from=build /app/src ./src
 COPY --from=build /app/package*.json ./
 COPY --from=build /app/index.ts ./
 
-# Create logs directory
-RUN mkdir -p logs
+# Create logs and data directories with proper permissions
+RUN mkdir -p logs data && chmod 755 logs data
 
 # Expose port
 EXPOSE 3001

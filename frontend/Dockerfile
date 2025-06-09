@@ -1,5 +1,7 @@
 # Frontend Dockerfile
-FROM nginx:alpine AS production
+FROM nginx:alpine
+
+# Copy pre-built dist folder
 COPY dist /usr/share/nginx/html
 
 # Create nginx config for SPA

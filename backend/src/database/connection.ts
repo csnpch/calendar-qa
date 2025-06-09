@@ -1,13 +1,20 @@
 import { Database } from 'bun:sqlite';
 import { join } from 'path';
+import { mkdirSync, existsSync } from 'fs';
 
 class DatabaseConnection {
   private static instance: Database | null = null;
 
   static getInstance(): Database {
     if (!this.instance) {
-      // Create database file in backend directory
-      const dbPath = join(process.cwd(), 'calendar.db');
+      // Ensure data directory exists
+      const dataDir = join(process.cwd(), 'data');
+      if (!existsSync(dataDir)) {
+        mkdirSync(dataDir, { recursive: true });
+      }
+      
+      // Create database file in data directory
+      const dbPath = join(dataDir, 'calendar.db');
       this.instance = new Database(dbPath);
       
       // Enable foreign keys

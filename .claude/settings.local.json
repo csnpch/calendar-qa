@@ -30,7 +30,10 @@
       "Bash(git rm:*)",
       "Bash(ls:*)",
       "Bash(docker compose:*)",
-      "Bash(kill:*)"
+      "Bash(kill:*)",
+      "Bash(docker volume:*)",
+      "Bash(chmod:*)",
+      "Bash(./build.sh:*)"
     ],
     "deny": []
   }
