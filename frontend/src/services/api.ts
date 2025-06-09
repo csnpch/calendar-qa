@@ -115,6 +115,9 @@ export interface CronjobConfig {
   schedule_time: string;
   webhook_url: string;
   notification_days: number;
+  notification_type?: 'daily' | 'weekly';
+  weekly_days?: number[];
+  weekly_scope?: 'current_week' | 'next_week';
   created_at: string;
   updated_at: string;
 }

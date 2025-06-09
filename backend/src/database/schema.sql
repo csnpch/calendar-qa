@@ -27,6 +27,9 @@ CREATE TABLE IF NOT EXISTS cronjob_config (
     schedule_time TEXT NOT NULL, -- Format: "HH:MM"
     webhook_url TEXT NOT NULL,
     notification_days INTEGER NOT NULL DEFAULT 1, -- Days ahead to notify (0=today, 1=tomorrow)
+    notification_type TEXT NOT NULL DEFAULT 'daily' CHECK (notification_type IN ('daily', 'weekly')), -- daily or weekly
+    weekly_days TEXT, -- JSON array of weekday numbers (0=Sunday, 1=Monday, ..., 6=Saturday) for weekly notifications
+    weekly_scope TEXT DEFAULT 'current_week' CHECK (weekly_scope IN ('current_week', 'next_week')), -- current or next week events
     created_at TEXT NOT NULL DEFAULT (datetime('now')),
     updated_at TEXT NOT NULL DEFAULT (datetime('now'))
 );

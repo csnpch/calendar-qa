@@ -38,6 +38,9 @@ global.mockDatabase.exec(`
     schedule_time TEXT NOT NULL,
     webhook_url TEXT NOT NULL,
     notification_days INTEGER NOT NULL DEFAULT 0,
+    notification_type TEXT NOT NULL DEFAULT 'daily' CHECK (notification_type IN ('daily', 'weekly')),
+    weekly_days TEXT,
+    weekly_scope TEXT DEFAULT 'current_week' CHECK (weekly_scope IN ('current_week', 'next_week')),
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
   );

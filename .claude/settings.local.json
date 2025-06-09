@@ -33,7 +33,8 @@
       "Bash(kill:*)",
       "Bash(docker volume:*)",
       "Bash(chmod:*)",
-      "Bash(./build.sh:*)"
+      "Bash(./build.sh:*)",
+      "Bash(timeout:*)"
     ],
     "deny": []
   }

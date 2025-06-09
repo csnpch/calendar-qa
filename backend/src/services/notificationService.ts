@@ -336,7 +336,6 @@ export class NotificationService {
         return false;
       }
 
-      console.log('Teams notification sent successfully');
       return true;
     } catch (error) {
       console.error('Error sending Teams notification:', error);
@@ -386,7 +385,6 @@ export class NotificationService {
         return { success: false, error: errorMessage };
       }
 
-      console.log('Teams notification sent successfully');
       return { success: true };
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown network error';
@@ -412,6 +410,176 @@ export class NotificationService {
     notificationDays: number
   ): Promise<{ success: boolean; error?: string }> {
     const payload = this.createTeamsPayload(events, notificationDate, notificationDays);
+    return this.sendTeamsNotificationWithError(webhookUrl, payload);
+  }
+
+  static createWeeklyTeamsPayload(events: Event[], startDate: string, endDate: string, scope: 'current_week' | 'next_week'): TeamsNotificationPayload {
+    const startFormatted = this.formatDate(startDate);
+    const endFormatted = this.formatDate(endDate);
+    const scopeText = scope === 'current_week' ? 'สัปดาห์นี้' : 'สัปดาห์หน้า';
+    
+    if (events.length === 0) {
+      return {
+        type: 'AdaptiveCard',
+        attachments: [{
+          contentType: 'application/vnd.microsoft.card.adaptive',
+          contentUrl: null,
+          content: {
+            type: 'AdaptiveCard',
+            body: [
+              {
+                type: 'TextBlock',
+                size: 'Medium',
+                weight: 'Bolder',
+                text: '🗓️ **Calendar QA**',
+              },
+              {
+                type: 'ColumnSet',
+                columns: [{
+                  type: 'Column',
+                  items: [
+                    {
+                      type: 'TextBlock',
+                      spacing: 'None',
+                      text: `📅 แจ้งเตือนปฏิทิน - ${scopeText}`,
+                      wrap: true,
+                      color: 'good',
+                      weight: 'Bolder',
+                    },
+                    {
+                      type: 'TextBlock',
+                      spacing: 'None',
+                      text: `${startFormatted} - ${endFormatted} | ไม่มีเหตุการณ์${scopeText} ✅`,
+                      wrap: true,
+                      color: 'accent',
+                    },  
+                  ],
+                  width: 'stretch',
+                }],
+              },
+            ],
+          },
+        }],
+      };
+    }
+
+    // Group events by date first, then by leave type
+    const eventsByDate = events.reduce((acc, event) => {
+      if (!acc[event.date]) {
+        acc[event.date] = {};
+      }
+      const thaiType = this.getLeaveTypeInThai(event.leaveType || 'other');
+      if (!acc[event.date]![thaiType]) {
+        acc[event.date]![thaiType] = [];
+      }
+      acc[event.date]![thaiType]!.push(event);
+      return acc;
+    }, {} as { [date: string]: { [type: string]: Event[] } });
+
+    // Build event details text
+    let eventDetails = `**${startFormatted} - ${endFormatted}** | **${events.length} เหตุการณ์**`;
+    
+    // Build event list organized by date
+    let eventList = '';
+    Object.entries(eventsByDate).sort().forEach(([date, dateEvents]) => {
+      const dateFormatted = this.formatDate(date);
+      const dayEvents = Object.values(dateEvents).flat();
+      eventList += `\n**📅 ${dateFormatted}** (${dayEvents.length} เหตุการณ์):\n`;
+      
+      Object.entries(dateEvents).forEach(([type, typeEvents]) => {
+        eventList += `- **${type}** (${typeEvents.length} คน):\n`;
+        typeEvents.forEach(event => {
+          const employeeName = event.employeeName || 'ไม่ระบุชื่อ';
+          const description = event.description;
+          if (description && description.trim()) {
+            eventList += `  - ${employeeName} - *${description}*\n`;
+          } else {
+            eventList += `  - ${employeeName}\n`;
+          }
+        });
+      });
+    });
+    
+    const eventHeader = `⏰ ${scopeText}มีเหตุการณ์:`;
+
+    return {
+      type: 'AdaptiveCard',
+      attachments: [{
+        contentType: 'application/vnd.microsoft.card.adaptive',
+        contentUrl: null,
+        content: {
+          type: 'AdaptiveCard',
+          body: [
+            {
+              type: 'TextBlock',
+              size: 'Medium',
+              weight: 'Bolder',
+              text: '🗓️ **Calendar QA**',
+            },
+            {
+              type: 'ColumnSet',
+              columns: [{
+                type: 'Column',
+                items: [
+                  {
+                    type: 'TextBlock',
+                    spacing: 'None',
+                    text: `🔔 แจ้งเตือนปฏิทิน - ${scopeText}`,
+                    wrap: true,
+                    color: 'default',
+                    weight: 'Bolder',
+                  },
+                  {
+                    type: 'TextBlock',
+                    spacing: 'None',
+                    text: eventDetails.trim(),
+                    wrap: true,
+                    color: 'default',
+                  },
+                  {
+                    type: 'TextBlock',
+                    spacing: 'Small',
+                    text: eventHeader,
+                    wrap: true,
+                    color: 'default',
+                    weight: 'Bolder',
+                  },
+                  {
+                    type: 'TextBlock',
+                    spacing: 'None',
+                    text: eventList.trim(),
+                    wrap: true,
+                    color: 'default',
+                  },
+                ],
+                width: 'stretch',
+              }],
+            },
+          ],
+        },
+      }],
+    };
+  }
+
+  static async sendWeeklyEventsNotification(
+    events: Event[], 
+    webhookUrl: string, 
+    startDate: string, 
+    endDate: string,
+    scope: 'current_week' | 'next_week'
+  ): Promise<boolean> {
+    const payload = this.createWeeklyTeamsPayload(events, startDate, endDate, scope);
+    return this.sendTeamsNotification(webhookUrl, payload);
+  }
+
+  static async sendWeeklyEventsNotificationWithError(
+    events: Event[], 
+    webhookUrl: string, 
+    startDate: string, 
+    endDate: string,
+    scope: 'current_week' | 'next_week'
+  ): Promise<{ success: boolean; error?: string }> {
+    const payload = this.createWeeklyTeamsPayload(events, startDate, endDate, scope);
     return this.sendTeamsNotificationWithError(webhookUrl, payload);
   }
 }
