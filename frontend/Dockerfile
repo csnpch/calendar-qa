@@ -1,8 +1,25 @@
 # Frontend Dockerfile
+# Build stage
+FROM node:18-alpine AS builder
+WORKDIR /app
+
+# Accept build argument for API URL
+ARG VITE_API_BASE_URL=http://192.168.42.106:3000
+ENV VITE_API_BASE_URL=$VITE_API_BASE_URL
+
+# Copy package files
+COPY package*.json ./
+RUN npm install
+
+# Copy source code and build
+COPY . .
+RUN npm run build
+
+# Production stage
 FROM nginx:alpine
 
-# Copy pre-built dist folder
-COPY dist /usr/share/nginx/html
+# Copy built files from builder stage
+COPY --from=builder /app/dist /usr/share/nginx/html
 
 # Create nginx config for SPA
 RUN echo 'server { \
