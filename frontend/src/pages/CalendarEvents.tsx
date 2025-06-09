@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { CalendarGrid } from '@/components/CalendarGrid';
 import { EventModal } from '@/components/EventModal';
 import { EventDetailsModal } from '@/components/EventDetailsModal';
+import { EventTypeLegend } from '@/components/EventTypeLegend';
 import { useCalendarData } from '@/hooks/useCalendarData';
 import { Event } from '@/services/apiDatabase';
 import { Layout } from '@/components/Layout';
@@ -124,6 +125,13 @@ const CalendarEvents = () => {
     loadEventsForMonth(newDate.getFullYear(), newDate.getMonth());
   };
 
+  const handleTodayClick = () => {
+    const today = new Date();
+    const newDate = new Date(today.getFullYear(), today.getMonth(), 1);
+    setCurrentDate(newDate);
+    loadEventsForMonth(newDate.getFullYear(), newDate.getMonth());
+  };
+
   useEffect(() => {
     if (!isModalOpen && !isDetailsModalOpen) {
       document.body.style.overflow = 'unset';
@@ -152,7 +160,7 @@ const CalendarEvents = () => {
               <div className="text-gray-500 dark:text-gray-300">Loading calendar data...</div>
             </div>
           ) : (
-            <div>
+            <div className="space-y-6">
               <CalendarGrid
                 currentDate={currentDate}
                 events={events}
@@ -160,7 +168,9 @@ const CalendarEvents = () => {
                 onCreateEvent={handleCreateEvent}
                 onPrevMonth={handlePrevMonth}
                 onNextMonth={handleNextMonth}
+                onTodayClick={handleTodayClick}
               />
+              <EventTypeLegend />
             </div>
           )}
         </div>

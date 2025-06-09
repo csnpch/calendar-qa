@@ -44,12 +44,12 @@ export const Navbar: React.FC<NavbarProps> = ({ currentPage = 'calendar-events' 
           <Button
             variant="ghost"
             onClick={() => navigate('/')}
-            className="flex items-center space-x-2 sm:space-x-3 md:space-x-4 p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+            className="flex items-center space-x-0.5 sm:space-x-1.5 md:space-x-2.5 p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
           >
             <div className="p-1.5 sm:p-2 md:p-3 bg-blue-100 dark:bg-gray-700 rounded-lg">
               <Building2 className="w-5 h-5 sm:w-6 sm:h-6 md:w-8 md:h-8 text-blue-600 dark:text-gray-200" />
             </div>
-            <h1 className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold text-gray-900 dark:text-white">Calendar QA</h1>
+            <h1 className="text-base sm:text-lg md:text-xl lg:text-2xl font-bold text-gray-900 dark:text-white">Calendar QA</h1>
           </Button>
           
           {/* Navigation Menu */}

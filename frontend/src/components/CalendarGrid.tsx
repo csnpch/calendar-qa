@@ -12,6 +12,7 @@ interface CalendarGridProps {
   onCreateEvent: (date: Date) => void;
   onPrevMonth: () => void;
   onNextMonth: () => void;
+  onTodayClick: () => void;
 }
 
 const DAYS_OF_WEEK = ['อา', 'จ', 'อ', 'พ', 'พฤ', 'ศ', 'ส'];
@@ -21,17 +22,17 @@ const MONTHS = [
 ];
 
 const LEAVE_TYPE_COLORS = {
-  'vacation': 'bg-blue-100 dark:bg-gray-800/40 text-blue-800 dark:text-gray-200 border-blue-200 dark:border-gray-600',
+  'vacation': 'bg-sky-100 dark:bg-sky-800/40 text-sky-800 dark:text-sky-200 border-sky-200 dark:border-sky-600',
   'personal': 'bg-green-100 dark:bg-green-800/40 text-green-800 dark:text-green-200 border-green-200 dark:border-green-600',
   'sick': 'bg-red-100 dark:bg-red-800/40 text-red-800 dark:text-red-200 border-red-200 dark:border-red-600',
   'absent': 'bg-red-100 dark:bg-red-800/40 text-red-800 dark:text-red-200 border-red-200 dark:border-red-600',
   'maternity': 'bg-pink-100 dark:bg-pink-800/40 text-pink-800 dark:text-pink-200 border-pink-200 dark:border-pink-600',
   'paternity': 'bg-cyan-100 dark:bg-cyan-800/40 text-cyan-800 dark:text-cyan-200 border-cyan-200 dark:border-cyan-600',
-  'bereavement': 'bg-gray-100 dark:bg-gray-700/40 text-gray-800 dark:text-gray-200 border-gray-200 dark:border-gray-600',
+  'bereavement': 'bg-stone-100 dark:bg-stone-800/40 text-stone-800 dark:text-stone-200 border-stone-200 dark:border-stone-600',
   'study': 'bg-orange-100 dark:bg-orange-800/40 text-orange-800 dark:text-orange-200 border-orange-200 dark:border-orange-600',
   'military': 'bg-teal-100 dark:bg-teal-800/40 text-teal-800 dark:text-teal-200 border-teal-200 dark:border-teal-600',
   'sabbatical': 'bg-indigo-100 dark:bg-indigo-800/40 text-indigo-800 dark:text-indigo-200 border-indigo-200 dark:border-indigo-600',
-  'unpaid': 'bg-slate-100 dark:bg-slate-700/40 text-slate-800 dark:text-slate-200 border-slate-200 dark:border-slate-600',
+  'unpaid': 'bg-neutral-100 dark:bg-neutral-800/40 text-neutral-800 dark:text-neutral-200 border-neutral-200 dark:border-neutral-600',
   'compensatory': 'bg-emerald-100 dark:bg-emerald-800/40 text-emerald-800 dark:text-emerald-200 border-emerald-200 dark:border-emerald-600',
   'other': 'bg-purple-100 dark:bg-purple-800/40 text-purple-800 dark:text-purple-200 border-purple-200 dark:border-purple-600'
 };
@@ -58,7 +59,8 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({
   onDateClick,
   onCreateEvent,
   onPrevMonth,
-  onNextMonth
+  onNextMonth,
+  onTodayClick
 }) => {
   const [popoverOpen, setPopoverOpen] = useState(false);
   const [selectedPopoverDate, setSelectedPopoverDate] = useState<Date | null>(null);
@@ -138,6 +140,9 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({
             </h2>
           </div>
           <div className="flex space-x-1">
+            <Button variant="outline" size="sm" onClick={onTodayClick} className="h-6 sm:h-7 px-2 text-xs sm:text-sm text-gray-500 hover:text-gray-700 dark:text-white dark:hover:text-gray-300 border-gray-200 dark:border-gray-600">
+              Today
+            </Button>
             <Button variant="outline" size="sm" onClick={onPrevMonth} className="h-6 w-6 sm:h-7 sm:w-7 p-0 text-gray-500 hover:text-gray-700 dark:text-white dark:hover:text-gray-300 border-gray-200 dark:border-gray-600">
               <ChevronLeft className="w-3 h-3 sm:w-4 sm:h-4" />
             </Button>
