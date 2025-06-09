@@ -28,7 +28,9 @@
       "Bash(docker-compose down:*)",
       "Bash(docker-compose:*)",
       "Bash(git rm:*)",
-      "Bash(ls:*)"
+      "Bash(ls:*)",
+      "Bash(docker compose:*)",
+      "Bash(kill:*)"
     ],
     "deny": []
   }
