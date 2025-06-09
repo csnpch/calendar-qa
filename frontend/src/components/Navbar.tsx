@@ -1,25 +1,32 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
 import { useTheme } from '@/contexts/ThemeContext';
+import { useAuth } from '@/contexts/AuthContext';
+import { AdminLoginModal } from './AdminLoginModal';
 import { 
   CalendarDays, 
   Building2, 
   Users, 
   Settings, 
-  MoreVertical, 
+  MoreVertical,
   Moon, 
-  Sun 
+  Sun,
+  Shield,
+  LayoutDashboard,
+  LogOut
 } from 'lucide-react';
 
 interface NavbarProps {
-  currentPage?: 'home' | 'calendar-events' | 'employees' | 'cronjob-config';
+  currentPage?: 'calendar-events' | 'dashboard' | 'employees' | 'cronjob-config';
 }
 
-export const Navbar: React.FC<NavbarProps> = ({ currentPage = 'home' }) => {
+export const Navbar: React.FC<NavbarProps> = ({ currentPage = 'calendar-events' }) => {
   const navigate = useNavigate();
   const { theme, toggleTheme } = useTheme();
+  const { isAdminAuthenticated, logout } = useAuth();
+  const [showLoginModal, setShowLoginModal] = useState(false);
 
   const isCurrentPage = (page: string) => currentPage === page;
 
@@ -48,29 +55,42 @@ export const Navbar: React.FC<NavbarProps> = ({ currentPage = 'home' }) => {
           {/* Navigation Menu */}
           <div className="flex items-center gap-4">
             <nav className="hidden md:flex items-center gap-6">
-              <Button
-                variant="ghost"
-                onClick={() => navigate('/')}
-                className={getButtonClasses('home')}
-              >
-                หน้าแรก
-              </Button>
-              <Button
-                variant="ghost"
-                onClick={() => navigate('/calendar-events')}
-                className={getButtonClasses('calendar-events')}
-              >
-                <CalendarDays className="w-4 h-4 mr-2" />
-                ปฏิทินเหตุการณ์
-              </Button>
-              <Button
-                variant="ghost"
-                onClick={() => navigate('/employees')}
-                className={getButtonClasses('employees')}
-              >
-                <Users className="w-4 h-4 mr-2" />
-                จัดการพนักงาน
-              </Button>
+              {isAdminAuthenticated && (
+                <>
+                  <Button
+                    variant="ghost"
+                    onClick={() => navigate('/dashboard')}
+                    className={getButtonClasses('dashboard')}
+                  >
+                    <LayoutDashboard className="w-4 h-4 mr-2" />
+                    แดชบอร์ด
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    onClick={() => navigate('/')}
+                    className={getButtonClasses('calendar-events')}
+                  >
+                    <CalendarDays className="w-4 h-4 mr-2" />
+                    ปฏิทินเหตุการณ์
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    onClick={() => navigate('/employees')}
+                    className={getButtonClasses('employees')}
+                  >
+                    <Users className="w-4 h-4 mr-2" />
+                    จัดการพนักงาน
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    onClick={() => navigate('/cronjob-config')}
+                    className={getButtonClasses('cronjob-config')}
+                  >
+                    <Settings className="w-4 h-4 mr-2" />
+                    ตั้งค่า Cronjob
+                  </Button>
+                </>
+              )}
             </nav>
             
             <div className="flex items-center gap-2">
@@ -85,10 +105,20 @@ export const Navbar: React.FC<NavbarProps> = ({ currentPage = 'home' }) => {
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="p-2">
-                  <DropdownMenuItem onClick={() => navigate('/cronjob-config')} className="px-4 py-3">
-                    <Settings className="w-4 h-4 mr-2" />
-                    ตั้งค่า Cronjob
-                  </DropdownMenuItem>
+                  {!isAdminAuthenticated ? (
+                    <DropdownMenuItem 
+                      onClick={() => setShowLoginModal(true)} 
+                      className="px-4 py-3"
+                    >
+                      <Shield className="w-4 h-4 mr-2" />
+                      Management
+                    </DropdownMenuItem>
+                  ) : (
+                    <DropdownMenuItem onClick={logout} className="px-4 py-3 text-red-600">
+                      <LogOut className="w-4 h-4 mr-2" />
+                      Logout
+                    </DropdownMenuItem>
+                  )}
                 </DropdownMenuContent>
               </DropdownMenu>
               
@@ -107,6 +137,17 @@ export const Navbar: React.FC<NavbarProps> = ({ currentPage = 'home' }) => {
           </div>
         </div>
       </div>
+      
+      <AdminLoginModal
+        key={showLoginModal ? 'open' : 'closed'}
+        isOpen={showLoginModal}
+        onClose={() => {
+          setShowLoginModal(false);
+        }}
+        onSuccess={() => {
+          setShowLoginModal(false);
+        }}
+      />
     </div>
   );
 };
