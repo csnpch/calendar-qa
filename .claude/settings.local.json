@@ -37,7 +37,12 @@
       "Bash(timeout:*)",
       "Bash(mkdir:*)",
       "Bash(DATABASE_URL=\"file:./data/calendar.db\" npx prisma db push)",
-      "Bash(git checkout:*)"
+      "Bash(git checkout:*)",
+      "Bash(sudo docker compose:*)",
+      "Bash(docker system prune:*)",
+      "Bash(docker login:*)",
+      "Bash(docker pull:*)",
+      "Bash(sudo docker-compose:*)"
     ],
     "deny": []
   }

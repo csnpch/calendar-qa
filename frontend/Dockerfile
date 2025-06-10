@@ -1,6 +1,6 @@
 # Frontend Dockerfile
 # Build stage
-FROM node:18-alpine AS builder
+FROM node:20-slim AS builder
 WORKDIR /app
 
 # Accept build argument for API URL
@@ -9,11 +9,12 @@ ENV VITE_API_BASE_URL=$VITE_API_BASE_URL
 
 # Copy package files
 COPY package*.json ./
-RUN npm install
+RUN apt-get update && apt-get install -y python3 make g++ && rm -rf /var/lib/apt/lists/*
+RUN npm ci --legacy-peer-deps
 
 # Copy source code and build
 COPY . .
-RUN npm run build
+RUN npm run build --verbose
 
 # Production stage
 FROM nginx:alpine
