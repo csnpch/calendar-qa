@@ -63,7 +63,7 @@ class DatabaseConnection {
             notification_days INTEGER NOT NULL DEFAULT 1, -- Days ahead to notify (0=today, 1=tomorrow)
             notification_type TEXT NOT NULL DEFAULT 'daily' CHECK (notification_type IN ('daily', 'weekly')),
             weekly_days TEXT, -- JSON array of day names for weekly notifications
-            weekly_scope TEXT DEFAULT 'current_week' CHECK (weekly_scope IN ('current_week', 'next_week')),
+            weekly_scope TEXT DEFAULT 'current' CHECK (weekly_scope IN ('current', 'next')),
             created_at TEXT NOT NULL DEFAULT (datetime('now')),
             updated_at TEXT NOT NULL DEFAULT (datetime('now'))
         );
@@ -89,10 +89,51 @@ class DatabaseConnection {
       `;
       
       this.instance.exec(schema);
+      
+      // Run migration for existing databases
+      this.runMigrations();
+      
       console.log('Database schema initialized successfully');
     } catch (error) {
       console.error('Failed to initialize database schema:', error);
       throw error;
+    }
+  }
+
+  private static runMigrations(): void {
+    if (!this.instance) return;
+    
+    try {
+      console.log('Running database migrations...');
+      
+      // Check if cronjob_config table exists and get its columns
+      const tableInfo = this.instance.prepare("PRAGMA table_info(cronjob_config)").all();
+      const existingColumns = tableInfo.map((col: any) => col.name);
+      
+      // Add missing columns if they don't exist
+      if (!existingColumns.includes('notification_type')) {
+        console.log('Adding notification_type column...');
+        this.instance.exec("ALTER TABLE cronjob_config ADD COLUMN notification_type TEXT NOT NULL DEFAULT 'daily' CHECK (notification_type IN ('daily', 'weekly'))");
+      }
+      
+      if (!existingColumns.includes('weekly_days')) {
+        console.log('Adding weekly_days column...');
+        this.instance.exec("ALTER TABLE cronjob_config ADD COLUMN weekly_days TEXT");
+      }
+      
+      if (!existingColumns.includes('weekly_scope')) {
+        console.log('Adding weekly_scope column...');
+        this.instance.exec("ALTER TABLE cronjob_config ADD COLUMN weekly_scope TEXT DEFAULT 'current' CHECK (weekly_scope IN ('current', 'next'))");
+      }
+      
+      // Fix any existing data with wrong weekly_scope values
+      this.instance.exec("UPDATE cronjob_config SET weekly_scope = 'current' WHERE weekly_scope = 'current_week'");
+      this.instance.exec("UPDATE cronjob_config SET weekly_scope = 'next' WHERE weekly_scope = 'next_week'");
+      
+      console.log('Migrations completed successfully');
+    } catch (error) {
+      console.error('Migration failed:', error);
+      // Don't throw - allow server to start even if migration fails
     }
   }
 

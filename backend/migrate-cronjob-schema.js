@@ -30,7 +30,7 @@ function migrateCronjobSchema() {
     
     if (!existingColumns.includes('weekly_scope')) {
       console.log('Adding weekly_scope column...');
-      db.exec("ALTER TABLE cronjob_config ADD COLUMN weekly_scope TEXT DEFAULT 'current_week' CHECK (weekly_scope IN ('current_week', 'next_week'))");
+      db.exec("ALTER TABLE cronjob_config ADD COLUMN weekly_scope TEXT DEFAULT 'current' CHECK (weekly_scope IN ('current', 'next'))");
     }
     
     console.log('Migration completed successfully!');
