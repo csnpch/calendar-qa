@@ -1,0 +1,57 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Employee {
+  id        Int      @id @default(autoincrement())
+  name      String
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  
+  events Event[]
+
+  @@map("employees")
+}
+
+model Event {
+  id           Int      @id @default(autoincrement())
+  employeeId   Int      @map("employee_id")
+  employeeName String   @map("employee_name")
+  leaveType    String   @map("leave_type")
+  date         String
+  description  String?
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+  
+  employee Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+
+  @@map("events")
+  @@index([employeeId])
+  @@index([date])
+  @@index([leaveType])
+}
+
+model CronjobConfig {
+  id               Int      @id @default(autoincrement())
+  name             String   @unique
+  enabled          Boolean  @default(true)
+  scheduleTime     String   @map("schedule_time")
+  webhookUrl       String   @map("webhook_url")
+  notificationDays Int      @default(1) @map("notification_days")
+  notificationType String   @default("daily") @map("notification_type")
+  weeklyDays       String?  @map("weekly_days")
+  weeklyScope      String?  @default("current_week") @map("weekly_scope")
+  createdAt        DateTime @default(now()) @map("created_at")
+  updatedAt        DateTime @updatedAt @map("updated_at")
+
+  @@map("cronjob_config")
+  @@index([enabled])
+}

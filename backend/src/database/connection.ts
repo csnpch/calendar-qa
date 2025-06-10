@@ -61,6 +61,9 @@ class DatabaseConnection {
             schedule_time TEXT NOT NULL, -- Format: "HH:MM"
             webhook_url TEXT NOT NULL,
             notification_days INTEGER NOT NULL DEFAULT 1, -- Days ahead to notify (0=today, 1=tomorrow)
+            notification_type TEXT NOT NULL DEFAULT 'daily' CHECK (notification_type IN ('daily', 'weekly')),
+            weekly_days TEXT, -- JSON array of day names for weekly notifications
+            weekly_scope TEXT DEFAULT 'current_week' CHECK (weekly_scope IN ('current_week', 'next_week')),
             created_at TEXT NOT NULL DEFAULT (datetime('now')),
             updated_at TEXT NOT NULL DEFAULT (datetime('now'))
         );

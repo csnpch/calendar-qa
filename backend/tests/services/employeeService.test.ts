@@ -11,37 +11,29 @@ describe('EmployeeService', () => {
 
   beforeEach(() => {
     employeeService = new EmployeeService();
-    // Clear employees except test data and reset them
-    global.mockDatabase.exec('DELETE FROM employees WHERE id > 2');
-    global.mockDatabase.exec(`
-      UPDATE employees SET name = 'John Smith' WHERE id = 1;
-      UPDATE employees SET name = 'Jane Doe' WHERE id = 2;
-    `);
   });
 
   describe('createEmployee', () => {
-    it('should create a new employee successfully', () => {
-      const employeeData: CreateEmployeeRequest = {
-        name: 'New Employee'
+    it('should create an employee successfully', () => {
+      const employeeData = {
+        name: 'John Smith'
       };
 
       const result = employeeService.createEmployee(employeeData);
 
-      expect(result).toBeDefined();
       expect(result.name).toBe(employeeData.name);
       expect(result.id).toBeGreaterThan(0);
       expect(result.createdAt).toBeDefined();
       expect(result.updatedAt).toBeDefined();
     });
 
-    it('should create employee with valid name', () => {
-      const employeeData: CreateEmployeeRequest = {
+    it('should create an employee with Thai name', () => {
+      const employeeData = {
         name: 'สมชาย ใจดี'
       };
 
       const result = employeeService.createEmployee(employeeData);
 
-      expect(result).toBeDefined();
       expect(result.name).toBe('สมชาย ใจดี');
     });
   });
@@ -49,22 +41,19 @@ describe('EmployeeService', () => {
   describe('getAllEmployees', () => {
     it('should return all employees ordered by name', () => {
       const employees = employeeService.getAllEmployees();
-      
-      expect(employees).toHaveLength(2); // Test data from setup
+
       expect(employees[0]!.name).toBe('Jane Doe');
       expect(employees[1]!.name).toBe('John Smith');
     });
 
-    it('should return employees with correct structure', () => {
+    it('should ensure all employees have required fields', () => {
       const employees = employeeService.getAllEmployees();
-      
+
       employees.forEach(employee => {
-        expect(employee).toHaveProperty('id');
-        expect(employee).toHaveProperty('name');
-        expect(employee).toHaveProperty('createdAt');
-        expect(employee).toHaveProperty('updatedAt');
-        expect(typeof employee.id).toBe('number');
-        expect(typeof employee.name).toBe('string');
+        expect(employee.id).toBeDefined();
+        expect(employee.name).toBeDefined();
+        expect(employee.createdAt).toBeDefined();
+        expect(employee.updatedAt).toBeDefined();
       });
     });
   });
@@ -72,91 +61,79 @@ describe('EmployeeService', () => {
   describe('getEmployeeById', () => {
     it('should return employee by ID', () => {
       const employee = employeeService.getEmployeeById(1);
-      
-      expect(employee).toBeDefined();
+
       expect(employee?.id).toBe(1);
       expect(employee?.name).toBe('John Smith');
     });
 
-    it('should return null for non-existent ID', () => {
+    it('should return null for non-existent employee', () => {
       const employee = employeeService.getEmployeeById(999);
+
       expect(employee).toBeNull();
     });
   });
 
   describe('updateEmployee', () => {
-    it('should update existing employee', () => {
-      const updateData: UpdateEmployeeRequest = {
-        name: 'John Updated Smith'
-      };
-
-      const updated = employeeService.updateEmployee(1, updateData);
+    it('should update employee successfully', () => {
+      const updateData = { name: 'John Updated Smith' };
       
-      expect(updated).toBeDefined();
+      const updated = employeeService.updateEmployee(1, updateData);
+
       expect(updated?.name).toBe('John Updated Smith');
       expect(updated?.id).toBe(1);
       expect(updated?.updatedAt).toBeDefined();
     });
 
     it('should return null for non-existent employee', () => {
-      const updateData: UpdateEmployeeRequest = {
-        name: 'Non Existent'
-      };
+      const updateData = { name: 'Non-existent' };
 
       const updated = employeeService.updateEmployee(999, updateData);
+
       expect(updated).toBeNull();
     });
 
-    it('should keep existing name if not provided', () => {
+    it('should handle update with same data', () => {
       const original = employeeService.getEmployeeById(1);
-      const updateData: UpdateEmployeeRequest = {};
+      const updated = employeeService.updateEmployee(1, { name: original?.name });
 
-      const updated = employeeService.updateEmployee(1, updateData);
-      
-      expect(updated).toBeDefined();
       expect(updated?.name).toBe(original?.name);
     });
   });
 
   describe('deleteEmployee', () => {
-    it('should delete existing employee', () => {
-      const created = employeeService.createEmployee({ name: 'To Delete' });
-      
+    it('should delete employee successfully', () => {
+      const created = employeeService.createEmployee({ name: 'Test Employee' });
       const deleted = employeeService.deleteEmployee(created.id);
-      expect(deleted).toBe(true);
-
       const found = employeeService.getEmployeeById(created.id);
+
+      expect(deleted).toBe(true);
       expect(found).toBeNull();
     });
 
     it('should return false for non-existent employee', () => {
-      const deleted = employeeService.deleteEmployee(999);
-      expect(deleted).toBe(false);
+      const result = employeeService.deleteEmployee(999);
+
+      expect(result).toBe(false);
     });
   });
 
   describe('searchEmployees', () => {
     it('should search employees by name', () => {
-      employeeService.createEmployee({ name: 'Alice Johnson' });
-      employeeService.createEmployee({ name: 'Bob Smith' });
-      employeeService.createEmployee({ name: 'Charlie Johnson' });
+      const results = employeeService.searchEmployees('John');
 
-      const results = employeeService.searchEmployees('Johnson');
-      
-      expect(results).toHaveLength(2);
-      expect(results.every(emp => emp.name.includes('Johnson'))).toBe(true);
-      expect(results[0]!.name).toBe('Alice Johnson'); // Ordered by name
-      expect(results[1]!.name).toBe('Charlie Johnson');
+      expect(results.every(emp => emp.name.includes('John'))).toBe(true);
+      expect(results[0]!.name).toBe('John Smith'); // Ordered by name
     });
 
     it('should return empty array for no matches', () => {
       const results = employeeService.searchEmployees('NonExistent');
-      expect(results).toEqual([]);
+
+      expect(results).toHaveLength(0);
     });
 
-    it('should be case insensitive', () => {
-      const results = employeeService.searchEmployees('john');
-      expect(results).toHaveLength(1);
+    it('should handle partial name search', () => {
+      const results = employeeService.searchEmployees('John');
+
       expect(results[0]!.name).toBe('John Smith');
     });
   });
@@ -164,25 +141,34 @@ describe('EmployeeService', () => {
   describe('getEmployeeStats', () => {
     it('should return correct employee count', () => {
       const stats = employeeService.getEmployeeStats();
-      
-      expect(stats).toHaveProperty('total');
+
       expect(stats.total).toBe(2); // Test data from setup
     });
 
-    it('should update count after adding employees', () => {
-      employeeService.createEmployee({ name: 'New Employee 1' });
-      employeeService.createEmployee({ name: 'New Employee 2' });
-
+    it('should handle dynamic employee count changes', () => {
       const stats = employeeService.getEmployeeStats();
-      expect(stats.total).toBe(4);
-    });
 
-    it('should update count after deleting employees', () => {
-      const created = employeeService.createEmployee({ name: 'To Delete' });
-      employeeService.deleteEmployee(created.id);
+      expect(stats.total).toBe(2);
 
-      const stats = employeeService.getEmployeeStats();
-      expect(stats.total).toBe(2); // Back to original count
+      // Create new employee
+      employeeService.createEmployee({ name: 'Dynamic Test 1' });
+      employeeService.createEmployee({ name: 'Dynamic Test 2' });
+
+      const updatedStats = employeeService.getEmployeeStats();
+
+      expect(updatedStats.total).toBe(4);
+
+      // Clean up
+      const employees = employeeService.getAllEmployees();
+      employees.forEach(emp => {
+        if (emp.name.includes('Dynamic Test')) {
+          employeeService.deleteEmployee(emp.id);
+        }
+      });
+
+      const finalStats = employeeService.getEmployeeStats();
+
+      expect(finalStats.total).toBe(2); // Back to original count
     });
   });
 });

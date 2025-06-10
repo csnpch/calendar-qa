@@ -58,9 +58,20 @@ global.mockDatabase.exec(`
 `);
 
 beforeEach(() => {
-  // Clean events and cronjob_config tables before each test
+  // Clean all tables before each test
   global.mockDatabase.exec('DELETE FROM events');
   global.mockDatabase.exec('DELETE FROM cronjob_config');
+  global.mockDatabase.exec('DELETE FROM employees');
+  
+  // Reset auto-increment
+  global.mockDatabase.exec("DELETE FROM sqlite_sequence WHERE name='employees'");
+  
+  // Re-insert test data
+  global.mockDatabase.exec(`
+    INSERT INTO employees (name) VALUES 
+      ('John Smith'),
+      ('Jane Doe');
+  `);
 });
 
 afterAll(() => {

@@ -81,14 +81,6 @@ export const Navbar: React.FC<NavbarProps> = ({ currentPage = 'calendar-events' 
                     <Users className="w-4 h-4 mr-2" />
                     จัดการพนักงาน
                   </Button>
-                  <Button
-                    variant="ghost"
-                    onClick={() => navigate('/cronjob-config')}
-                    className={getButtonClasses('cronjob-config')}
-                  >
-                    <Settings className="w-4 h-4 mr-2" />
-                    ตั้งค่า Cronjob
-                  </Button>
                 </>
               )}
             </nav>
@@ -114,10 +106,20 @@ export const Navbar: React.FC<NavbarProps> = ({ currentPage = 'calendar-events' 
                       Management
                     </DropdownMenuItem>
                   ) : (
-                    <DropdownMenuItem onClick={logout} className="px-4 py-3 text-red-600">
-                      <LogOut className="w-4 h-4 mr-2" />
-                      Logout
-                    </DropdownMenuItem>
+                    <>
+                      <DropdownMenuItem 
+                        onClick={() => navigate('/cronjob-config')} 
+                        className="px-4 py-3"
+                      >
+                        <Settings className="w-4 h-4 mr-2" />
+                        ตั้งค่า Cronjob
+                      </DropdownMenuItem>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem onClick={() => { logout(); navigate('/'); }} className="px-4 py-3 text-red-600">
+                        <LogOut className="w-4 h-4 mr-2" />
+                        Logout
+                      </DropdownMenuItem>
+                    </>
                   )}
                 </DropdownMenuContent>
               </DropdownMenu>
