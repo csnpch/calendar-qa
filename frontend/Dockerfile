@@ -1,6 +1,6 @@
 # Frontend Dockerfile
 # Build stage
-FROM node:20-slim AS builder
+FROM oven/bun:1-alpine AS builder
 WORKDIR /app
 
 # Accept build argument for API URL
@@ -8,13 +8,12 @@ ARG VITE_API_BASE_URL=http://192.168.42.106:3000
 ENV VITE_API_BASE_URL=$VITE_API_BASE_URL
 
 # Copy package files
-COPY package*.json ./
-RUN apt-get update && apt-get install -y python3 make g++ && rm -rf /var/lib/apt/lists/*
-RUN npm ci --legacy-peer-deps
+COPY package*.json bun.lockb ./
+RUN bun install --frozen-lockfile
 
 # Copy source code and build
 COPY . .
-RUN npm run build --verbose
+RUN bun run build
 
 # Production stage
 FROM nginx:alpine
