@@ -49,7 +49,7 @@ export default function CronjobConfig() {
     notification_days: 1,
     notification_type: 'daily' as 'daily' | 'weekly',
     weekly_days: [] as number[],
-    weekly_scope: 'current_week' as 'current_week' | 'next_week'
+    weekly_scope: 'current' as 'current' | 'next'
   });
 
   const loadConfigs = async () => {
@@ -259,7 +259,7 @@ export default function CronjobConfig() {
       notification_days: config.notification_type === 'daily' ? config.notification_days + 1 : config.notification_days,
       notification_type: config.notification_type || 'daily',
       weekly_days: config.weekly_days || [5],
-      weekly_scope: config.weekly_scope || 'current_week'
+      weekly_scope: config.weekly_scope === 'current_week' ? 'current' : config.weekly_scope === 'next_week' ? 'next' : config.weekly_scope || 'current'
     });
     setIsEditDialogOpen(true);
   };
@@ -273,7 +273,7 @@ export default function CronjobConfig() {
       notification_days: 1,
       notification_type: 'daily',
       weekly_days: [5],
-      weekly_scope: 'current_week'
+      weekly_scope: 'current'
     });
   };
 
@@ -443,14 +443,14 @@ export default function CronjobConfig() {
                       <Label htmlFor="weekly_scope">Week Scope <span className="text-red-500">*</span></Label>
                       <Select
                         value={formData.weekly_scope}
-                        onValueChange={(value: 'current_week' | 'next_week') => setFormData(prev => ({ ...prev, weekly_scope: value }))}
+                        onValueChange={(value: 'current' | 'next') => setFormData(prev => ({ ...prev, weekly_scope: value }))}
                       >
                         <SelectTrigger>
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="current_week">สัปดาห์นี้ (Current Week)</SelectItem>
-                          <SelectItem value="next_week">สัปดาห์หน้า (Next Week)</SelectItem>
+                          <SelectItem value="current">สัปดาห์นี้ (Current Week)</SelectItem>
+                          <SelectItem value="next">สัปดาห์หน้า (Next Week)</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
@@ -529,7 +529,7 @@ export default function CronjobConfig() {
                     </p>
                     <p className="text-gray-900 dark:text-white">
                       {config.notification_type === 'weekly' 
-                        ? (config.weekly_scope === 'current_week' ? 'สัปดาห์นี้' : 'สัปดาห์หน้า')
+                        ? (config.weekly_scope === 'current' || config.weekly_scope === 'current_week' ? 'สัปดาห์นี้' : 'สัปดาห์หน้า')
                         : (config.notification_days === -1 ? 'Today' : 
                            config.notification_days === 0 ? 'Tomorrow' : 
                            `${config.notification_days + 1} days ahead`)
@@ -677,14 +677,14 @@ export default function CronjobConfig() {
                   <Label htmlFor="edit-weekly_scope">Week Scope <span className="text-red-500">*</span></Label>
                   <Select
                     value={formData.weekly_scope}
-                    onValueChange={(value: 'current_week' | 'next_week') => setFormData(prev => ({ ...prev, weekly_scope: value }))}
+                    onValueChange={(value: 'current' | 'next') => setFormData(prev => ({ ...prev, weekly_scope: value }))}
                   >
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="current_week">สัปดาห์นี้ (Current Week)</SelectItem>
-                      <SelectItem value="next_week">สัปดาห์หน้า (Next Week)</SelectItem>
+                      <SelectItem value="current">สัปดาห์นี้ (Current Week)</SelectItem>
+                      <SelectItem value="next">สัปดาห์หน้า (Next Week)</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
