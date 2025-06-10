@@ -25,7 +25,7 @@ describe('CronjobService - Invalid Webhook URL Tests', () => {
       // Create test cronjob config with invalid webhook URL (google.com)
       global.mockDatabase.exec(`
         INSERT INTO cronjob_config (name, enabled, schedule_time, webhook_url, notification_days, notification_type, weekly_days, weekly_scope)
-        VALUES ('Test Invalid Webhook', 1, '09:00', 'https://google.com/', 1, 'daily', NULL, 'current_week')
+        VALUES ('Test Invalid Webhook', 1, '09:00', 'https://google.com/', 1, 'daily', NULL, 'current')
       `);
 
       // Mock Google's 405 response (exactly what google.com returns)
@@ -84,14 +84,14 @@ describe('CronjobService - Invalid Webhook URL Tests', () => {
         notification_days: 0,
         notification_type: 'weekly' as const,
         weekly_days: [1, 2, 3, 4, 5], // Monday to Friday
-        weekly_scope: 'current_week' as const
+        weekly_scope: 'current' as const
       };
 
       const createdConfig = cronjobService.createConfig(configData);
 
       expect(createdConfig.notification_type).toBe('weekly');
       expect(createdConfig.weekly_days).toEqual([1, 2, 3, 4, 5]);
-      expect(createdConfig.weekly_scope).toBe('current_week');
+      expect(createdConfig.weekly_scope).toBe('current');
     });
 
     it('should test weekly notification successfully with valid webhook', async () => {
@@ -104,7 +104,7 @@ describe('CronjobService - Invalid Webhook URL Tests', () => {
         notification_days: 0,
         notification_type: 'weekly',
         weekly_days: [5], // Friday only
-        weekly_scope: 'next_week'
+        weekly_scope: 'next'
       });
 
       // Mock successful webhook response
@@ -140,7 +140,7 @@ describe('CronjobService - Invalid Webhook URL Tests', () => {
         notification_days: 0,
         notification_type: 'weekly',
         weekly_days: [1, 3, 5],
-        weekly_scope: 'current_week'
+        weekly_scope: 'current'
       });
 
       // Mock console.error to suppress logs
@@ -168,7 +168,7 @@ describe('CronjobService - Invalid Webhook URL Tests', () => {
         notification_days: 1,
         notification_type: 'daily',
         weekly_days: undefined,
-        weekly_scope: 'current_week'
+        weekly_scope: 'current'
       });
 
       // Mock console.error to suppress logs
@@ -196,7 +196,7 @@ describe('CronjobService - Invalid Webhook URL Tests', () => {
         notification_days: 0,
         notification_type: 'daily',
         weekly_days: undefined,
-        weekly_scope: 'current_week'
+        weekly_scope: 'current'
       });
 
       // Mock HTTP error response
@@ -223,19 +223,19 @@ describe('CronjobService - Invalid Webhook URL Tests', () => {
         notification_days: 1,
         notification_type: 'daily',
         weekly_days: undefined,
-        weekly_scope: 'current_week'
+        weekly_scope: 'current'
       });
 
       // Update to convert to weekly
       const updatedConfig = cronjobService.updateConfig(dailyConfig.id, {
         notification_type: 'weekly',
         weekly_days: [1, 3, 5],
-        weekly_scope: 'next_week'
+        weekly_scope: 'next'
       });
 
       expect(updatedConfig?.notification_type).toBe('weekly');
       expect(updatedConfig?.weekly_days).toEqual([1, 3, 5]);
-      expect(updatedConfig?.weekly_scope).toBe('next_week');
+      expect(updatedConfig?.weekly_scope).toBe('next');
     });
   });
 
@@ -250,7 +250,7 @@ describe('CronjobService - Invalid Webhook URL Tests', () => {
         notification_days: 1,
         notification_type: 'daily',
         weekly_days: undefined,
-        weekly_scope: 'current_week'
+        weekly_scope: 'current'
       });
 
       cronjobService.createConfig({
@@ -261,7 +261,7 @@ describe('CronjobService - Invalid Webhook URL Tests', () => {
         notification_days: 0,
         notification_type: 'weekly',
         weekly_days: [5],
-        weekly_scope: 'current_week'
+        weekly_scope: 'current'
       });
 
       cronjobService.createConfig({
@@ -272,7 +272,7 @@ describe('CronjobService - Invalid Webhook URL Tests', () => {
         notification_days: 0,
         notification_type: 'weekly',
         weekly_days: [1, 5],
-        weekly_scope: 'next_week'
+        weekly_scope: 'next'
       });
 
       const allConfigs = cronjobService.getAllConfigs();
@@ -281,8 +281,8 @@ describe('CronjobService - Invalid Webhook URL Tests', () => {
       expect(allConfigs.length).toBeGreaterThanOrEqual(3);
       expect(weeklyConfigs).toHaveLength(2);
 
-      const currentWeekConfig = weeklyConfigs.find(c => c.weekly_scope === 'current_week');
-      const nextWeekConfig = weeklyConfigs.find(c => c.weekly_scope === 'next_week');
+      const currentWeekConfig = weeklyConfigs.find(c => c.weekly_scope === 'current');
+      const nextWeekConfig = weeklyConfigs.find(c => c.weekly_scope === 'next');
 
       expect(currentWeekConfig).toBeDefined();
       expect(currentWeekConfig?.weekly_days).toEqual([5]);

@@ -413,10 +413,10 @@ export class NotificationService {
     return this.sendTeamsNotificationWithError(webhookUrl, payload);
   }
 
-  static createWeeklyTeamsPayload(events: Event[], startDate: string, endDate: string, scope: 'current_week' | 'next_week'): TeamsNotificationPayload {
+  static createWeeklyTeamsPayload(events: Event[], startDate: string, endDate: string, scope: 'current' | 'next'): TeamsNotificationPayload {
     const startFormatted = this.formatDate(startDate);
     const endFormatted = this.formatDate(endDate);
-    const scopeText = scope === 'current_week' ? 'สัปดาห์นี้' : 'สัปดาห์หน้า';
+    const scopeText = scope === 'current' ? 'สัปดาห์นี้' : 'สัปดาห์หน้า';
     
     if (events.length === 0) {
       return {
@@ -566,7 +566,7 @@ export class NotificationService {
     webhookUrl: string, 
     startDate: string, 
     endDate: string,
-    scope: 'current_week' | 'next_week'
+    scope: 'current' | 'next'
   ): Promise<boolean> {
     const payload = this.createWeeklyTeamsPayload(events, startDate, endDate, scope);
     return this.sendTeamsNotification(webhookUrl, payload);
@@ -577,7 +577,7 @@ export class NotificationService {
     webhookUrl: string, 
     startDate: string, 
     endDate: string,
-    scope: 'current_week' | 'next_week'
+    scope: 'current' | 'next'
   ): Promise<{ success: boolean; error?: string }> {
     const payload = this.createWeeklyTeamsPayload(events, startDate, endDate, scope);
     return this.sendTeamsNotificationWithError(webhookUrl, payload);

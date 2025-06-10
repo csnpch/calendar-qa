@@ -55,7 +55,7 @@ export type CronjobConfig = {
   notification_days: number;
   notification_type: 'daily' | 'weekly';
   weekly_days?: number[];
-  weekly_scope?: 'current_week' | 'next_week';
+  weekly_scope?: 'current' | 'next';
   created_at: string;
   updated_at: string;
 };
