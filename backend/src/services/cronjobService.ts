@@ -60,7 +60,7 @@ export class CronjobService {
       config.notification_days,
       config.notification_type || 'daily',
       config.weekly_days ? JSON.stringify(config.weekly_days) : null,
-      config.weekly_scope || 'current_week'
+      config.weekly_scope || 'current'
     );
 
     return this.getConfigById(Number(result.lastInsertRowid))!;
@@ -182,11 +182,11 @@ export class CronjobService {
   }
 
   // Get week date range based on scope
-  private getWeekDateRange(scope: 'current_week' | 'next_week'): { startDate: string, endDate: string } {
+  private getWeekDateRange(scope: 'current' | 'next'): { startDate: string, endDate: string } {
     const now = moment().utcOffset('+07:00');
     
     let weekStart: moment.Moment;
-    if (scope === 'current_week') {
+    if (scope === 'current') {
       weekStart = now.clone().startOf('week');
     } else {
       weekStart = now.clone().add(1, 'week').startOf('week');
@@ -259,7 +259,7 @@ export class CronjobService {
       return true;
     }
 
-    const scope = config.weekly_scope || 'current_week';
+    const scope = config.weekly_scope || 'current';
     const { startDate, endDate } = this.getWeekDateRange(scope);
     const events = this.getEventsForDateRange(startDate, endDate);
     
@@ -344,7 +344,7 @@ export class CronjobService {
       return { success: true };
     }
 
-    const scope = config.weekly_scope || 'current_week';
+    const scope = config.weekly_scope || 'current';
     const { startDate, endDate } = this.getWeekDateRange(scope);
     const events = this.getEventsForDateRange(startDate, endDate);
     
@@ -383,7 +383,7 @@ export class CronjobService {
     // For testing, always send a notification regardless of events
     // This ensures the webhook URL is validated even when no events exist
     if (config.notification_type === 'weekly') {
-      const scope = config.weekly_scope || 'current_week';
+      const scope = config.weekly_scope || 'current';
       const { startDate, endDate } = this.getWeekDateRange(scope);
       const events = this.getEventsForDateRange(startDate, endDate);
       

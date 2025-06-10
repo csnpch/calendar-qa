@@ -121,7 +121,7 @@ export const cronjobRoutes = new Elysia({ prefix: '/cronjobs' })
         notification_days: t.Number({ minimum: -1, maximum: 7 }),
         notification_type: t.Optional(t.Union([t.Literal('daily'), t.Literal('weekly')])),
         weekly_days: t.Optional(t.Array(t.Number({ minimum: 0, maximum: 6 }))), // 0=Sunday, 1=Monday, ..., 6=Saturday
-        weekly_scope: t.Optional(t.Union([t.Literal('current_week'), t.Literal('next_week')]))
+        weekly_scope: t.Optional(t.Union([t.Literal('current'), t.Literal('next')]))
       }),
       detail: {
         summary: 'Create new cronjob configuration',
@@ -169,7 +169,7 @@ export const cronjobRoutes = new Elysia({ prefix: '/cronjobs' })
         notification_days: t.Optional(t.Number({ minimum: -1, maximum: 7 })),
         notification_type: t.Optional(t.Union([t.Literal('daily'), t.Literal('weekly')])),
         weekly_days: t.Optional(t.Array(t.Number({ minimum: 0, maximum: 6 }))), // 0=Sunday, 1=Monday, ..., 6=Saturday
-        weekly_scope: t.Optional(t.Union([t.Literal('current_week'), t.Literal('next_week')]))
+        weekly_scope: t.Optional(t.Union([t.Literal('current'), t.Literal('next')]))
       }),
       detail: {
         summary: 'Update cronjob configuration',
