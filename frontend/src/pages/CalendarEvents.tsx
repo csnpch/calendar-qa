@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { CalendarGrid } from '@/components/CalendarGrid';
 import { EventModal } from '@/components/EventModal';
 import { EventDetailsModal } from '@/components/EventDetailsModal';
-import { EventTypeLegend } from '@/components/EventTypeLegend';
 import { useCalendarData } from '@/hooks/useCalendarData';
 import { Event } from '@/services/apiDatabase';
 import { Layout } from '@/components/Layout';
@@ -160,18 +159,15 @@ const CalendarEvents = () => {
               <div className="text-gray-500 dark:text-gray-300">Loading calendar data...</div>
             </div>
           ) : (
-            <div className="space-y-6">
-              <CalendarGrid
-                currentDate={currentDate}
-                events={events}
-                onDateClick={handleDateClick}
-                onCreateEvent={handleCreateEvent}
-                onPrevMonth={handlePrevMonth}
-                onNextMonth={handleNextMonth}
-                onTodayClick={handleTodayClick}
-              />
-              <EventTypeLegend />
-            </div>
+            <CalendarGrid
+              currentDate={currentDate}
+              events={events}
+              onDateClick={handleDateClick}
+              onCreateEvent={handleCreateEvent}
+              onPrevMonth={handlePrevMonth}
+              onNextMonth={handleNextMonth}
+              onTodayClick={handleTodayClick}
+            />
           )}
         </div>
       </div>

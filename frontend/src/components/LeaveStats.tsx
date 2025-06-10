@@ -3,18 +3,12 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Event } from '@/services/apiDatabase';
 import { BarChart3, TrendingUp } from 'lucide-react';
+import { LEAVE_TYPE_LABELS } from '@/lib/utils';
 
 interface LeaveStatsProps {
   events: Event[];
   currentDate: Date;
 }
-
-const LEAVE_TYPE_LABELS = {
-  'vacation': 'ลาพักร้อน',
-  'personal': 'ลากิจ',
-  'sick': 'ลาป่วย',
-  'other': 'อื่นๆ'
-};
 
 const LEAVE_TYPE_COLORS = {
   'vacation': 'bg-blue-500',

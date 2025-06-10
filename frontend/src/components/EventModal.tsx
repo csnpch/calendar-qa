@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Combobox } from '@/components/ui/combobox';
 import { Textarea } from '@/components/ui/textarea';
 import { Event } from '@/services/apiDatabase';
-import { LEAVE_TYPE_LABELS } from '@/lib/utils';
+import { LEAVE_TYPE_LABELS, formatDate } from '@/lib/utils';
 
 interface EventModalProps {
   isOpen: boolean;
@@ -26,27 +26,8 @@ interface EventModalProps {
 
 const LEAVE_TYPES = Object.entries(LEAVE_TYPE_LABELS).map(([value, label]) => ({
   value,
-  label,
-  color: getLeaveTypeColor(value)
+  label
 }));
-
-function getLeaveTypeColor(type: string) {
-  switch (type) {
-    case 'vacation': return 'text-blue-600';
-    case 'personal': return 'text-green-600';
-    case 'sick': return 'text-red-600';
-    case 'absent': return 'text-red-700';
-    case 'maternity': return 'text-pink-600';
-    case 'bereavement': return 'text-gray-600';
-    case 'study': return 'text-orange-600';
-    case 'military': return 'text-teal-600';
-    case 'sabbatical': return 'text-indigo-600';
-    case 'unpaid': return 'text-slate-600';
-    case 'compensatory': return 'text-emerald-600';
-    case 'other': return 'text-purple-600';
-    default: return 'text-gray-600';
-  }
-}
 
 export const EventModal: React.FC<EventModalProps> = ({
   isOpen,
@@ -90,15 +71,6 @@ export const EventModal: React.FC<EventModalProps> = ({
     onClose();
   };
 
-  const formatDate = (date: Date | null) => {
-    if (!date) return '';
-    return new Intl.DateTimeFormat('th-TH', {
-      weekday: 'long',
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
-    }).format(date);
-  };
 
   useEffect(() => {
     if (isOpen) {

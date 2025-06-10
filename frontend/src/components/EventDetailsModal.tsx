@@ -4,6 +4,7 @@ import { createPortal } from 'react-dom';
 import { X, Calendar, User, FileText, MessageSquare, Plus, Edit, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Event } from '@/services/apiDatabase';
+import { LEAVE_TYPE_LABELS, formatDate, getLeaveTypeColor } from '@/lib/utils';
 
 interface EventDetailsModalProps {
   isOpen: boolean;
@@ -15,36 +16,6 @@ interface EventDetailsModalProps {
   selectedDate: Date | null;
 }
 
-const LEAVE_TYPE_LABELS = {
-  'vacation': 'ลาพักร้อน',
-  'personal': 'ลากิจ',
-  'sick': 'ลาป่วย',
-  'absent': 'ขาดงาน',
-  'maternity': 'ลาคลอด',
-  'bereavement': 'ลาฌาปนกิจ',
-  'study': 'ลาศึกษา',
-  'military': 'ลาทหาร',
-  'sabbatical': 'ลาพักผ่อนพิเศษ',
-  'unpaid': 'ลาไม่ได้รับเงินเดือน',
-  'compensatory': 'ลาชดเชย',
-  'other': 'อื่นๆ'
-};
-
-const LEAVE_TYPE_COLORS = {
-  'vacation': 'bg-blue-100 text-blue-800 border-blue-200 dark:bg-gray-900 dark:text-gray-200 dark:border-gray-700',
-  'personal': 'bg-green-100 text-green-800 border-green-200 dark:bg-green-900 dark:text-green-200 dark:border-green-700',
-  'sick': 'bg-red-100 text-red-800 border-red-200 dark:bg-red-900 dark:text-red-200 dark:border-red-700',
-  'absent': 'bg-red-200 text-red-900 border-red-300 dark:bg-red-800 dark:text-red-100 dark:border-red-600',
-  'maternity': 'bg-pink-100 text-pink-800 border-pink-200 dark:bg-pink-900 dark:text-pink-200 dark:border-pink-700',
-  'bereavement': 'bg-gray-100 text-gray-800 border-gray-200 dark:bg-gray-700 dark:text-gray-200 dark:border-gray-600',
-  'study': 'bg-orange-100 text-orange-800 border-orange-200 dark:bg-orange-900 dark:text-orange-200 dark:border-orange-700',
-  'military': 'bg-teal-100 text-teal-800 border-teal-200 dark:bg-teal-900 dark:text-teal-200 dark:border-teal-700',
-  'sabbatical': 'bg-indigo-100 text-indigo-800 border-indigo-200 dark:bg-indigo-900 dark:text-indigo-200 dark:border-indigo-700',
-  'unpaid': 'bg-slate-100 text-slate-800 border-slate-200 dark:bg-slate-700 dark:text-slate-200 dark:border-slate-600',
-  'compensatory': 'bg-emerald-100 text-emerald-800 border-emerald-200 dark:bg-emerald-900 dark:text-emerald-200 dark:border-emerald-700',
-  'other': 'bg-purple-100 text-purple-800 border-purple-200 dark:bg-purple-900 dark:text-purple-200 dark:border-purple-700'
-};
-
 export const EventDetailsModal: React.FC<EventDetailsModalProps> = ({
   isOpen,
   onClose,
@@ -54,15 +25,6 @@ export const EventDetailsModal: React.FC<EventDetailsModalProps> = ({
   events,
   selectedDate
 }) => {
-  const formatDate = (date: Date | null) => {
-    if (!date) return '';
-    return new Intl.DateTimeFormat('th-TH', {
-      weekday: 'long',
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
-    }).format(date);
-  };
 
   const handleCreateEvent = () => {
     onCreateEvent();

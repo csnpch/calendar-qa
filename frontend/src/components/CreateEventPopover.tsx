@@ -3,6 +3,7 @@ import React from 'react';
 import { Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { formatDate } from '@/lib/utils';
 
 interface CreateEventPopoverProps {
   isOpen: boolean;
@@ -19,15 +20,6 @@ export const CreateEventPopover: React.FC<CreateEventPopoverProps> = ({
   selectedDate,
   triggerElement
 }) => {
-  const formatDate = (date: Date | null) => {
-    if (!date) return '';
-    return new Intl.DateTimeFormat('th-TH', {
-      weekday: 'long',
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
-    }).format(date);
-  };
 
   const handleCreateEvent = () => {
     onCreateEvent();

@@ -8,40 +8,9 @@ import { Combobox } from '@/components/ui/combobox';
 import { Input } from '@/components/ui/input';
 import { useTheme } from '@/contexts/ThemeContext';
 import { getDashboardSummary, DashboardSummary } from '@/services/api';
-import { LEAVE_TYPE_LABELS } from '@/lib/utils';
+import { LEAVE_TYPE_LABELS, getLeaveTypeColor } from '@/lib/utils';
 import { Layout } from '@/components/Layout';
 import { UserDetailsModal } from '@/components/UserDetailsModal';
-
-const getEventTypeColor = (type: string) => {
-  switch (type) {
-    case 'sick':
-      return 'bg-red-100 text-red-800 dark:bg-red-800 dark:text-red-200';
-    case 'personal':
-      return 'bg-blue-100 text-blue-800 dark:bg-gray-800 dark:text-gray-200';
-    case 'vacation':
-      return 'bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-200';
-    case 'absent':
-      return 'bg-red-200 text-red-900 dark:bg-red-900 dark:text-red-100';
-    case 'maternity':
-      return 'bg-pink-100 text-pink-800 dark:bg-pink-800 dark:text-pink-200';
-    case 'bereavement':
-      return 'bg-gray-200 text-gray-900 dark:bg-gray-700 dark:text-gray-100';
-    case 'study':
-      return 'bg-orange-100 text-orange-800 dark:bg-orange-800 dark:text-orange-200';
-    case 'military':
-      return 'bg-teal-100 text-teal-800 dark:bg-teal-800 dark:text-teal-200';
-    case 'sabbatical':
-      return 'bg-indigo-100 text-indigo-800 dark:bg-indigo-800 dark:text-indigo-200';
-    case 'unpaid':
-      return 'bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-200';
-    case 'compensatory':
-      return 'bg-emerald-100 text-emerald-800 dark:bg-emerald-800 dark:text-emerald-200';
-    case 'other':
-      return 'bg-purple-100 text-purple-800 dark:bg-purple-800 dark:text-purple-200';
-    default:
-      return 'bg-blue-100 text-blue-800 dark:bg-gray-800 dark:text-gray-200';
-  }
-};
 
 const Dashboard = () => {
   const { theme } = useTheme();
@@ -340,7 +309,7 @@ const Dashboard = () => {
                       <div className="flex flex-wrap gap-1">
                         {Object.entries(employee.eventTypes).map(([type, count]) => (
                           count > 0 && (
-                            <Badge key={type} variant="secondary" className={getEventTypeColor(type)}>
+                            <Badge key={type} variant="secondary" className={getLeaveTypeColor(type)}>
                               {LEAVE_TYPE_LABELS[type as keyof typeof LEAVE_TYPE_LABELS] || type}: {count}
                             </Badge>
                           )
