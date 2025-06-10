@@ -37,7 +37,6 @@ function getLeaveTypeColor(type: string) {
     case 'sick': return 'text-red-600';
     case 'absent': return 'text-red-700';
     case 'maternity': return 'text-pink-600';
-    case 'paternity': return 'text-cyan-600';
     case 'bereavement': return 'text-gray-600';
     case 'study': return 'text-orange-600';
     case 'military': return 'text-teal-600';

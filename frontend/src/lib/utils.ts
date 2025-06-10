@@ -11,7 +11,6 @@ export const LEAVE_TYPE_LABELS = {
   'sick': 'ลาป่วย',
   'absent': 'ขาดงาน',
   'maternity': 'ลาคลอด',
-  'paternity': 'ลาบิดา',
   'bereavement': 'ลาฌาปนกิจ',
   'study': 'ลาศึกษา',
   'military': 'ลาทหาร',

@@ -24,8 +24,6 @@ const getEventTypeColor = (type: string) => {
       return 'bg-red-200 text-red-900 dark:bg-red-900 dark:text-red-100';
     case 'maternity':
       return 'bg-pink-100 text-pink-800 dark:bg-pink-800 dark:text-pink-200';
-    case 'paternity':
-      return 'bg-cyan-100 text-cyan-800 dark:bg-cyan-800 dark:text-cyan-200';
     case 'bereavement':
       return 'bg-gray-200 text-gray-900 dark:bg-gray-700 dark:text-gray-100';
     case 'study':

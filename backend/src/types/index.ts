@@ -9,7 +9,7 @@ export type Event = {
   id: number;
   employeeId: number;
   employeeName: string;
-  leaveType: 'vacation' | 'personal' | 'sick' | 'absent' | 'maternity' | 'paternity' | 'bereavement' | 'study' | 'military' | 'sabbatical' | 'unpaid' | 'compensatory' | 'other';
+  leaveType: 'vacation' | 'personal' | 'sick' | 'absent' | 'maternity' | 'bereavement' | 'study' | 'military' | 'sabbatical' | 'unpaid' | 'compensatory' | 'other';
   date: string;
   description?: string;
   createdAt: string;
@@ -33,7 +33,7 @@ export type UpdateEmployeeRequest = {
 export type CreateEventRequest = {
   employeeId: number;
   employeeName: string;
-  leaveType: 'vacation' | 'personal' | 'sick' | 'absent' | 'maternity' | 'paternity' | 'bereavement' | 'study' | 'military' | 'sabbatical' | 'unpaid' | 'compensatory' | 'other';
+  leaveType: 'vacation' | 'personal' | 'sick' | 'absent' | 'maternity' | 'bereavement' | 'study' | 'military' | 'sabbatical' | 'unpaid' | 'compensatory' | 'other';
   date: string;
   description?: string;
 };
@@ -41,7 +41,7 @@ export type CreateEventRequest = {
 export type UpdateEventRequest = {
   employeeId?: number;
   employeeName?: string;
-  leaveType?: 'vacation' | 'personal' | 'sick' | 'absent' | 'maternity' | 'paternity' | 'bereavement' | 'study' | 'military' | 'sabbatical' | 'unpaid' | 'compensatory' | 'other';
+  leaveType?: 'vacation' | 'personal' | 'sick' | 'absent' | 'maternity' | 'bereavement' | 'study' | 'military' | 'sabbatical' | 'unpaid' | 'compensatory' | 'other';
   date?: string;
   description?: string;
 };
