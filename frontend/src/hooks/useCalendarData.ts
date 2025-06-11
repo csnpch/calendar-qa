@@ -120,7 +120,9 @@ export const useCalendarData = () => {
 
   // Get events for a specific date
   const getEventsForDate = (date: Date): Event[] => {
-    const dateString = date.toISOString().split('T')[0];
+    const dateString = date.getFullYear() + '-' + 
+      String(date.getMonth() + 1).padStart(2, '0') + '-' + 
+      String(date.getDate()).padStart(2, '0');
     return events.filter(event => event.date === dateString);
   };
 

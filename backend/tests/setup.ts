@@ -57,6 +57,7 @@ global.mockDatabase.exec(`
     ('วันลอยกระทง', '2025-11-15');
 `);
 
+
 beforeEach(() => {
   // Clean all tables before each test
   global.mockDatabase.exec('DELETE FROM events');

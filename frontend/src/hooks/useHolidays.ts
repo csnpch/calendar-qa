@@ -33,7 +33,9 @@ export const useHolidays = (year: number) => {
   }, [year]);
 
   const isHoliday = (date: Date): ThaiHoliday | null => {
-    const dateString = date.toISOString().split('T')[0];
+    const dateString = date.getFullYear() + '-' + 
+      String(date.getMonth() + 1).padStart(2, '0') + '-' + 
+      String(date.getDate()).padStart(2, '0');
     return holidays.find(holiday => holiday.date === dateString) || null;
   };
 

@@ -60,7 +60,9 @@ export const EventModal: React.FC<EventModalProps> = ({
     onSave({
       employeeName,
       leaveType,
-      date: selectedDate.toISOString().split('T')[0],
+      date: selectedDate.getFullYear() + '-' + 
+        String(selectedDate.getMonth() + 1).padStart(2, '0') + '-' + 
+        String(selectedDate.getDate()).padStart(2, '0'),
       description
     });
 
@@ -116,7 +118,7 @@ export const EventModal: React.FC<EventModalProps> = ({
               options={employees.map(emp => ({ value: emp, label: emp }))}
               value={employeeName}
               onValueChange={setEmployeeName}
-              placeholder="เลือกพนักงาน"
+              placeholder="รายชื่อพนักงาน"
               searchPlaceholder="ค้นหาพนักงาน..."
               emptyMessage="ไม่พบพนักงาน"
               className="h-8 sm:h-9 text-xs sm:text-sm"

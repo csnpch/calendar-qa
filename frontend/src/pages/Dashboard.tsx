@@ -43,8 +43,12 @@ const Dashboard = () => {
       } else if (selectedPeriod === 'month') {
         const startOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
         const endOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0);
-        params.startDate = startOfMonth.toISOString().split('T')[0];
-        params.endDate = endOfMonth.toISOString().split('T')[0];
+        params.startDate = startOfMonth.getFullYear() + '-' + 
+          String(startOfMonth.getMonth() + 1).padStart(2, '0') + '-' + 
+          String(startOfMonth.getDate()).padStart(2, '0');
+        params.endDate = endOfMonth.getFullYear() + '-' + 
+          String(endOfMonth.getMonth() + 1).padStart(2, '0') + '-' + 
+          String(endOfMonth.getDate()).padStart(2, '0');
       } else if (selectedPeriod === 'year') {
         params.startDate = `${currentDate.getFullYear()}-01-01`;
         params.endDate = `${currentDate.getFullYear()}-12-31`;
@@ -98,8 +102,12 @@ const Dashboard = () => {
       const startOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
       const endOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0);
       return {
-        from: startOfMonth.toISOString().split('T')[0],
-        to: endOfMonth.toISOString().split('T')[0]
+        from: startOfMonth.getFullYear() + '-' + 
+          String(startOfMonth.getMonth() + 1).padStart(2, '0') + '-' + 
+          String(startOfMonth.getDate()).padStart(2, '0'),
+        to: endOfMonth.getFullYear() + '-' + 
+          String(endOfMonth.getMonth() + 1).padStart(2, '0') + '-' + 
+          String(endOfMonth.getDate()).padStart(2, '0')
       };
     } else if (selectedPeriod === 'year') {
       return {
