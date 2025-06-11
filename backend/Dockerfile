@@ -14,9 +14,7 @@ RUN apk add --no-cache python3 make g++
 COPY package*.json bun.lock* ./
 RUN bun install --frozen-lockfile
 COPY . .
-# Generate Prisma client
-RUN bun prisma generate
-RUN bun build index.ts --outdir ./dist --target=bun
+RUN bun run build
 
 # Production image
 FROM base AS production
@@ -34,4 +32,4 @@ RUN mkdir -p logs data && chmod 755 logs data
 EXPOSE 3001
 
 # Run the application
-CMD ["bun", "index.ts"]
+CMD ["bun", "start"]

@@ -4,8 +4,8 @@
   "private": true,
   "scripts": {
     "dev": "npm run test && ~/.bun/bin/bun --watch index.ts",
-    "start": "~/.bun/bin/bun index.ts",
-    "build": "npm run test && ~/.bun/bin/bun build index.ts --outdir ./dist",
+    "start": "bun prisma generate && bun index.ts",
+    "build": "bun prisma generate && npm run test && bun build index.ts --outdir ./dist",
     "clean": "rm -rf dist",
     "test": "jest",
     "test:watch": "jest --watchAll --silent",
