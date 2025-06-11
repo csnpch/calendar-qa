@@ -55,3 +55,15 @@ model CronjobConfig {
   @@map("cronjob_config")
   @@index([enabled])
 }
+
+model CompanyHoliday {
+  id          Int      @id @default(autoincrement())
+  name        String
+  date        String
+  description String?
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@map("company_holidays")
+  @@index([date])
+}

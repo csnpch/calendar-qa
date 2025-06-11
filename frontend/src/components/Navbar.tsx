@@ -15,11 +15,12 @@ import {
   Sun,
   Shield,
   LayoutDashboard,
-  LogOut
+  LogOut,
+  Calendar
 } from 'lucide-react';
 
 interface NavbarProps {
-  currentPage?: 'calendar-events' | 'dashboard' | 'employees' | 'cronjob-config';
+  currentPage?: 'calendar-events' | 'dashboard' | 'employees' | 'cronjob-config' | 'company-holidays';
 }
 
 export const Navbar: React.FC<NavbarProps> = ({ currentPage = 'calendar-events' }) => {
@@ -98,15 +99,32 @@ export const Navbar: React.FC<NavbarProps> = ({ currentPage = 'calendar-events' 
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="p-2">
                   {!isAdminAuthenticated ? (
-                    <DropdownMenuItem 
-                      onClick={() => setShowLoginModal(true)} 
-                      className="px-4 py-3"
-                    >
-                      <Shield className="w-4 h-4 mr-2" />
-                      Management
-                    </DropdownMenuItem>
+                    <>
+                      <DropdownMenuItem 
+                        onClick={() => navigate('/company-holidays')} 
+                        className="px-4 py-3"
+                      >
+                        <Calendar className="w-4 h-4 mr-2" />
+                        วันหยุดบริษัท
+                      </DropdownMenuItem>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem 
+                        onClick={() => setShowLoginModal(true)} 
+                        className="px-4 py-3"
+                      >
+                        <Shield className="w-4 h-4 mr-2" />
+                        Management
+                      </DropdownMenuItem>
+                    </>
                   ) : (
                     <>
+                      <DropdownMenuItem 
+                        onClick={() => navigate('/company-holidays')} 
+                        className="px-4 py-3"
+                      >
+                        <Calendar className="w-4 h-4 mr-2" />
+                        วันหยุดบริษัท
+                      </DropdownMenuItem>
                       <DropdownMenuItem 
                         onClick={() => navigate('/cronjob-config')} 
                         className="px-4 py-3"

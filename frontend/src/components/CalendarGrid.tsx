@@ -3,6 +3,7 @@ import { Calendar, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { CreateEventPopover } from '@/components/CreateEventPopover';
 import { useHolidays } from '@/hooks/useHolidays';
+import { useCompanyHolidays } from '@/hooks/useCompanyHolidays';
 import { Event } from '@/services/apiDatabase';
 import { DAYS_OF_WEEK, MONTHS, LEAVE_TYPE_COLORS, LEAVE_TYPE_LABELS } from '@/lib/utils';
 
@@ -11,6 +12,7 @@ interface CalendarGridProps {
   events: Event[];
   onDateClick: (date: Date) => void;
   onCreateEvent: (date: Date) => void;
+  onHolidayAdded?: () => void;
   onPrevMonth: () => void;
   onNextMonth: () => void;
   onTodayClick: () => void;
@@ -21,6 +23,7 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({
   events,
   onDateClick,
   onCreateEvent,
+  onHolidayAdded,
   onPrevMonth,
   onNextMonth,
   onTodayClick
@@ -31,6 +34,15 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({
   const year = currentDate.getFullYear();
   const month = currentDate.getMonth();
   const { holidays, isHoliday, isWeekend } = useHolidays(year);
+  const { holidays: companyHolidays, isCompanyHoliday, refresh: refreshCompanyHolidays } = useCompanyHolidays(year);
+
+  const handleHolidayAdded = () => {
+    // Refresh company holidays when a new one is added
+    refreshCompanyHolidays();
+    if (onHolidayAdded) {
+      onHolidayAdded();
+    }
+  };
   
   const firstDay = new Date(year, month, 1);
   const lastDay = new Date(year, month + 1, 0);
@@ -140,7 +152,8 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({
                 const isOtherMonth = !isCurrentMonth(date);
                 const isTodayDate = isToday(date);
                 const hasEvents = dayEvents.length > 0;
-                const holiday = isHoliday(date);
+                const thaiHoliday = isHoliday(date);
+                const companyHoliday = isCompanyHoliday(date);
                 const weekend = isWeekend(date);
 
                 let bgColor = 'bg-white dark:bg-gray-700';
@@ -157,11 +170,14 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({
                     bgColor = 'bg-red-50 dark:bg-red-800/30';
                     textColor = 'text-red-700 dark:text-red-300';
                     borderColor = 'border-red-200 dark:border-red-600';
-                  } else if (holiday) {
-                    // If it's a holiday but NOT a weekend, only apply red text
-                    // bgColor remains the default for a current month day (e.g., 'bg-white dark:bg-gray-700')
-                    textColor = 'text-red-600 dark:text-red-500'; // Red text for holiday
-                    borderColor = 'border-red-100 dark:border-red-800'; // Keep a subtle holiday border
+                  } else if (companyHoliday) {
+                    // Company holidays get red styling (old Thai holiday colors)
+                    textColor = 'text-red-600 dark:text-red-500';
+                    borderColor = 'border-red-100 dark:border-red-800';
+                  } else if (thaiHoliday) {
+                    // Thai holidays get dark gray styling
+                    textColor = 'text-gray-600 dark:text-gray-400';
+                    borderColor = 'border-gray-300 dark:border-gray-600';
                   }
 
                   // Today's styling (overrides previous settings for the current day)
@@ -171,8 +187,10 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({
                     // Keep text color as white in dark mode, but preserve the appropriate color in light mode
                     if (weekend) {
                       textColor = 'text-red-700 dark:text-white';
-                    } else if (holiday) {
+                    } else if (companyHoliday) {
                       textColor = 'text-red-600 dark:text-white';
+                    } else if (thaiHoliday) {
+                      textColor = 'text-gray-600 dark:text-white';
                     } else {
                       textColor = 'text-blue-700 dark:text-white';
                     }
@@ -183,7 +201,7 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({
                     borderColor = 'border-blue-400 dark:border-gray-500';
                     // Only change bgColor for events if it's not today, not a weekend,
                     // and not a non-weekend holiday (which now has default background).
-                    if (!isTodayDate && !weekend && !holiday) {
+                    if (!isTodayDate && !weekend && !thaiHoliday && !companyHoliday) {
                       bgColor = 'bg-blue-25 dark:bg-gray-800/20';
                     }
                   }
@@ -205,14 +223,26 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({
                       {date.getDate()}
                     </div>
                     
-                    {holiday && !isOtherMonth && (
+                    {companyHoliday && !isOtherMonth && (
                       <div className="text-xs bg-red-50 dark:bg-red-900/50 text-red-700 dark:text-red-400 px-1 py-0.5 rounded mb-0.5 font-medium leading-tight">
                         <div className="break-words overflow-hidden leading-tight" style={{
                           display: '-webkit-box',
                           WebkitLineClamp: 3,
                           WebkitBoxOrient: 'vertical'
                         }}>
-                          {holiday.name}
+                          {companyHoliday.name}
+                        </div>
+                      </div>
+                    )}
+                    
+                    {thaiHoliday && !isOtherMonth && (
+                      <div className="text-xs bg-gray-50 dark:bg-gray-800/50 text-gray-700 dark:text-gray-400 px-1 py-0.5 rounded mb-0.5 font-medium leading-tight">
+                        <div className="break-words overflow-hidden leading-tight" style={{
+                          display: '-webkit-box',
+                          WebkitLineClamp: 3,
+                          WebkitBoxOrient: 'vertical'
+                        }}>
+                          {thaiHoliday.name}
                         </div>
                       </div>
                     )}
@@ -249,6 +279,7 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({
                       if (!open) setSelectedPopoverDate(null);
                     }}
                     onCreateEvent={handleCreateEvent}
+                    onHolidayAdded={handleHolidayAdded}
                     selectedDate={selectedPopoverDate}
                     triggerElement={dayElement}
                   />

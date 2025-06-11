@@ -7,6 +7,7 @@ import Dashboard from "./pages/Dashboard";
 import CalendarEvents from "./pages/CalendarEvents";
 import { Employees } from "./pages/Employees";
 import CronjobConfig from "./pages/CronjobConfig";
+import CompanyHolidays from "./pages/CompanyHolidays";
 import NotFound from "./pages/NotFound";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import { AuthProvider } from "./contexts/AuthContext";
@@ -26,6 +27,7 @@ const App = () => (
               <Route path="/" element={<CalendarEvents />} />
               <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
               <Route path="/employees" element={<ProtectedRoute><Employees /></ProtectedRoute>} />
+              <Route path="/company-holidays" element={<CompanyHolidays />} />
               <Route path="/cronjob-config" element={<ProtectedRoute><CronjobConfig /></ProtectedRoute>} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />

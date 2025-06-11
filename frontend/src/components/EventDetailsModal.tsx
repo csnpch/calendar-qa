@@ -4,7 +4,7 @@ import { createPortal } from 'react-dom';
 import { X, Calendar, User, FileText, MessageSquare, Plus, Edit, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Event } from '@/services/apiDatabase';
-import { LEAVE_TYPE_LABELS, formatDate, getLeaveTypeColor } from '@/lib/utils';
+import { LEAVE_TYPE_COLORS, LEAVE_TYPE_LABELS, formatDate, getLeaveTypeColor } from '@/lib/utils';
 
 interface EventDetailsModalProps {
   isOpen: boolean;

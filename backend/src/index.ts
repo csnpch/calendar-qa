@@ -6,6 +6,7 @@ import { cron } from '@elysiajs/cron';
 import { employeesRoutes } from './routes/employees';
 import { eventsRoutes } from './routes/events';
 import { holidaysRoutes } from './routes/holidays';
+import { companyHolidaysRoutes } from './routes/companyHolidays';
 import { cronjobRoutes } from './routes/cronjobs';
 import { loggerMiddleware } from './middleware/logger';
 import { CronjobService } from './services/cronjobService';
@@ -34,6 +35,7 @@ const app = new Elysia()
         { name: 'employees', description: 'Employee management endpoints' },
         { name: 'events', description: 'Event management endpoints' },
         { name: 'holidays', description: 'Holiday information endpoints' },
+        { name: 'company-holidays', description: 'Company holiday management endpoints' },
         { name: 'Cronjobs', description: 'Cronjob management and notifications' }
       ]
     }
@@ -51,6 +53,7 @@ const app = new Elysia()
   .use(employeesRoutes)
   .use(eventsRoutes)
   .use(holidaysRoutes)
+  .use(companyHolidaysRoutes)
   .use(cronjobRoutes)
   .listen(3001);
 
