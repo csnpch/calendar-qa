@@ -5,6 +5,7 @@ import { X, Calendar, User, FileText, MessageSquare, Plus, Edit, Trash2 } from '
 import { Button } from '@/components/ui/button';
 import { Event } from '@/services/apiDatabase';
 import { LEAVE_TYPE_COLORS, LEAVE_TYPE_LABELS, formatDate, getLeaveTypeColor } from '@/lib/utils';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface EventDetailsModalProps {
   isOpen: boolean;
@@ -33,6 +34,7 @@ export const EventDetailsModal: React.FC<EventDetailsModalProps> = ({
   onEditCompanyHoliday,
   onDeleteCompanyHoliday
 }) => {
+  const { isAdminAuthenticated } = useAuth();
 
   const handleCreateEvent = () => {
     onCreateEvent();
@@ -101,34 +103,36 @@ export const EventDetailsModal: React.FC<EventDetailsModalProps> = ({
                       )}
                     </div>
                     
-                    <div className="flex space-x-1 ml-2">
-                      {onEditCompanyHoliday && (
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => onEditCompanyHoliday(companyHoliday)}
-                          className="h-7 w-7 p-0 text-gray-600 hover:text-blue-600 dark:text-gray-300 dark:hover:text-gray-100"
-                          title="แก้ไขวันหยุด"
-                        >
-                          <Edit className="w-3 h-3" />
-                        </Button>
-                      )}
-                      {onDeleteCompanyHoliday && (
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => {
-                            if (window.confirm('คุณต้องการลบวันหยุดนี้หรือไม่?')) {
-                              onDeleteCompanyHoliday(companyHoliday.id);
-                            }
-                          }}
-                          className="h-7 w-7 p-0 text-gray-600 hover:text-red-600 dark:text-gray-300 dark:hover:text-red-400"
-                          title="ลบวันหยุด"
-                        >
-                          <Trash2 className="w-3 h-3" />
-                        </Button>
-                      )}
-                    </div>
+                    {isAdminAuthenticated && (
+                      <div className="flex space-x-1 ml-2">
+                        {onEditCompanyHoliday && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => onEditCompanyHoliday(companyHoliday)}
+                            className="h-7 w-7 p-0 text-gray-600 hover:text-blue-600 dark:text-gray-300 dark:hover:text-gray-100"
+                            title="แก้ไขวันหยุด"
+                          >
+                            <Edit className="w-3 h-3" />
+                          </Button>
+                        )}
+                        {onDeleteCompanyHoliday && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => {
+                              if (window.confirm('คุณต้องการลบวันหยุดนี้หรือไม่?')) {
+                                onDeleteCompanyHoliday(companyHoliday.id);
+                              }
+                            }}
+                            className="h-7 w-7 p-0 text-gray-600 hover:text-red-600 dark:text-gray-300 dark:hover:text-red-400"
+                            title="ลบวันหยุด"
+                          >
+                            <Trash2 className="w-3 h-3" />
+                          </Button>
+                        )}
+                      </div>
+                    )}
                   </div>
                 </div>
               )}
