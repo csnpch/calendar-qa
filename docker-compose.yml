@@ -11,6 +11,7 @@ services:
       - calendar-logs:/app/logs
     environment:
       - NODE_ENV=production
+      - DATABASE_URL=file:/app/data/calendar.db
     restart: unless-stopped
     networks:
       - calendar-network
