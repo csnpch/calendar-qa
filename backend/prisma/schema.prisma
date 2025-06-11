@@ -67,3 +67,19 @@ model CompanyHoliday {
   @@map("company_holidays")
   @@index([date])
 }
+
+model ThaiHoliday {
+  id        Int      @id @default(autoincrement())
+  name      String
+  date      String
+  type      String   // 'public', 'religious', 'substitution'
+  year      Int
+  source    String   @default("api") // 'api', 'fallback'
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("thai_holidays")
+  @@unique([date, year])
+  @@index([year])
+  @@index([date])
+}

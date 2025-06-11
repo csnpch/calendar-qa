@@ -6,17 +6,21 @@ global.fetch = mockFetch as any;
 
 describe('HolidayService', () => {
   let holidayService: HolidayService;
-  let consoleSpy: jest.SpyInstance;
+  let consoleSpies: jest.SpyInstance[];
 
   beforeEach(() => {
     holidayService = new HolidayService();
     jest.clearAllMocks();
-    // Suppress console.error during tests
-    consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+    // Suppress console logs during tests
+    consoleSpies = [
+      jest.spyOn(console, 'error').mockImplementation(() => {}),
+      jest.spyOn(console, 'log').mockImplementation(() => {}),
+      jest.spyOn(console, 'warn').mockImplementation(() => {})
+    ];
   });
 
   afterEach(() => {
-    consoleSpy.mockRestore();
+    consoleSpies.forEach(spy => spy.mockRestore());
   });
 
   describe('fetchThaiHolidays', () => {
@@ -147,7 +151,7 @@ describe('HolidayService', () => {
 
       const holidays = await holidayService.fetchThaiHolidays(2025);
 
-      expect(holidays).toHaveLength(8); // Default holidays count
+      expect(holidays).toHaveLength(24); // Updated comprehensive holidays count for 2025
       expect(holidays[0]!).toEqual({
         date: '2025-01-01',
         name: 'วันขึ้นปีใหม่',
@@ -155,6 +159,9 @@ describe('HolidayService', () => {
       });
       expect(holidays.some(h => h.date === '2025-04-13')).toBe(true);
       expect(holidays.some(h => h.date === '2025-12-31')).toBe(true);
+      // Check for year-specific compensatory holidays in 2025
+      expect(holidays.some(h => h.date === '2025-01-02')).toBe(true);
+      expect(holidays.some(h => h.date === '2025-04-16')).toBe(true);
     });
 
     it('should return default holidays when API returns non-ok response', async () => {
@@ -165,7 +172,7 @@ describe('HolidayService', () => {
 
       const holidays = await holidayService.fetchThaiHolidays(2025);
 
-      expect(holidays).toHaveLength(8);
+      expect(holidays).toHaveLength(24);
       expect(holidays[0]!.date).toBe('2025-01-01');
     });
   });

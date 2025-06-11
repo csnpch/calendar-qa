@@ -12,7 +12,7 @@ export const fetchThaiHolidays = async (year: number): Promise<ThaiHoliday[]> =>
     return await apiClient.get<ThaiHoliday[]>(`/holidays/${year}`);
   } catch (error) {
     console.error('Error fetching Thai holidays from API:', error);
-    // Fallback to some basic Thai holidays
+    // Fallback to basic Thai holidays (limited compared to backend comprehensive list)
     return [
       { date: `${year}-01-01`, name: 'วันขึ้นปีใหม่', type: 'public' },
       { date: `${year}-04-13`, name: 'วันสงกรานต์', type: 'public' },

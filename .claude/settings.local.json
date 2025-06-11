@@ -42,7 +42,10 @@
       "Bash(docker system prune:*)",
       "Bash(docker login:*)",
       "Bash(docker pull:*)",
-      "Bash(sudo docker-compose:*)"
+      "Bash(sudo docker-compose:*)",
+      "WebFetch(domain:calendarific.com)",
+      "WebFetch(domain:holidayapi.com)",
+      "WebFetch(domain:www.abstractapi.com)"
     ],
     "deny": []
   }
