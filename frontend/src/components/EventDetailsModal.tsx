@@ -13,6 +13,7 @@ interface EventDetailsModalProps {
   onEditEvent?: (event: Event) => void;
   onDeleteEvent?: (eventId: number) => void;
   events: Event[];
+  employees: { id: number; name: string }[];
   selectedDate: Date | null;
 }
 
@@ -23,12 +24,18 @@ export const EventDetailsModal: React.FC<EventDetailsModalProps> = ({
   onEditEvent,
   onDeleteEvent,
   events,
+  employees,
   selectedDate
 }) => {
 
   const handleCreateEvent = () => {
     onCreateEvent();
     onClose();
+  };
+
+  const getEmployeeName = (employeeId: number) => {
+    const employee = employees.find(emp => emp.id === employeeId);
+    return employee?.name || 'Unknown Employee';
   };
 
   useEffect(() => {
@@ -80,7 +87,7 @@ export const EventDetailsModal: React.FC<EventDetailsModalProps> = ({
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center space-x-2 mb-1">
                         <User className="w-3 h-3 flex-shrink-0" />
-                        <span className="font-medium text-sm truncate">{event.employeeName}</span>
+                        <span className="font-medium text-sm truncate">{getEmployeeName(event.employeeId)}</span>
                       </div>
                       
                       <div className="flex items-center space-x-2 mb-1">

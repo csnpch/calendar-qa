@@ -28,7 +28,6 @@ interface UpdateEmployeeRequest {
 
 interface CreateEventRequest {
   employeeId: number;
-  employeeName: string;
   leaveType: 'vacation' | 'personal' | 'sick' | 'other';
   date: string;
   description?: string;
@@ -36,7 +35,6 @@ interface CreateEventRequest {
 
 interface UpdateEventRequest {
   employeeId?: number;
-  employeeName?: string;
   leaveType?: 'vacation' | 'personal' | 'sick' | 'other';
   date?: string;
   description?: string;

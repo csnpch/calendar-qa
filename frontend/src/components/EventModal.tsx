@@ -14,13 +14,14 @@ interface EventModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSave: (event: {
+    employeeId: number;
     employeeName: string;
     leaveType: string;
     date: string;
     description?: string;
   }) => void;
   selectedDate: Date | null;
-  employees: string[];
+  employees: { id: number; name: string }[];
   editingEvent?: Event | null;
 }
 
@@ -37,28 +38,32 @@ export const EventModal: React.FC<EventModalProps> = ({
   employees,
   editingEvent
 }) => {
-  const [employeeName, setEmployeeName] = useState('');
+  const [selectedEmployeeId, setSelectedEmployeeId] = useState<number | null>(null);
   const [leaveType, setLeaveType] = useState('');
   const [description, setDescription] = useState('');
 
   // Initialize form with editing event data
   useEffect(() => {
     if (editingEvent) {
-      setEmployeeName(editingEvent.employeeName);
+      setSelectedEmployeeId(editingEvent.employeeId);
       setLeaveType(editingEvent.leaveType);
       setDescription(editingEvent.description || '');
     } else {
-      setEmployeeName('');
+      setSelectedEmployeeId(null);
       setLeaveType('');
       setDescription('');
     }
   }, [editingEvent, isOpen]);
 
   const handleSave = () => {
-    if (!employeeName || !leaveType || !selectedDate) return;
+    if (!selectedEmployeeId || !leaveType || !selectedDate) return;
+
+    const selectedEmployee = employees.find(emp => emp.id === selectedEmployeeId);
+    if (!selectedEmployee) return;
 
     onSave({
-      employeeName,
+      employeeId: selectedEmployeeId,
+      employeeName: selectedEmployee.name,
       leaveType,
       date: selectedDate.getFullYear() + '-' + 
         String(selectedDate.getMonth() + 1).padStart(2, '0') + '-' + 
@@ -67,7 +72,7 @@ export const EventModal: React.FC<EventModalProps> = ({
     });
 
     // Reset form
-    setEmployeeName('');
+    setSelectedEmployeeId(null);
     setLeaveType('');
     setDescription('');
     onClose();
@@ -121,9 +126,9 @@ export const EventModal: React.FC<EventModalProps> = ({
               <span>ชื่อพนักงาน</span>
             </Label>
             <Combobox
-              options={employees.map(emp => ({ value: emp, label: emp }))}
-              value={employeeName}
-              onValueChange={setEmployeeName}
+              options={employees.map(emp => ({ value: emp.id.toString(), label: emp.name }))}
+              value={selectedEmployeeId?.toString() || ''}
+              onValueChange={(value) => setSelectedEmployeeId(value ? parseInt(value) : null)}
               placeholder="รายชื่อพนักงาน"
               searchPlaceholder="ค้นหาพนักงาน..."
               emptyMessage="ไม่พบพนักงาน"
@@ -169,7 +174,7 @@ export const EventModal: React.FC<EventModalProps> = ({
           </Button>
           <Button 
             onClick={handleSave} 
-            disabled={!employeeName || !leaveType}
+            disabled={!selectedEmployeeId || !leaveType}
             className="flex-1 bg-blue-600 hover:bg-blue-700 dark:bg-gray-700 dark:hover:bg-gray-800 text-white text-xs sm:text-sm h-8 sm:h-9"
           >
             {editingEvent ? 'อัพเดท' : 'บันทึก'}

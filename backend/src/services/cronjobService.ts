@@ -140,17 +140,18 @@ export class CronjobService {
   private getEventsForDate(dateString: string): Event[] {
     const stmt = this.db.prepare(`
       SELECT 
-        id,
-        employee_id as employeeId,
-        employee_name as employeeName,
-        leave_type as leaveType,
-        date,
-        description,
-        created_at as createdAt,
-        updated_at as updatedAt
-      FROM events 
-      WHERE date = ? 
-      ORDER BY employee_name
+        e.id,
+        e.employee_id as employeeId,
+        emp.name as employeeName,
+        e.leave_type as leaveType,
+        e.date,
+        e.description,
+        e.created_at as createdAt,
+        e.updated_at as updatedAt
+      FROM events e
+      LEFT JOIN employees emp ON e.employee_id = emp.id
+      WHERE e.date = ? 
+      ORDER BY emp.name
     `);
     return stmt.all(dateString) as Event[];
   }
@@ -166,17 +167,18 @@ export class CronjobService {
   private getEventsForDateRange(startDate: string, endDate: string): Event[] {
     const stmt = this.db.prepare(`
       SELECT 
-        id,
-        employee_id as employeeId,
-        employee_name as employeeName,
-        leave_type as leaveType,
-        date,
-        description,
-        created_at as createdAt,
-        updated_at as updatedAt
-      FROM events 
-      WHERE date >= ? AND date <= ?
-      ORDER BY date, employee_name
+        e.id,
+        e.employee_id as employeeId,
+        emp.name as employeeName,
+        e.leave_type as leaveType,
+        e.date,
+        e.description,
+        e.created_at as createdAt,
+        e.updated_at as updatedAt
+      FROM events e
+      LEFT JOIN employees emp ON e.employee_id = emp.id
+      WHERE e.date >= ? AND e.date <= ?
+      ORDER BY e.date, emp.name
     `);
     return stmt.all(startDate, endDate) as Event[];
   }

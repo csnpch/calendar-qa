@@ -24,7 +24,6 @@ model Employee {
 model Event {
   id           Int      @id @default(autoincrement())
   employeeId   Int      @map("employee_id")
-  employeeName String   @map("employee_name")
   leaveType    String   @map("leave_type")
   date         String
   description  String?

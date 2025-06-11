@@ -11,6 +11,7 @@ import { DAYS_OF_WEEK, MONTHS, LEAVE_TYPE_COLORS, LEAVE_TYPE_LABELS } from '@/li
 interface CalendarGridProps {
   currentDate: Date;
   events: Event[];
+  employees: { id: number; name: string }[];
   onDateClick: (date: Date) => void;
   onCreateEvent: (date: Date) => void;
   onHolidayAdded?: () => void;
@@ -22,6 +23,7 @@ interface CalendarGridProps {
 export const CalendarGrid: React.FC<CalendarGridProps> = ({
   currentDate,
   events,
+  employees,
   onDateClick,
   onCreateEvent,
   onHolidayAdded,
@@ -67,6 +69,11 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({
       String(date.getMonth() + 1).padStart(2, '0') + '-' + 
       String(date.getDate()).padStart(2, '0');
     return events.filter(event => event.date === dateString);
+  };
+
+  const getEmployeeName = (employeeId: number) => {
+    const employee = employees.find(emp => emp.id === employeeId);
+    return employee?.name || 'Unknown Employee';
   };
 
   const isCurrentMonth = (date: Date) => {
@@ -247,7 +254,7 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({
                     )}
                     
                     {thaiHoliday && !isOtherMonth && (
-                      <div className="text-xs bg-gray-50 dark:bg-gray-800/50 text-gray-700 dark:text-gray-400 px-1 py-0.5 rounded mb-0.5 font-medium leading-tight">
+                      <div className="text-xs bg-green-100 dark:bg-green-900/50 text-green-800 dark:text-green-200 px-1 py-0.5 rounded mb-0.5 font-medium leading-tight">
                         <div className="break-words overflow-hidden leading-tight" style={{
                           display: '-webkit-box',
                           WebkitLineClamp: 3,
@@ -259,19 +266,22 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({
                     )}
                     
                     <div className="space-y-0.5">
-                      {dayEvents.slice(0, window.innerWidth < 640 ? 1 : window.innerWidth < 768 ? 1 : 2).map((event) => (
-                        <div
-                          key={event.id}
-                          className={`
-                            text-xs px-0.5 py-0.5 sm:px-1 sm:py-0.5 rounded border text-center font-medium truncate
-                            ${LEAVE_TYPE_COLORS[event.leaveType as keyof typeof LEAVE_TYPE_COLORS] || LEAVE_TYPE_COLORS.other}
-                          `}
-                          title={`${event.employeeName} - ${LEAVE_TYPE_LABELS[event.leaveType as keyof typeof LEAVE_TYPE_LABELS] || event.leaveType}`}
-                        >
-                          <span className="sm:inline truncate block">{event.employeeName.length > 12 ? event.employeeName.substring(0, 12) + '...' : event.employeeName}</span>
-                          <span className="sm:hidden truncate block">{event.employeeName.split(' ')[0].substring(0, 6)}</span>
-                        </div>
-                      ))}
+                      {dayEvents.slice(0, window.innerWidth < 640 ? 1 : window.innerWidth < 768 ? 1 : 2).map((event) => {
+                        const employeeName = getEmployeeName(event.employeeId);
+                        return (
+                          <div
+                            key={event.id}
+                            className={`
+                              text-xs px-0.5 py-0.5 sm:px-1 sm:py-0.5 rounded border text-center font-medium truncate
+                              ${LEAVE_TYPE_COLORS[event.leaveType as keyof typeof LEAVE_TYPE_COLORS] || LEAVE_TYPE_COLORS.other}
+                            `}
+                            title={`${employeeName} - ${LEAVE_TYPE_LABELS[event.leaveType as keyof typeof LEAVE_TYPE_LABELS] || event.leaveType}`}
+                          >
+                            <span className="sm:inline truncate block">{employeeName.length > 12 ? employeeName.substring(0, 12) + '...' : employeeName}</span>
+                            <span className="sm:hidden truncate block">{employeeName.split(' ')[0].substring(0, 6)}</span>
+                          </div>
+                        );
+                      })}
                       {dayEvents.length > (window.innerWidth < 640 ? 1 : window.innerWidth < 768 ? 1 : 2) && (
                         <div className="text-xs text-gray-600 text-center font-medium">
                           +{dayEvents.length - (window.innerWidth < 640 ? 1 : window.innerWidth < 768 ? 1 : 2)}

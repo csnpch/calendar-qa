@@ -57,6 +57,9 @@ export const useCalendarData = () => {
       const updatedEmployee = await employeeService.updateEmployee(id, updates);
       if (updatedEmployee) {
         setEmployees(prev => prev.map(emp => emp.id === id ? updatedEmployee : emp));
+        // Reload events to get updated employee names
+        const eventsData = await eventService.getAllEvents();
+        setEvents(eventsData);
         return updatedEmployee;
       }
       throw new Error('Employee not found');

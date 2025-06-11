@@ -51,7 +51,6 @@ export const eventsRoutes = new Elysia({ prefix: '/events' })
   }, {
     body: t.Object({
       employeeId: t.Number(),
-      employeeName: t.String(),
       leaveType: t.Union([
         t.Literal('vacation'),
         t.Literal('personal'),
@@ -92,7 +91,6 @@ export const eventsRoutes = new Elysia({ prefix: '/events' })
     }),
     body: t.Object({
       employeeId: t.Optional(t.Number()),
-      employeeName: t.Optional(t.String()),
       leaveType: t.Optional(t.Union([
         t.Literal('vacation'),
         t.Literal('personal'),

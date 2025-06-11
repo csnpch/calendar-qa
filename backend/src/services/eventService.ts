@@ -7,14 +7,22 @@ export class EventService {
 
   createEvent(data: CreateEventRequest): Event {
     const now = moment().utcOffset('+07:00').format();
+    
+    // Verify employee exists
+    const employeeStmt = this.db.prepare('SELECT name FROM employees WHERE id = ?');
+    const employee = employeeStmt.get(data.employeeId) as { name: string } | undefined;
+    
+    if (!employee) {
+      throw new Error(`Employee with id ${data.employeeId} not found`);
+    }
+    
     const stmt = this.db.prepare(`
-      INSERT INTO events (employee_id, employee_name, leave_type, date, description, created_at, updated_at)
-      VALUES (?, ?, ?, ?, ?, ?, ?)
+      INSERT INTO events (employee_id, leave_type, date, description, created_at, updated_at)
+      VALUES (?, ?, ?, ?, ?, ?)
     `);
     
     stmt.run(
       data.employeeId,
-      data.employeeName,
       data.leaveType,
       data.date,
       data.description || null,
@@ -27,7 +35,7 @@ export class EventService {
     return {
       id: result.id,
       employeeId: data.employeeId,
-      employeeName: data.employeeName,
+      employeeName: employee.name, // Get from current lookup
       leaveType: data.leaveType,
       date: data.date,
       description: data.description,
@@ -39,16 +47,17 @@ export class EventService {
   getAllEvents(): Event[] {
     const stmt = this.db.prepare(`
       SELECT 
-        id,
-        employee_id as employeeId,
-        employee_name as employeeName,
-        leave_type as leaveType,
-        date,
-        description,
-        created_at as createdAt,
-        updated_at as updatedAt
-      FROM events
-      ORDER BY date DESC
+        e.id,
+        e.employee_id as employeeId,
+        emp.name as employeeName,
+        e.leave_type as leaveType,
+        e.date,
+        e.description,
+        e.created_at as createdAt,
+        e.updated_at as updatedAt
+      FROM events e
+      LEFT JOIN employees emp ON e.employee_id = emp.id
+      ORDER BY e.date DESC
     `);
     
     return stmt.all() as Event[];
@@ -57,16 +66,17 @@ export class EventService {
   getEventById(id: number): Event | null {
     const stmt = this.db.prepare(`
       SELECT 
-        id,
-        employee_id as employeeId,
-        employee_name as employeeName,
-        leave_type as leaveType,
-        date,
-        description,
-        created_at as createdAt,
-        updated_at as updatedAt
-      FROM events
-      WHERE id = ?
+        e.id,
+        e.employee_id as employeeId,
+        emp.name as employeeName,
+        e.leave_type as leaveType,
+        e.date,
+        e.description,
+        e.created_at as createdAt,
+        e.updated_at as updatedAt
+      FROM events e
+      LEFT JOIN employees emp ON e.employee_id = emp.id
+      WHERE e.id = ?
     `);
     
     const result = stmt.get(id) as Event | undefined;
@@ -76,17 +86,18 @@ export class EventService {
   getEventsByDate(date: string): Event[] {
     const stmt = this.db.prepare(`
       SELECT 
-        id,
-        employee_id as employeeId,
-        employee_name as employeeName,
-        leave_type as leaveType,
-        date,
-        description,
-        created_at as createdAt,
-        updated_at as updatedAt
-      FROM events
-      WHERE date = ?
-      ORDER BY employee_name ASC
+        e.id,
+        e.employee_id as employeeId,
+        emp.name as employeeName,
+        e.leave_type as leaveType,
+        e.date,
+        e.description,
+        e.created_at as createdAt,
+        e.updated_at as updatedAt
+      FROM events e
+      LEFT JOIN employees emp ON e.employee_id = emp.id
+      WHERE e.date = ?
+      ORDER BY emp.name ASC
     `);
     
     return stmt.all(date) as Event[];
@@ -95,17 +106,18 @@ export class EventService {
   getEventsByDateRange(startDate: string, endDate: string): Event[] {
     const stmt = this.db.prepare(`
       SELECT 
-        id,
-        employee_id as employeeId,
-        employee_name as employeeName,
-        leave_type as leaveType,
-        date,
-        description,
-        created_at as createdAt,
-        updated_at as updatedAt
-      FROM events
-      WHERE date >= ? AND date <= ?
-      ORDER BY date ASC, employee_name ASC
+        e.id,
+        e.employee_id as employeeId,
+        emp.name as employeeName,
+        e.leave_type as leaveType,
+        e.date,
+        e.description,
+        e.created_at as createdAt,
+        e.updated_at as updatedAt
+      FROM events e
+      LEFT JOIN employees emp ON e.employee_id = emp.id
+      WHERE e.date >= ? AND e.date <= ?
+      ORDER BY e.date ASC, emp.name ASC
     `);
     
     return stmt.all(startDate, endDate) as Event[];
@@ -114,17 +126,18 @@ export class EventService {
   getEventsByEmployeeId(employeeId: number): Event[] {
     const stmt = this.db.prepare(`
       SELECT 
-        id,
-        employee_id as employeeId,
-        employee_name as employeeName,
-        leave_type as leaveType,
-        date,
-        description,
-        created_at as createdAt,
-        updated_at as updatedAt
-      FROM events
-      WHERE employee_id = ?
-      ORDER BY date DESC
+        e.id,
+        e.employee_id as employeeId,
+        emp.name as employeeName,
+        e.leave_type as leaveType,
+        e.date,
+        e.description,
+        e.created_at as createdAt,
+        e.updated_at as updatedAt
+      FROM events e
+      LEFT JOIN employees emp ON e.employee_id = emp.id
+      WHERE e.employee_id = ?
+      ORDER BY e.date DESC
     `);
     
     return stmt.all(employeeId) as Event[];
@@ -133,26 +146,27 @@ export class EventService {
   getEventsByEmployeeName(employeeName: string, startDate?: string, endDate?: string): Event[] {
     let query = `
       SELECT 
-        id,
-        employee_id as employeeId,
-        employee_name as employeeName,
-        leave_type as leaveType,
-        date,
-        description,
-        created_at as createdAt,
-        updated_at as updatedAt
-      FROM events
-      WHERE employee_name = ?
+        e.id,
+        e.employee_id as employeeId,
+        emp.name as employeeName,
+        e.leave_type as leaveType,
+        e.date,
+        e.description,
+        e.created_at as createdAt,
+        e.updated_at as updatedAt
+      FROM events e
+      LEFT JOIN employees emp ON e.employee_id = emp.id
+      WHERE emp.name = ?
     `;
     
     const params: any[] = [employeeName];
     
     if (startDate && endDate) {
-      query += ' AND date >= ? AND date <= ?';
+      query += ' AND e.date >= ? AND e.date <= ?';
       params.push(startDate, endDate);
     }
     
-    query += ' ORDER BY date DESC';
+    query += ' ORDER BY e.date DESC';
     
     const stmt = this.db.prepare(query);
     return stmt.all(...params) as Event[];
@@ -161,17 +175,18 @@ export class EventService {
   getEventsByLeaveType(leaveType: string): Event[] {
     const stmt = this.db.prepare(`
       SELECT 
-        id,
-        employee_id as employeeId,
-        employee_name as employeeName,
-        leave_type as leaveType,
-        date,
-        description,
-        created_at as createdAt,
-        updated_at as updatedAt
-      FROM events
-      WHERE leave_type = ?
-      ORDER BY date DESC
+        e.id,
+        e.employee_id as employeeId,
+        emp.name as employeeName,
+        e.leave_type as leaveType,
+        e.date,
+        e.description,
+        e.created_at as createdAt,
+        e.updated_at as updatedAt
+      FROM events e
+      LEFT JOIN employees emp ON e.employee_id = emp.id
+      WHERE e.leave_type = ?
+      ORDER BY e.date DESC
     `);
     
     return stmt.all(leaveType) as Event[];
@@ -190,11 +205,20 @@ export class EventService {
     if (!existing) return null;
 
     const now = moment().utcOffset('+07:00').format();
+    const newEmployeeId = data.employeeId ?? existing.employeeId;
+    
+    // Verify employee exists
+    const employeeStmt = this.db.prepare('SELECT name FROM employees WHERE id = ?');
+    const employee = employeeStmt.get(newEmployeeId) as { name: string } | undefined;
+    
+    if (!employee) {
+      throw new Error(`Employee with id ${newEmployeeId} not found`);
+    }
+    
     const stmt = this.db.prepare(`
       UPDATE events
       SET 
         employee_id = ?,
-        employee_name = ?,
         leave_type = ?,
         date = ?,
         description = ?,
@@ -203,8 +227,7 @@ export class EventService {
     `);
     
     const result = stmt.run(
-      data.employeeId ?? existing.employeeId,
-      data.employeeName ?? existing.employeeName,
+      newEmployeeId,
       data.leaveType ?? existing.leaveType,
       data.date ?? existing.date,
       data.description ?? existing.description ?? null,
@@ -232,17 +255,18 @@ export class EventService {
   searchEvents(query: string): Event[] {
     const stmt = this.db.prepare(`
       SELECT 
-        id,
-        employee_id as employeeId,
-        employee_name as employeeName,
-        leave_type as leaveType,
-        date,
-        description,
-        created_at as createdAt,
-        updated_at as updatedAt
-      FROM events
-      WHERE employee_name LIKE ? OR description LIKE ?
-      ORDER BY date DESC
+        e.id,
+        e.employee_id as employeeId,
+        emp.name as employeeName,
+        e.leave_type as leaveType,
+        e.date,
+        e.description,
+        e.created_at as createdAt,
+        e.updated_at as updatedAt
+      FROM events e
+      LEFT JOIN employees emp ON e.employee_id = emp.id
+      WHERE emp.name LIKE ? OR e.description LIKE ?
+      ORDER BY e.date DESC
     `);
     
     const searchTerm = `%${query}%`;
@@ -291,15 +315,18 @@ export class EventService {
 
   getDashboardSummary(startDate?: string, endDate?: string, eventType?: string) {
     let whereClause = '';
+    let joinWhereClause = '';
     const params: any[] = [];
     
     if (startDate && endDate) {
       whereClause = 'WHERE date >= ? AND date <= ?';
+      joinWhereClause = 'WHERE e.date >= ? AND e.date <= ?';
       params.push(startDate, endDate);
     }
     
     if (eventType && eventType !== 'all') {
       whereClause += whereClause ? ' AND leave_type = ?' : 'WHERE leave_type = ?';
+      joinWhereClause += joinWhereClause ? ' AND e.leave_type = ?' : 'WHERE e.leave_type = ?';
       params.push(eventType);
     }
 
@@ -326,14 +353,15 @@ export class EventService {
     // Employee ranking with event breakdown
     const rankingStmt = this.db.prepare(`
       SELECT 
-        employee_id as employeeId,
-        employee_name as employeeName,
-        leave_type as leaveType,
+        e.employee_id as employeeId,
+        emp.name as employeeName,
+        e.leave_type as leaveType,
         COUNT(*) as count
-      FROM events
-      ${whereClause}
-      GROUP BY employee_id, employee_name, leave_type
-      ORDER BY employee_name ASC
+      FROM events e
+      LEFT JOIN employees emp ON e.employee_id = emp.id
+      ${joinWhereClause}
+      GROUP BY e.employee_id, emp.name, e.leave_type
+      ORDER BY emp.name ASC
     `);
     
     const rankingData = rankingStmt.all(...params) as Array<{

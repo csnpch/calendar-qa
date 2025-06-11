@@ -32,7 +32,6 @@ export type UpdateEmployeeRequest = {
 
 export type CreateEventRequest = {
   employeeId: number;
-  employeeName: string;
   leaveType: 'vacation' | 'personal' | 'sick' | 'absent' | 'maternity' | 'bereavement' | 'study' | 'military' | 'sabbatical' | 'unpaid' | 'compensatory' | 'other';
   date: string;
   description?: string;
@@ -40,7 +39,6 @@ export type CreateEventRequest = {
 
 export type UpdateEventRequest = {
   employeeId?: number;
-  employeeName?: string;
   leaveType?: 'vacation' | 'personal' | 'sick' | 'absent' | 'maternity' | 'bereavement' | 'study' | 'military' | 'sabbatical' | 'unpaid' | 'compensatory' | 'other';
   date?: string;
   description?: string;

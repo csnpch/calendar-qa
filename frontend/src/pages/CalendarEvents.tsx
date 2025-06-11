@@ -67,31 +67,23 @@ const CalendarEvents = () => {
   };
 
   const handleEventSave = async (eventData: {
+    employeeId: number;
     employeeName: string;
     leaveType: string;
     date: string;
     description?: string;
   }) => {
     try {
-      const employee = employees.find(emp => emp.name === eventData.employeeName) || employees[0];
-      
-      if (!employee) {
-        console.error('No employee found');
-        return;
-      }
-
       if (editingEvent) {
         await updateEvent(editingEvent.id, {
-          employeeId: employee.id,
-          employeeName: eventData.employeeName,
+          employeeId: eventData.employeeId,
           leaveType: eventData.leaveType as any,
           date: eventData.date,
           description: eventData.description
         });
       } else {
         await addEvent({
-          employeeId: employee.id,
-          employeeName: eventData.employeeName,
+          employeeId: eventData.employeeId,
           leaveType: eventData.leaveType as any,
           date: eventData.date,
           description: eventData.description
@@ -162,6 +154,7 @@ const CalendarEvents = () => {
             <CalendarGrid
               currentDate={currentDate}
               events={events}
+              employees={employees}
               onDateClick={handleDateClick}
               onCreateEvent={handleCreateEvent}
               onPrevMonth={handlePrevMonth}
@@ -178,7 +171,7 @@ const CalendarEvents = () => {
         onClose={() => { setIsModalOpen(false); setEditingEvent(null); }}
         onSave={handleEventSave}
         selectedDate={selectedDate}
-        employees={employees.map(emp => emp.name)}
+        employees={employees}
         editingEvent={editingEvent}
       />
 
@@ -190,6 +183,7 @@ const CalendarEvents = () => {
         onEditEvent={handleEditEvent}
         onDeleteEvent={handleDeleteEvent}
         events={selectedDateEvents}
+        employees={employees}
         selectedDate={selectedDate}
       />
     </Layout>

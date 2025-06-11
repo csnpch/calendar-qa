@@ -8,46 +8,50 @@ interface ThaiHoliday {
   type: 'public' | 'religious' | 'substitution';
 }
 
-const translateToThai = async (englishName: string): Promise<string> => {
-  try {
-    // Use Google Translate via axios
-    const response = await axios.get(`https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=th&dt=t&q=${encodeURIComponent(englishName)}`);
-    
-    const translated = response.data[0][0][0];
-    
-    console.log(`✅ Translated: "${englishName}" -> "${translated}"`);
-    return translated || englishName;
-    
-  } catch (error) {
-    console.warn('Translation failed for:', englishName, error);
-    return englishName;
-  }
-};
+// Commented out translation function - keeping for future use
+// const translateToThai = async (englishName: string): Promise<string> => {
+//   try {
+//     // Use Google Translate via axios
+//     const response = await axios.get(`https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=th&dt=t&q=${encodeURIComponent(englishName)}`);
+//     
+//     const translated = response.data[0][0][0];
+//     
+//     console.log(`✅ Translated: "${englishName}" -> "${translated}"`);
+//     return translated || englishName;
+//     
+//   } catch (error) {
+//     console.warn('Translation failed for:', englishName, error);
+//     return englishName;
+//   }
+// };
 
 export const fetchThaiHolidays = async (year: number): Promise<ThaiHoliday[]> => {
   try {
     const holidays = await apiClient.get<ThaiHoliday[]>(`/holidays/${year}`);
     
-    // Translate English holiday names to Thai
-    const translatedHolidays = await Promise.all(
-      holidays.map(async (holiday) => {
-        // Check if the name is already in Thai (contains Thai characters)
-        const isAlreadyThai = /[\u0E00-\u0E7F]/.test(holiday.name);
-        
-        if (isAlreadyThai) {
-          return holiday;
-        }
-        
-        // Translate English name to Thai
-        const translatedName = await translateToThai(holiday.name);
-        return {
-          ...holiday,
-          name: translatedName
-        };
-      })
-    );
+    // Return holidays without translation
+    return holidays;
     
-    return translatedHolidays;
+    // Commented out translation logic - keeping for future use
+    // const translatedHolidays = await Promise.all(
+    //   holidays.map(async (holiday) => {
+    //     // Check if the name is already in Thai (contains Thai characters)
+    //     const isAlreadyThai = /[\u0E00-\u0E7F]/.test(holiday.name);
+    //     
+    //     if (isAlreadyThai) {
+    //       return holiday;
+    //     }
+    //     
+    //     // Translate English name to Thai
+    //     const translatedName = await translateToThai(holiday.name);
+    //     return {
+    //       ...holiday,
+    //       name: translatedName
+    //     };
+    //   })
+    // );
+    // 
+    // return translatedHolidays;
   } catch (error) {
     console.error('Error fetching Thai holidays from API:', error);
     // Fallback to basic Thai holidays (limited compared to backend comprehensive list)
