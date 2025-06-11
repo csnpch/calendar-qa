@@ -1,5 +1,6 @@
 import type { Holiday } from '../types';
 import { prisma } from '../database/prisma';
+import axios from 'axios';
 
 interface NagerDateApiResponse {
   date: string;
@@ -53,16 +54,11 @@ export class HolidayService {
       
       // Try to fetch fresh data from API
       console.log(`Trying Calendarific API for Thailand holidays ${year}`);
-      const response = await fetch(
+      const response = await axios.get(
         `https://calendarific.com/api/v2/holidays?api_key=h7EPXfb9fLSkyeNUwai6DVfCbgaub1Re&country=TH&year=${year}`
       );
       
-      if (!response.ok) {
-        console.warn(`Calendarific API returned ${response.status}: ${response.statusText}`);
-        throw new Error(`API returned ${response.status}`);
-      }
-      
-      const data = await response.json() as CalendarificApiResponse;
+      const data = response.data as CalendarificApiResponse;
       
       if (data.meta.code !== 200 || data.meta.error_type) {
         console.warn(`Calendarific API error: ${data.meta.error_type} - ${data.meta.error_detail}`);

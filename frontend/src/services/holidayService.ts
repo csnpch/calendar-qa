@@ -1,5 +1,6 @@
 
 import { apiClient } from './api';
+import axios from 'axios';
 
 interface ThaiHoliday {
   date: string;
@@ -9,15 +10,10 @@ interface ThaiHoliday {
 
 const translateToThai = async (englishName: string): Promise<string> => {
   try {
-    // Use Google Translate via fetch API
-    const response = await fetch(`https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=th&dt=t&q=${encodeURIComponent(englishName)}`);
+    // Use Google Translate via axios
+    const response = await axios.get(`https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=th&dt=t&q=${encodeURIComponent(englishName)}`);
     
-    if (!response.ok) {
-      throw new Error(`Translation API returned ${response.status}`);
-    }
-    
-    const data = await response.json();
-    const translated = data[0][0][0];
+    const translated = response.data[0][0][0];
     
     console.log(`✅ Translated: "${englishName}" -> "${translated}"`);
     return translated || englishName;

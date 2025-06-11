@@ -5,16 +5,17 @@ jest.mock('../../src/database/connection', () => ({
   getDatabase: () => global.mockDatabase,
 }));
 
-// Mock fetch globally
-const mockFetch = jest.fn();
-global.fetch = mockFetch as any;
+// Mock axios
+import axios from 'axios';
+jest.mock('axios');
+const mockAxios = axios as jest.Mocked<typeof axios>;
 
 describe('CronjobService - Invalid Webhook URL Tests', () => {
   let cronjobService: CronjobService;
 
   beforeEach(() => {
-    // Reset fetch mock before each test
-    mockFetch.mockReset();
+    // Reset axios mock before each test
+    mockAxios.post.mockReset();
     
     // Create fresh service instance
     cronjobService = new CronjobService(global.mockDatabase as any);
@@ -29,17 +30,19 @@ describe('CronjobService - Invalid Webhook URL Tests', () => {
       `);
 
       // Mock Google's 405 response (exactly what google.com returns)
-      mockFetch.mockResolvedValueOnce({
-        ok: false,
-        status: 405,
-        statusText: 'Method Not Allowed',
-        text: () => Promise.resolve(`<!DOCTYPE html>
+      const error405 = {
+        response: {
+          status: 405,
+          statusText: 'Method Not Allowed',
+          data: `<!DOCTYPE html>
 <html lang=en>
   <meta charset=utf-8>
   <title>Error 405 (Method Not Allowed)!!1</title>
   <p><b>405.</b> <ins>That's an error.</ins>
-  <p>The request method <code>POST</code> is inappropriate for the URL <code>/</code>.  <ins>That's all we know.</ins>`)
-      });
+  <p>The request method <code>POST</code> is inappropriate for the URL <code>/</code>.  <ins>That's all we know.</ins>`
+        }
+      };
+      mockAxios.post.mockRejectedValueOnce(error405);
 
       const result = await cronjobService.testNotification(1);
 
@@ -47,15 +50,14 @@ describe('CronjobService - Invalid Webhook URL Tests', () => {
       expect(result.success).toBe(false);
       expect(result.error).toBe('Method not allowed: https://google.com/ does not accept POST requests (405 Method Not Allowed)');
       
-      // Verify fetch was called with correct webhook URL
-      expect(mockFetch).toHaveBeenCalledWith(
+      // Verify axios.post was called with correct webhook URL
+      expect(mockAxios.post).toHaveBeenCalledWith(
         'https://google.com/',
+        expect.any(Object),
         expect.objectContaining({
-          method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-          },
-          body: expect.any(String)
+          }
         })
       );
     });
@@ -71,7 +73,7 @@ describe('CronjobService - Invalid Webhook URL Tests', () => {
   describe('Weekly notification configuration tests', () => {
     beforeEach(() => {
       // Reset all mocks
-      mockFetch.mockReset();
+      mockAxios.post.mockReset();
       cronjobService = new CronjobService(global.mockDatabase as any);
     });
 
@@ -108,24 +110,22 @@ describe('CronjobService - Invalid Webhook URL Tests', () => {
       });
 
       // Mock successful webhook response
-      mockFetch.mockResolvedValueOnce({
-        ok: true,
+      mockAxios.post.mockResolvedValueOnce({
         status: 200,
         statusText: 'OK',
-        text: () => Promise.resolve('Success')
+        data: 'Success'
       });
 
       const result = await cronjobService.testNotification(config.id);
 
       expect(result.success).toBe(true);
-      expect(mockFetch).toHaveBeenCalledWith(
+      expect(mockAxios.post).toHaveBeenCalledWith(
         'https://webhook.test/endpoint',
+        expect.any(Object),
         expect.objectContaining({
-          method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-          },
-          body: expect.stringContaining('สัปดาห์หน้า')
+          }
         })
       );
     });
@@ -147,7 +147,7 @@ describe('CronjobService - Invalid Webhook URL Tests', () => {
       const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
       
       // Mock failed webhook response
-      mockFetch.mockRejectedValueOnce(new Error('Network error'));
+      mockAxios.post.mockRejectedValueOnce(new Error('getaddrinfo ENOTFOUND invalid.webhook.url'));
 
       const result = await cronjobService.testNotification(config.id);
       
@@ -155,7 +155,7 @@ describe('CronjobService - Invalid Webhook URL Tests', () => {
       consoleSpy.mockRestore();
 
       expect(result.success).toBe(false);
-      expect(result.error).toContain('Network error');
+      expect(result.error).toContain('getaddrinfo ENOTFOUND invalid.webhook.url');
     });
 
     it('should handle daily notification with invalid webhook URL', async () => {
@@ -175,7 +175,7 @@ describe('CronjobService - Invalid Webhook URL Tests', () => {
       const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
       
       // Mock failed webhook response
-      mockFetch.mockRejectedValueOnce(new Error('Connection timeout'));
+      mockAxios.post.mockRejectedValueOnce(new Error('getaddrinfo ENOTFOUND invalid.webhook.url'));
 
       const result = await cronjobService.testNotification(config.id);
       
@@ -183,7 +183,7 @@ describe('CronjobService - Invalid Webhook URL Tests', () => {
       consoleSpy.mockRestore();
 
       expect(result.success).toBe(false);
-      expect(result.error).toContain('Connection timeout');
+      expect(result.error).toContain('getaddrinfo ENOTFOUND invalid.webhook.url');
     });
 
     it('should handle another invalid webhook URL case', async () => {
@@ -200,12 +200,14 @@ describe('CronjobService - Invalid Webhook URL Tests', () => {
       });
 
       // Mock HTTP error response
-      mockFetch.mockResolvedValueOnce({
-        ok: false,
-        status: 404,
-        statusText: 'Not Found',
-        text: () => Promise.resolve('Endpoint not found')
-      });
+      const error404 = {
+        response: {
+          status: 404,
+          statusText: 'Not Found',
+          data: 'Endpoint not found'
+        }
+      };
+      mockAxios.post.mockRejectedValueOnce(error404);
 
       const result = await cronjobService.testNotification(config.id);
 

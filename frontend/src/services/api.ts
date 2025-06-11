@@ -1,3 +1,5 @@
+import axios from 'axios';
+
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001';
 
 export class ApiClient {
@@ -7,22 +9,20 @@ export class ApiClient {
     this.baseUrl = baseUrl;
   }
 
-  private async request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
+  private async request<T>(endpoint: string, options: { method?: string; data?: any; headers?: Record<string, string> } = {}): Promise<T> {
     const url = `${this.baseUrl}${endpoint}`;
     
-    const response = await fetch(url, {
+    const response = await axios({
+      url,
+      method: options.method || 'GET',
+      data: options.data,
       headers: {
         'Content-Type': 'application/json',
         ...options.headers,
       },
-      ...options,
     });
 
-    if (!response.ok) {
-      throw new Error(`API Error: ${response.status} ${response.statusText}`);
-    }
-
-    return response.json();
+    return response.data;
   }
 
   async get<T>(endpoint: string): Promise<T> {
@@ -32,14 +32,14 @@ export class ApiClient {
   async post<T>(endpoint: string, data: any): Promise<T> {
     return this.request<T>(endpoint, {
       method: 'POST',
-      body: JSON.stringify(data),
+      data,
     });
   }
 
   async put<T>(endpoint: string, data: any): Promise<T> {
     return this.request<T>(endpoint, {
       method: 'PUT',
-      body: JSON.stringify(data),
+      data,
     });
   }
 

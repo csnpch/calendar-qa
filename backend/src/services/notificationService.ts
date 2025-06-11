@@ -1,4 +1,5 @@
 import type { Event } from '../types';
+import axios from 'axios';
 
 export interface TeamsNotificationPayload {
   type: 'AdaptiveCard';
@@ -309,30 +310,15 @@ export class NotificationService {
       console.log('Sending Teams notification to:', webhookUrl);
       console.log('Payload:', JSON.stringify(payload, null, 2));
       
-      // Use the same approach as the working example
-      const response = await fetch(webhookUrl, {
-        method: 'POST',
+      // Use axios for the request
+      const response = await axios.post(webhookUrl, payload, {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(payload)
       });
 
-      let responseText = '';
-      try {
-        responseText = await response.text();
-      } catch (e) {
-        console.log('Could not read response text:', e);
-      }
-      
       console.log('Response status:', response.status);
-      console.log('Response text:', responseText);
-
-      if (!response.ok) {
-        console.error('Failed to send Teams notification:', response.status, response.statusText);
-        console.error('Response body:', responseText);
-        return false;
-      }
+      console.log('Response text:', response.data);
 
       return true;
     } catch (error) {
@@ -343,38 +329,13 @@ export class NotificationService {
 
   static async sendTeamsNotificationWithError(webhookUrl: string, payload: TeamsNotificationPayload): Promise<{ success: boolean; error?: string }> {
     try {
-      
-      const response = await fetch(webhookUrl, {
-        method: 'POST',
+      const response = await axios.post(webhookUrl, payload, {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(payload)
       });
 
-      let responseText = '';
-      try {
-        responseText = await response.text();
-      } catch (e) {
-        console.log('Could not read response text:', e);
-      }
-
-      // Check for common non-webhook HTTP status codes first
-      if (response.status === 405) {
-        const errorMessage = `Method not allowed: ${webhookUrl} does not accept POST requests (405 Method Not Allowed)`;
-        return { success: false, error: errorMessage };
-      }
-
-      if (response.status === 404) {
-        const errorMessage = `Not found: ${webhookUrl} endpoint does not exist (404 Not Found)`;
-        return { success: false, error: errorMessage };
-      }
-
-      if (!response.ok) {
-        const errorMessage = `Webhook failed with status ${response.status}: ${response.statusText}. Response: ${responseText}`;
-        console.error('Failed to send Teams notification:', errorMessage);
-        return { success: false, error: errorMessage };
-      }
+      const responseText = typeof response.data === 'string' ? response.data : JSON.stringify(response.data);
 
       // Additional validation for proper webhook endpoints
       if (!this.isValidWebhookResponse(webhookUrl, responseText, response.status)) {
@@ -384,7 +345,25 @@ export class NotificationService {
       }
 
       return { success: true };
-    } catch (error) {
+    } catch (error: any) {
+      if (error.response) {
+        // Check for common non-webhook HTTP status codes first
+        if (error.response.status === 405) {
+          const errorMessage = `Method not allowed: ${webhookUrl} does not accept POST requests (405 Method Not Allowed)`;
+          return { success: false, error: errorMessage };
+        }
+
+        if (error.response.status === 404) {
+          const errorMessage = `Not found: ${webhookUrl} endpoint does not exist (404 Not Found)`;
+          return { success: false, error: errorMessage };
+        }
+
+        const responseText = typeof error.response.data === 'string' ? error.response.data : JSON.stringify(error.response.data);
+        const errorMessage = `Webhook failed with status ${error.response.status}: ${error.response.statusText || 'Unknown error'}. Response: ${responseText}`;
+        console.error('Failed to send Teams notification:', errorMessage);
+        return { success: false, error: errorMessage };
+      }
+
       const errorMessage = error instanceof Error ? error.message : 'Unknown network error';
       console.error('Error sending Teams notification:', error);
       return { success: false, error: `Network error: ${errorMessage}` };
