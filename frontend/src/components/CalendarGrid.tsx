@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Calendar, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { CreateEventPopover } from '@/components/CreateEventPopover';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useHolidays } from '@/hooks/useHolidays';
 import { useCompanyHolidays } from '@/hooks/useCompanyHolidays';
 import { Event } from '@/services/apiDatabase';
@@ -104,7 +105,8 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({
   const allVisibleDays = weeks.flat();
 
   return (
-    <div className="bg-white dark:bg-gray-700 rounded-lg shadow-lg border border-gray-200 dark:border-gray-600 overflow-hidden">
+    <TooltipProvider>
+      <div className="bg-white dark:bg-gray-700 rounded-lg shadow-lg border border-gray-200 dark:border-gray-600 overflow-hidden">
       {/* Header */}
       <div className="p-2 sm:p-3 md:p-4 border-b border-gray-200 dark:border-gray-600 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-gray-700 dark:to-gray-600">
         <div className="flex items-center justify-between">
@@ -224,15 +226,22 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({
                     </div>
                     
                     {companyHoliday && !isOtherMonth && (
-                      <div className="text-xs bg-red-50 dark:bg-red-900/50 text-red-700 dark:text-red-400 px-1 py-0.5 rounded mb-0.5 font-medium leading-tight">
-                        <div className="break-words overflow-hidden leading-tight" style={{
-                          display: '-webkit-box',
-                          WebkitLineClamp: 3,
-                          WebkitBoxOrient: 'vertical'
-                        }}>
-                          {companyHoliday.name}
-                        </div>
-                      </div>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <div className="text-xs bg-red-50 dark:bg-red-900/50 text-red-700 dark:text-red-400 px-1 py-0.5 rounded mb-0.5 font-medium leading-tight cursor-pointer">
+                            <div className="break-words overflow-hidden leading-tight" style={{
+                              display: '-webkit-box',
+                              WebkitLineClamp: 3,
+                              WebkitBoxOrient: 'vertical'
+                            }}>
+                              {companyHoliday.name}
+                            </div>
+                          </div>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p>{companyHoliday.description || companyHoliday.name}</p>
+                        </TooltipContent>
+                      </Tooltip>
                     )}
                     
                     {thaiHoliday && !isOtherMonth && (
@@ -291,6 +300,7 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({
           ))}
         </div>
       </div>
-    </div>
+      </div>
+    </TooltipProvider>
   );
 };
