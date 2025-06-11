@@ -2,17 +2,22 @@ import React, { useState, useEffect } from 'react';
 import { CalendarGrid } from '@/components/CalendarGrid';
 import { EventModal } from '@/components/EventModal';
 import { EventDetailsModal } from '@/components/EventDetailsModal';
+import { CompanyHolidayModal } from '@/components/CompanyHolidayModal';
 import { useCalendarData } from '@/hooks/useCalendarData';
+import { useCompanyHolidays } from '@/hooks/useCompanyHolidays';
 import { Event } from '@/services/apiDatabase';
 import { Layout } from '@/components/Layout';
+import { deleteCompanyHoliday, updateCompanyHoliday } from '@/services/companyHolidayService';
 
 const CalendarEvents = () => {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
+  const [isCompanyHolidayModalOpen, setIsCompanyHolidayModalOpen] = useState(false);
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [selectedDateEvents, setSelectedDateEvents] = useState<Event[]>([]);
   const [editingEvent, setEditingEvent] = useState<Event | null>(null);
+  const [editingCompanyHoliday, setEditingCompanyHoliday] = useState<{ id: number; name: string; description?: string } | null>(null);
   
   const {
     employees,
@@ -26,6 +31,8 @@ const CalendarEvents = () => {
     loadEventsForMonth,
     loadData
   } = useCalendarData();
+
+  const { holidays: companyHolidays, isCompanyHoliday, refresh: refreshCompanyHolidays } = useCompanyHolidays(currentDate.getFullYear());
 
   const handleDateClick = (date: Date) => {
     setSelectedDate(date);
@@ -123,11 +130,60 @@ const CalendarEvents = () => {
     loadEventsForMonth(newDate.getFullYear(), newDate.getMonth());
   };
 
+  const handleEditCompanyHoliday = (holiday: { id: number; name: string; description?: string }) => {
+    setEditingCompanyHoliday(holiday);
+    setIsDetailsModalOpen(false);
+    setIsCompanyHolidayModalOpen(true);
+  };
+
+  const handleDeleteCompanyHoliday = async (holidayId: number) => {
+    try {
+      await deleteCompanyHoliday(holidayId);
+      refreshCompanyHolidays();
+      // Refresh events for the selected date to update the modal
+      if (selectedDate) {
+        const dayEvents = getEventsForDate(selectedDate);
+        setSelectedDateEvents(dayEvents);
+      }
+    } catch (error) {
+      console.error('Failed to delete company holiday:', error);
+    }
+  };
+
+  const handleCompanyHolidaySave = async (holidayData: {
+    name: string;
+    date: string;
+    description?: string;
+  }) => {
+    try {
+      if (editingCompanyHoliday) {
+        // Update existing company holiday
+        await updateCompanyHoliday(editingCompanyHoliday.id, {
+          name: holidayData.name,
+          description: holidayData.description
+        });
+      }
+      // Note: Creating new holiday is handled by CreateEventPopover
+      
+      refreshCompanyHolidays();
+      setEditingCompanyHoliday(null);
+      setIsCompanyHolidayModalOpen(false);
+      
+      // Refresh events for the selected date to update the modal
+      if (selectedDate) {
+        const dayEvents = getEventsForDate(selectedDate);
+        setSelectedDateEvents(dayEvents);
+      }
+    } catch (error) {
+      console.error('Failed to save company holiday:', error);
+    }
+  };
+
   useEffect(() => {
-    if (!isModalOpen && !isDetailsModalOpen) {
+    if (!isModalOpen && !isDetailsModalOpen && !isCompanyHolidayModalOpen) {
       document.body.style.overflow = 'unset';
     }
-  }, [isModalOpen, isDetailsModalOpen]);
+  }, [isModalOpen, isDetailsModalOpen, isCompanyHolidayModalOpen]);
 
   useEffect(() => {
     if (selectedDate) {
@@ -155,8 +211,10 @@ const CalendarEvents = () => {
               currentDate={currentDate}
               events={events}
               employees={employees}
+              companyHolidays={companyHolidays}
               onDateClick={handleDateClick}
               onCreateEvent={handleCreateEvent}
+              onHolidayAdded={refreshCompanyHolidays}
               onPrevMonth={handlePrevMonth}
               onNextMonth={handleNextMonth}
               onTodayClick={handleTodayClick}
@@ -185,6 +243,18 @@ const CalendarEvents = () => {
         events={selectedDateEvents}
         employees={employees}
         selectedDate={selectedDate}
+        companyHoliday={selectedDate ? isCompanyHoliday(selectedDate) : null}
+        onEditCompanyHoliday={handleEditCompanyHoliday}
+        onDeleteCompanyHoliday={handleDeleteCompanyHoliday}
+      />
+
+      {/* Company Holiday Modal */}
+      <CompanyHolidayModal
+        isOpen={isCompanyHolidayModalOpen}
+        onClose={() => { setIsCompanyHolidayModalOpen(false); setEditingCompanyHoliday(null); }}
+        onSave={handleCompanyHolidaySave}
+        selectedDate={selectedDate}
+        editingHoliday={editingCompanyHoliday}
       />
     </Layout>
   );

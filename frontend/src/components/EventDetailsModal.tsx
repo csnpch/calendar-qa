@@ -15,6 +15,9 @@ interface EventDetailsModalProps {
   events: Event[];
   employees: { id: number; name: string }[];
   selectedDate: Date | null;
+  companyHoliday?: { id: number; name: string; description?: string } | null;
+  onEditCompanyHoliday?: (holiday: { id: number; name: string; description?: string }) => void;
+  onDeleteCompanyHoliday?: (holidayId: number) => void;
 }
 
 export const EventDetailsModal: React.FC<EventDetailsModalProps> = ({
@@ -25,7 +28,10 @@ export const EventDetailsModal: React.FC<EventDetailsModalProps> = ({
   onDeleteEvent,
   events,
   employees,
-  selectedDate
+  selectedDate,
+  companyHoliday,
+  onEditCompanyHoliday,
+  onDeleteCompanyHoliday
 }) => {
 
   const handleCreateEvent = () => {
@@ -76,8 +82,58 @@ export const EventDetailsModal: React.FC<EventDetailsModalProps> = ({
 
         {/* Events List */}
         <div className="p-3 sm:p-4 md:p-6 max-h-60 sm:max-h-80 overflow-y-auto">
-          {events.length > 0 ? (
+          {(events.length > 0 || companyHoliday) ? (
             <div className="space-y-2">
+              {/* Company Holiday */}
+              {companyHoliday && (
+                <div className="p-3 rounded-lg border bg-red-200 dark:bg-red-600 text-black dark:text-red-100 border-red-300 dark:border-red-500">
+                  <div className="flex items-center justify-between">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center space-x-2 mb-1">
+                        <Calendar className="w-3 h-3 flex-shrink-0" />
+                        <span className="font-medium text-sm">{companyHoliday.name}</span>
+                      </div>
+                      {companyHoliday.description && (
+                        <div className="flex items-start space-x-2">
+                          <MessageSquare className="w-3 h-3 mt-0.5 flex-shrink-0" />
+                          <span className="text-xs line-clamp-2">{companyHoliday.description}</span>
+                        </div>
+                      )}
+                    </div>
+                    
+                    <div className="flex space-x-1 ml-2">
+                      {onEditCompanyHoliday && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => onEditCompanyHoliday(companyHoliday)}
+                          className="h-7 w-7 p-0 text-gray-600 hover:text-blue-600 dark:text-gray-300 dark:hover:text-gray-100"
+                          title="แก้ไขวันหยุด"
+                        >
+                          <Edit className="w-3 h-3" />
+                        </Button>
+                      )}
+                      {onDeleteCompanyHoliday && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => {
+                            if (window.confirm('คุณต้องการลบวันหยุดนี้หรือไม่?')) {
+                              onDeleteCompanyHoliday(companyHoliday.id);
+                            }
+                          }}
+                          className="h-7 w-7 p-0 text-gray-600 hover:text-red-600 dark:text-gray-300 dark:hover:text-red-400"
+                          title="ลบวันหยุด"
+                        >
+                          <Trash2 className="w-3 h-3" />
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
+              
+              {/* Employee Events */}
               {events.map((event) => (
                 <div
                   key={event.id}

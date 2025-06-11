@@ -17,7 +17,6 @@ describe('EventService', () => {
     it('should create an event successfully', () => {
       const eventData = {
         employeeId: 1,
-        employeeName: 'John Smith',
         leaveType: 'vacation' as const,
         date: '2025-06-15',
         description: 'Summer vacation'
@@ -26,7 +25,7 @@ describe('EventService', () => {
       const result = eventService.createEvent(eventData);
 
       expect(result.employeeId).toBe(eventData.employeeId);
-      expect(result.employeeName).toBe(eventData.employeeName);
+      expect(result.employeeName).toBe('John Smith'); // Should come from employee lookup
       expect(result.leaveType).toBe(eventData.leaveType);
       expect(result.date).toBe(eventData.date);
       expect(result.description).toBe(eventData.description);
@@ -38,7 +37,6 @@ describe('EventService', () => {
     it('should create an event without description', () => {
       const eventData = {
         employeeId: 2,
-        employeeName: 'Jane Doe',
         leaveType: 'sick' as const,
         date: '2025-06-16'
       };
@@ -54,7 +52,6 @@ describe('EventService', () => {
       // Create test events
       eventService.createEvent({
         employeeId: 1,
-        employeeName: 'John Smith',
         leaveType: 'vacation',
         date: '2025-06-15',
         description: 'Test event 1'
@@ -62,7 +59,6 @@ describe('EventService', () => {
 
       eventService.createEvent({
         employeeId: 2,
-        employeeName: 'Jane Doe',
         leaveType: 'sick',
         date: '2025-06-20',
         description: 'Test event 2'
@@ -79,7 +75,6 @@ describe('EventService', () => {
     it('should return event by ID', () => {
       const created = eventService.createEvent({
         employeeId: 1,
-        employeeName: 'John Smith',
         leaveType: 'vacation',
         date: '2025-06-15',
         description: 'Summer vacation'
@@ -102,7 +97,6 @@ describe('EventService', () => {
     it('should return events for specific date', () => {
       eventService.createEvent({
         employeeId: 1,
-        employeeName: 'John Smith',
         leaveType: 'vacation',
         date: '2025-06-15',
         description: 'Vacation'
@@ -119,7 +113,6 @@ describe('EventService', () => {
     it('should return events within date range', () => {
       eventService.createEvent({
         employeeId: 1,
-        employeeName: 'John Smith',
         leaveType: 'vacation',
         date: '2025-06-15',
         description: 'Vacation'
@@ -135,7 +128,6 @@ describe('EventService', () => {
     it('should update event successfully', async () => {
       const created = eventService.createEvent({
         employeeId: 1,
-        employeeName: 'John Smith',
         leaveType: 'vacation',
         date: '2025-06-15',
         description: 'Summer vacation'
@@ -169,7 +161,6 @@ describe('EventService', () => {
     it('should delete event successfully', () => {
       const created = eventService.createEvent({
         employeeId: 1,
-        employeeName: 'John Smith',
         leaveType: 'vacation',
         date: '2025-06-15'
       });
@@ -192,7 +183,6 @@ describe('EventService', () => {
     it('should search events by employee name', () => {
       eventService.createEvent({
         employeeId: 1,
-        employeeName: 'John Smith',
         leaveType: 'vacation',
         date: '2025-06-15',
         description: 'Test vacation'
@@ -210,14 +200,12 @@ describe('EventService', () => {
       // Create test events
       eventService.createEvent({
         employeeId: 1,
-        employeeName: 'John Smith',
         leaveType: 'vacation',
         date: '2025-06-15'
       });
 
       eventService.createEvent({
         employeeId: 2,
-        employeeName: 'Jane Doe',
         leaveType: 'sick',
         date: '2025-06-16'
       });

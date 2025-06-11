@@ -4,7 +4,6 @@ import { Button } from '@/components/ui/button';
 import { CreateEventPopover } from '@/components/CreateEventPopover';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useHolidays } from '@/hooks/useHolidays';
-import { useCompanyHolidays } from '@/hooks/useCompanyHolidays';
 import { Event } from '@/services/apiDatabase';
 import { DAYS_OF_WEEK, MONTHS, LEAVE_TYPE_COLORS, LEAVE_TYPE_LABELS } from '@/lib/utils';
 
@@ -12,6 +11,7 @@ interface CalendarGridProps {
   currentDate: Date;
   events: Event[];
   employees: { id: number; name: string }[];
+  companyHolidays: any[];
   onDateClick: (date: Date) => void;
   onCreateEvent: (date: Date) => void;
   onHolidayAdded?: () => void;
@@ -24,6 +24,7 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({
   currentDate,
   events,
   employees,
+  companyHolidays,
   onDateClick,
   onCreateEvent,
   onHolidayAdded,
@@ -37,11 +38,17 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({
   const year = currentDate.getFullYear();
   const month = currentDate.getMonth();
   const { holidays, isHoliday, isWeekend } = useHolidays(year);
-  const { holidays: companyHolidays, isCompanyHoliday, refresh: refreshCompanyHolidays } = useCompanyHolidays(year);
+
+  const isCompanyHoliday = (date: Date) => {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    const dateString = `${year}-${month}-${day}`;
+    return companyHolidays.find(holiday => holiday.date === dateString) || null;
+  };
 
   const handleHolidayAdded = () => {
     // Refresh company holidays when a new one is added
-    refreshCompanyHolidays();
     if (onHolidayAdded) {
       onHolidayAdded();
     }
@@ -87,8 +94,9 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({
 
   const handleDateClick = (date: Date) => {
     const dayEvents = getEventsForDate(date);
+    const companyHoliday = isCompanyHoliday(date);
     
-    if (dayEvents.length > 0) {
+    if (dayEvents.length > 0 || companyHoliday) {
       onDateClick(date);
     } else {
       setSelectedPopoverDate(date);
@@ -237,7 +245,7 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({
                     {companyHoliday && !isOtherMonth && (
                       <Tooltip>
                         <TooltipTrigger asChild>
-                          <div className="text-xs bg-red-50 dark:bg-red-900/50 text-red-700 dark:text-red-400 px-1 py-0.5 rounded mb-0.5 font-medium leading-tight cursor-pointer">
+                          <div className="text-xs bg-red-200 dark:bg-red-600 text-black dark:text-red-100 px-1 py-0.5 rounded mb-0.5 font-medium leading-tight cursor-pointer">
                             <div className="break-words overflow-hidden leading-tight" style={{
                               display: '-webkit-box',
                               WebkitLineClamp: 3,
@@ -291,7 +299,7 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({
                   </div>
                 );
 
-                return !hasEvents ? (
+                return !hasEvents && !companyHoliday ? (
                   <CreateEventPopover
                     key={`${weekIndex}-${index}`}
                     isOpen={popoverOpen && selectedPopoverDate?.toDateString() === date.toDateString()}
