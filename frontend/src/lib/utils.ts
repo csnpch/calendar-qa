@@ -14,10 +14,10 @@ export const LEAVE_TYPE_LABELS = {
 } as const;
 
 export const LEAVE_TYPE_COLORS = {
-  'vacation': 'bg-sky-100 dark:bg-sky-800/40 text-sky-800 dark:text-sky-200 border-sky-200 dark:border-sky-600',
-  'personal': 'bg-green-100 dark:bg-green-800/40 text-green-800 dark:text-green-200 border-green-200 dark:border-green-600',
-  'sick': 'bg-red-100 dark:bg-red-800/40 text-red-800 dark:text-red-200 border-red-200 dark:border-red-600',
-  'other': 'bg-purple-100 dark:bg-purple-800/40 text-purple-800 dark:text-purple-200 border-purple-200 dark:border-purple-600'
+  'vacation': 'bg-blue-100 dark:bg-blue-800/40 text-blue-800 dark:text-blue-200 border-blue-200 dark:border-blue-600',
+  'personal': 'bg-blue-100 dark:bg-blue-800/40 text-blue-800 dark:text-blue-200 border-blue-200 dark:border-blue-600',
+  'sick': 'bg-blue-100 dark:bg-blue-800/40 text-blue-800 dark:text-blue-200 border-blue-200 dark:border-blue-600',
+  'other': 'bg-blue-100 dark:bg-blue-800/40 text-blue-800 dark:text-blue-200 border-blue-200 dark:border-blue-600'
 } as const;
 
 // Utility function for getting leave type colors
