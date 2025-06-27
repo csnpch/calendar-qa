@@ -104,7 +104,7 @@ export const EventModal: React.FC<EventModalProps> = ({
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-2 sm:space-x-3">
               <Calendar className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 text-blue-600 dark:text-gray-200" />
-              <h3 className="text-sm sm:text-base md:text-lg lg:text-xl font-bold text-gray-900 dark:text-white">
+              <h3 className="text-sm sm:text-base md:text-lg lg:text-xl font-semibold text-gray-900 dark:text-white">
                 {editingEvent ? 'แก้ไขเหตุการณ์' : 'สร้างเหตุการณ์ใหม่'}
               </h3>
             </div>

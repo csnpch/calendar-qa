@@ -141,7 +141,7 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-2">
             <Calendar className="w-4 h-4 sm:w-5 sm:h-5 text-blue-600 dark:text-gray-200" />
-            <h2 className="text-sm sm:text-base md:text-lg lg:text-xl font-bold text-gray-900 dark:text-white">
+            <h2 className="text-sm sm:text-base md:text-lg lg:text-xl font-semibold text-gray-900 dark:text-white">
               {MONTHS[month]} {year}
             </h2>
           </div>
@@ -164,7 +164,7 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({
         {/* Days of week header */}
         <div className="grid grid-cols-7 gap-0.5 sm:gap-1 mb-1 sm:mb-2">
           {DAYS_OF_WEEK.map((day, index) => (
-            <div key={day} className={`p-1 sm:p-2 text-center text-xs font-semibold rounded ${
+            <div key={day} className={`p-1 sm:p-2 text-center text-xs font-medium rounded ${
               index === 0 || index === 6 
                 ? 'bg-red-50 dark:bg-red-900/20 text-red-500 dark:text-red-400' 
                 : 'bg-slate-50 dark:bg-slate-800 text-slate-500 dark:text-slate-400'
@@ -250,14 +250,14 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({
                     `}
                     onClick={() => handleDateClick(date)}
                   >
-                    <div className={`text-xs font-semibold mb-0.5 ${isTodayDate && !isOtherMonth ? 'dark:text-white' : ''}`}>
+                    <div className={`text-xs font-medium mb-0.5 ${isTodayDate && !isOtherMonth ? 'dark:text-white' : ''}`}>
                       {moment(date).date()}
                     </div>
                     
                     {companyHoliday && !isOtherMonth && (
                       <Tooltip>
                         <TooltipTrigger asChild>
-                          <div className="text-xs bg-red-200 dark:bg-red-600 text-black dark:text-red-100 px-1 py-0.5 rounded mb-0.5 font-medium leading-tight cursor-pointer">
+                          <div className="text-xs bg-red-200 dark:bg-red-600 text-black dark:text-red-100 px-1 py-0.5 rounded mb-0.5 font-normal leading-tight cursor-pointer">
                             <div className="break-words overflow-hidden leading-tight" style={{
                               display: '-webkit-box',
                               WebkitLineClamp: 3,
@@ -274,7 +274,7 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({
                     )}
                     
                     {thaiHoliday && !isOtherMonth && (
-                      <div className="text-xs bg-green-100 dark:bg-green-900/50 text-green-800 dark:text-green-200 px-1 py-0.5 rounded mb-0.5 font-medium leading-tight">
+                      <div className="text-xs bg-green-100 dark:bg-green-900/50 text-green-800 dark:text-green-200 px-1 py-0.5 rounded mb-0.5 font-normal leading-tight">
                         <div className="break-words overflow-hidden leading-tight" style={{
                           display: '-webkit-box',
                           WebkitLineClamp: 3,
@@ -292,7 +292,7 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({
                           <div
                             key={event.id}
                             className={`
-                              text-xs px-0.5 py-0.5 sm:px-1 sm:py-0.5 rounded border text-center font-medium truncate
+                              text-xs px-0.5 py-0.5 sm:px-1 sm:py-0.5 rounded border text-center font-normal truncate
                               ${LEAVE_TYPE_COLORS[event.leaveType as keyof typeof LEAVE_TYPE_COLORS] || LEAVE_TYPE_COLORS.other}
                             `}
                             title={`${employeeName} - ${LEAVE_TYPE_LABELS[event.leaveType as keyof typeof LEAVE_TYPE_LABELS] || event.leaveType}`}
@@ -303,7 +303,7 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({
                         );
                       })}
                       {dayEvents.length > maxVisibleEvents && (
-                        <div className="text-xs text-gray-600 text-center font-medium">
+                        <div className="text-xs text-gray-600 text-center font-normal">
                           +{dayEvents.length - maxVisibleEvents}
                         </div>
                       )}

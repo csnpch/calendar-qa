@@ -120,7 +120,7 @@ export const Employees = () => {
     <Layout currentPage="employees">
       <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-4">
         <div className="mb-6">
-          <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">จัดการข้อมูลพนักงาน</h2>
+          <h2 className="text-xl font-normal text-gray-900 dark:text-white mb-2">จัดการข้อมูลพนักงาน</h2>
           <p className="text-sm text-gray-600 dark:text-gray-400">เพิ่ม แก้ไข และลบข้อมูลพนักงาน</p>
         </div>
 
@@ -201,7 +201,7 @@ export const Employees = () => {
                           <Users className="w-5 h-5 text-blue-600 dark:text-gray-400" />
                         </div>
                         <div>
-                          <p className="font-medium text-gray-900 dark:text-white">{employee.name}</p>
+                          <p className="font-normal text-gray-900 dark:text-white">{employee.name}</p>
                         </div>
                       </div>
                       <div className="flex space-x-2">

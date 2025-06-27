@@ -143,11 +143,11 @@ const Dashboard = () => {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">เหตุการณ์ทั้งหมด</CardTitle>
+                  <CardTitle className="text-sm font-normal">เหตุการณ์ทั้งหมด</CardTitle>
                   <Calendar className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">{dashboardData.monthlyStats.totalEvents}</div>
+                  <div className="text-2xl font-normal">{dashboardData.monthlyStats.totalEvents}</div>
                   <p className="text-xs text-muted-foreground">
                     {selectedPeriod === 'custom' 
                       ? `${new Date(dateFrom).toLocaleDateString('th-TH')} - ${new Date(dateTo).toLocaleDateString('th-TH')}`
@@ -161,11 +161,11 @@ const Dashboard = () => {
               
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">พนักงานที่มีเหตุการณ์</CardTitle>
+                  <CardTitle className="text-sm font-normal">พนักงานที่มีเหตุการณ์</CardTitle>
                   <Users className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">{dashboardData.monthlyStats.totalEmployees}</div>
+                  <div className="text-2xl font-normal">{dashboardData.monthlyStats.totalEmployees}</div>
                   <p className="text-xs text-muted-foreground">
                     จากทั้งหมด {dashboardData.employeeRanking.length} คน
                   </p>
@@ -174,11 +174,11 @@ const Dashboard = () => {
               
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">ประเภทที่พบมากที่สุด</CardTitle>
+                  <CardTitle className="text-sm font-normal">ประเภทที่พบมากที่สุด</CardTitle>
                   <TrendingUp className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">
+                  <div className="text-2xl font-normal">
                     {LEAVE_TYPE_LABELS[dashboardData.monthlyStats.mostCommonType as keyof typeof LEAVE_TYPE_LABELS] || dashboardData.monthlyStats.mostCommonType}
                   </div>
                   <p className="text-xs text-muted-foreground">
@@ -196,7 +196,7 @@ const Dashboard = () => {
           : 'grid-cols-1 sm:grid-cols-2'
         }`}>
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <label className="block text-sm font-normal text-gray-700 dark:text-gray-300 mb-2">
               ช่วงเวลา
             </label>
             <Select value={selectedPeriod} onValueChange={setSelectedPeriod}>
@@ -213,7 +213,7 @@ const Dashboard = () => {
           </div>
           
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <label className="block text-sm font-normal text-gray-700 dark:text-gray-300 mb-2">
               ประเภทเหตุการณ์
             </label>
             <Combobox
@@ -232,7 +232,7 @@ const Dashboard = () => {
           {selectedPeriod === 'custom' && (
             <>
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <label className="block text-sm font-normal text-gray-700 dark:text-gray-300 mb-2">
                   วันที่เริ่มต้น
                 </label>
                 <div className="relative w-full">
@@ -250,7 +250,7 @@ const Dashboard = () => {
               </div>
               
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <label className="block text-sm font-normal text-gray-700 dark:text-gray-300 mb-2">
                   วันที่สิ้นสุด
                 </label>
                 <div className="relative w-full">
@@ -302,11 +302,11 @@ const Dashboard = () => {
                       onClick={() => handleEmployeeClick(employee.name)}
                     >
                       <div className="flex items-center gap-3">
-                        <div className="flex items-center justify-center w-8 h-8 bg-blue-100 dark:bg-gray-800 text-blue-600 dark:text-gray-400 rounded-full font-bold">
+                        <div className="flex items-center justify-center w-8 h-8 bg-blue-100 dark:bg-gray-800 text-blue-600 dark:text-gray-400 rounded-full font-normal">
                           {index + 1}
                         </div>
                         <div>
-                          <div className="font-medium text-gray-900 dark:text-white">{employee.name}</div>
+                          <div className="font-normal text-gray-900 dark:text-white">{employee.name}</div>
                           <div className="text-sm text-gray-500 dark:text-gray-400">
                             รวม {selectedEventType === 'all' ? employee.totalEvents : (employee.eventTypes[selectedEventType as keyof typeof employee.eventTypes] || 0)} เหตุการณ์
                           </div>

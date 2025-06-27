@@ -3,6 +3,7 @@ import { CalendarGrid } from '@/components/CalendarGrid';
 import { EventModal } from '@/components/EventModal';
 import { EventDetailsModal } from '@/components/EventDetailsModal';
 import { CompanyHolidayModal } from '@/components/CompanyHolidayModal';
+import UpcomingEvents from '@/components/UpcomingEvents';
 import { useCalendarData } from '@/hooks/useCalendarData';
 import { useCompanyHolidays } from '@/hooks/useCompanyHolidays';
 import { Event } from '@/services/apiDatabase';
@@ -207,18 +208,25 @@ const CalendarEvents = () => {
               <div className="text-gray-500 dark:text-gray-300">Loading calendar data...</div>
             </div>
           ) : (
-            <CalendarGrid
-              currentDate={currentDate}
-              events={events}
-              employees={employees}
-              companyHolidays={companyHolidays}
-              onDateClick={handleDateClick}
-              onCreateEvent={handleCreateEvent}
-              onHolidayAdded={refreshCompanyHolidays}
-              onPrevMonth={handlePrevMonth}
-              onNextMonth={handleNextMonth}
-              onTodayClick={handleTodayClick}
-            />
+            <>
+              <CalendarGrid
+                currentDate={currentDate}
+                events={events}
+                employees={employees}
+                companyHolidays={companyHolidays}
+                onDateClick={handleDateClick}
+                onCreateEvent={handleCreateEvent}
+                onHolidayAdded={refreshCompanyHolidays}
+                onPrevMonth={handlePrevMonth}
+                onNextMonth={handleNextMonth}
+                onTodayClick={handleTodayClick}
+              />
+              
+              {/* Upcoming Events Section */}
+              <div className="mt-6">
+                <UpcomingEvents events={events} employees={employees} />
+              </div>
+            </>
           )}
         </div>
       </div>

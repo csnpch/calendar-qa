@@ -320,7 +320,7 @@ export default function CronjobConfig() {
       <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-8">
         <div className="flex justify-between items-center mb-6">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Cronjob Configuration</h1>
+            <h1 className="text-2xl font-normal text-gray-900 dark:text-white">Cronjob Configuration</h1>
             <p className="text-gray-600 dark:text-gray-300 mt-2">Manage notification schedules and webhooks</p>
           </div>
         <div className="flex gap-2">
@@ -514,17 +514,17 @@ export default function CronjobConfig() {
               <CardContent>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
                   <div>
-                    <p className="font-medium text-gray-700 dark:text-gray-300">Schedule</p>
+                    <p className="font-normal text-gray-700 dark:text-gray-300">Schedule</p>
                     <p className="text-gray-900 dark:text-white">{config.schedule_time}</p>
                   </div>
                   <div>
-                    <p className="font-medium text-gray-700 dark:text-gray-300">Notification Type</p>
+                    <p className="font-normal text-gray-700 dark:text-gray-300">Notification Type</p>
                     <p className="text-gray-900 dark:text-white">
                       {config.notification_type === 'weekly' ? 'Weekly' : 'Daily'}
                     </p>
                   </div>
                   <div>
-                    <p className="font-medium text-gray-700 dark:text-gray-300">
+                    <p className="font-normal text-gray-700 dark:text-gray-300">
                       {config.notification_type === 'weekly' ? 'Weekly Scope' : 'Notification Days'}
                     </p>
                     <p className="text-gray-900 dark:text-white">
@@ -537,17 +537,17 @@ export default function CronjobConfig() {
                     </p>
                   </div>
                   <div>
-                    <p className="font-medium text-gray-700 dark:text-gray-300">Created</p>
+                    <p className="font-normal text-gray-700 dark:text-gray-300">Created</p>
                     <p className="text-gray-900 dark:text-white">{new Date(config.created_at).toLocaleDateString()}</p>
                   </div>
                   <div>
-                    <p className="font-medium text-gray-700 dark:text-gray-300">Updated</p>
+                    <p className="font-normal text-gray-700 dark:text-gray-300">Updated</p>
                     <p className="text-gray-900 dark:text-white">{new Date(config.updated_at).toLocaleDateString()}</p>
                   </div>
                 </div>
                 {config.notification_type === 'weekly' && config.weekly_days && config.weekly_days.length > 0 && (
                   <div className="mt-3">
-                    <p className="font-medium text-gray-700 dark:text-gray-300 mb-1">Notification Days</p>
+                    <p className="font-normal text-gray-700 dark:text-gray-300 mb-1">Notification Days</p>
                     <div className="flex flex-wrap gap-1">
                       {config.weekly_days.map(dayValue => {
                         const day = weekdays.find(w => w.value === dayValue);
@@ -561,7 +561,7 @@ export default function CronjobConfig() {
                   </div>
                 )}
                 <div className="mt-3">
-                  <p className="font-medium text-gray-700 dark:text-gray-300 mb-1">Webhook URL</p>
+                  <p className="font-normal text-gray-700 dark:text-gray-300 mb-1">Webhook URL</p>
                   <p className="text-xs text-gray-600 dark:text-gray-400 break-all bg-gray-50 dark:bg-gray-700 p-2 rounded">
                     {config.webhook_url}
                   </p>

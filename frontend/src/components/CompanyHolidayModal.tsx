@@ -93,7 +93,7 @@ export const CompanyHolidayModal: React.FC<CompanyHolidayModalProps> = ({
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-2 sm:space-x-3">
               <Calendar className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 text-red-600 dark:text-gray-200" />
-              <h3 className="text-sm sm:text-base md:text-lg lg:text-xl font-bold text-gray-900 dark:text-white">
+              <h3 className="text-sm sm:text-base md:text-lg lg:text-xl font-normal text-gray-900 dark:text-white">
                 {editingHoliday ? 'แก้ไขวันหยุดบริษัท' : 'เพิ่มวันหยุดบริษัท'}
               </h3>
             </div>
@@ -109,7 +109,7 @@ export const CompanyHolidayModal: React.FC<CompanyHolidayModalProps> = ({
         {/* Form */}
         <form onSubmit={handleSubmit} className="p-3 sm:p-4 md:p-6 space-y-3 sm:space-y-4 md:space-y-6">
           <div>
-            <Label htmlFor="holiday-name" className="text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300">
+            <Label htmlFor="holiday-name" className="text-xs sm:text-sm font-normal text-gray-700 dark:text-gray-300">
               ชื่อวันหยุด *
             </Label>
             <Input
@@ -124,7 +124,7 @@ export const CompanyHolidayModal: React.FC<CompanyHolidayModalProps> = ({
           </div>
 
           <div>
-            <Label htmlFor="holiday-description" className="text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300">
+            <Label htmlFor="holiday-description" className="text-xs sm:text-sm font-normal text-gray-700 dark:text-gray-300">
               รายละเอียด
             </Label>
             <Textarea

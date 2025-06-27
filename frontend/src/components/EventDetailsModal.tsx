@@ -72,7 +72,7 @@ export const EventDetailsModal: React.FC<EventDetailsModalProps> = ({
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-2 sm:space-x-3">
               <Calendar className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 text-blue-600 dark:text-gray-200" />
-              <h3 className="text-sm sm:text-base md:text-lg lg:text-xl font-bold text-gray-900 dark:text-white">เหตุการณ์ในวันนี้</h3>
+              <h3 className="text-sm sm:text-base md:text-lg lg:text-xl font-semibold text-gray-900 dark:text-white">เหตุการณ์ในวันนี้</h3>
             </div>
             <Button variant="ghost" size="sm" onClick={onClose} className="h-7 w-7 sm:h-8 sm:w-8 p-0">
               <X className="w-3 h-3 sm:w-4 sm:h-4 md:w-5 md:h-5" />
@@ -94,7 +94,7 @@ export const EventDetailsModal: React.FC<EventDetailsModalProps> = ({
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center space-x-2 mb-1">
                         <Calendar className="w-3 h-3 flex-shrink-0" />
-                        <span className="font-medium text-sm">{companyHoliday.name}</span>
+                        <span className="font-normal text-sm">{companyHoliday.name}</span>
                       </div>
                       {companyHoliday.description && (
                         <div className="flex items-start space-x-2">
@@ -148,7 +148,7 @@ export const EventDetailsModal: React.FC<EventDetailsModalProps> = ({
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center space-x-2 mb-1">
                         <User className="w-3 h-3 flex-shrink-0" />
-                        <span className="font-medium text-sm truncate">{getEmployeeName(event.employeeId)}</span>
+                        <span className="font-normal text-sm truncate">{getEmployeeName(event.employeeId)}</span>
                       </div>
                       
                       <div className="flex items-center space-x-2 mb-1">

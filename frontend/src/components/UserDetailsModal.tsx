@@ -133,7 +133,7 @@ export const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
           <div className="space-y-4">
             {/* Timeline */}
             <div className="space-y-2">
-              <h4 className="font-medium text-gray-900 dark:text-white flex items-center gap-2">
+              <h4 className="font-normal text-gray-900 dark:text-white flex items-center gap-2">
                 <Clock className="h-4 w-4" />
                 เส้นเวลาเหตุการณ์
               </h4>
@@ -162,7 +162,7 @@ export const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
                         <div key={year} className="relative">
                           {/* Year Header */}
                           <div className="sticky top-0 bg-white dark:bg-gray-800 z-30 py-1 mb-2">
-                            <div className="text-lg font-bold text-gray-900 dark:text-white border-l-4 border-purple-500 pl-4 bg-purple-50 dark:bg-purple-900/20 rounded-r-lg py-1">
+                            <div className="text-lg font-normal text-gray-900 dark:text-white border-l-4 border-purple-500 pl-4 bg-purple-50 dark:bg-purple-900/20 rounded-r-lg py-1">
                               ปี {parseInt(year) + 543}
                             </div>
                           </div>
@@ -173,7 +173,7 @@ export const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
                               <div key={month} className="relative">
                                 {/* Month Header */}
                                 <div className="sticky top-12 bg-white dark:bg-gray-800 z-20 py-1 mb-1">
-                                  <div className="text-base font-semibold text-gray-800 dark:text-gray-200 border-l-4 border-green-500 pl-3 bg-green-50 dark:bg-green-900/20 rounded-r py-0.5">
+                                  <div className="text-base font-normal text-gray-800 dark:text-gray-200 border-l-4 border-green-500 pl-3 bg-green-50 dark:bg-green-900/20 rounded-r py-0.5">
                                     {month} {parseInt(year) + 543}
                                   </div>
                                 </div>
@@ -184,7 +184,7 @@ export const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
                                     <div key={date} className="relative">
                                       {/* Date Header */}
                                       <div className="sticky top-16 bg-white dark:bg-gray-800 z-10 py-1 mb-1">
-                                        <div className="text-sm font-medium text-gray-700 dark:text-gray-300 border-l-4 border-blue-500 pl-3 bg-blue-50 dark:bg-blue-900/20 rounded-r py-0.5">
+                                        <div className="text-sm font-normal text-gray-700 dark:text-gray-300 border-l-4 border-blue-500 pl-3 bg-blue-50 dark:bg-blue-900/20 rounded-r py-0.5">
                                           {formatDate(date)}
                                         </div>
                                       </div>
@@ -212,7 +212,7 @@ export const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
                                                 <div className="bg-gray-50 dark:bg-gray-700 p-2 rounded-lg">
                                                   <div className="flex items-start justify-between">
                                                     <div className="flex-1">
-                                                      <h5 className="font-medium text-gray-900 dark:text-white">
+                                                      <h5 className="font-normal text-gray-900 dark:text-white">
                                                         {LEAVE_TYPE_LABELS[event.leaveType as keyof typeof LEAVE_TYPE_LABELS] || event.leaveType}
                                                       </h5>
                                                       {event.description && (

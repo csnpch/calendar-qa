@@ -265,7 +265,7 @@ const CompanyHolidays: React.FC = () => {
       <div className="container mx-auto px-4 py-8">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle className="text-2xl font-bold">วันหยุดบริษัท</CardTitle>
+            <CardTitle className="text-2xl font-normal">วันหยุดบริษัท</CardTitle>
             {isAdminAuthenticated && (
               <div className="flex gap-2">
                 {holidays.length > 0 && (
@@ -408,7 +408,7 @@ const CompanyHolidays: React.FC = () => {
                 <TableBody>
                   {holidays.map((holiday) => (
                     <TableRow key={holiday.id} className="h-10">
-                      <TableCell className="font-medium py-2">{holiday.name}</TableCell>
+                      <TableCell className="font-normal py-2">{holiday.name}</TableCell>
                       <TableCell className="py-2">{formatDateForDisplay(holiday.date)}</TableCell>
                       <TableCell className="py-2">{holiday.description || '-'}</TableCell>
                       {isAdminAuthenticated && (
