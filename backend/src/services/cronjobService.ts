@@ -1,7 +1,6 @@
 import type { Database } from 'bun:sqlite';
 import type { Event, CronjobConfig } from '../types';
 import { NotificationService } from './notificationService';
-import moment from 'moment';
 
 export class CronjobService {
   private db: Database;
@@ -160,7 +159,11 @@ export class CronjobService {
   private getNotificationDate(notificationDays: number): string {
     // notification_days = 0 means today's events
     // notification_days = 1 means tomorrow's events (1 day advance notification)
-    return moment().utcOffset('+07:00').add(notificationDays, 'days').format('YYYY-MM-DD');
+    const date = new Date();
+    // Add 7 hours for Thailand timezone (UTC+7)
+    const thailandDate = new Date(date.getTime() + (7 * 60 * 60 * 1000));
+    thailandDate.setDate(thailandDate.getDate() + notificationDays);
+    return thailandDate.toISOString().split('T')[0];
   }
 
   // Get events for a date range (for weekly notifications)
@@ -185,20 +188,25 @@ export class CronjobService {
 
   // Get week date range based on scope
   private getWeekDateRange(scope: 'current' | 'next'): { startDate: string, endDate: string } {
-    const now = moment().utcOffset('+07:00');
+    const now = new Date();
+    // Add 7 hours for Thailand timezone (UTC+7)
+    const thailandDate = new Date(now.getTime() + (7 * 60 * 60 * 1000));
     
-    let weekStart: moment.Moment;
-    if (scope === 'current') {
-      weekStart = now.clone().startOf('week');
-    } else {
-      weekStart = now.clone().add(1, 'week').startOf('week');
+    // Get start of week (Sunday)
+    const dayOfWeek = thailandDate.getDay(); // 0 = Sunday, 1 = Monday, etc.
+    const weekStart = new Date(thailandDate);
+    weekStart.setDate(thailandDate.getDate() - dayOfWeek);
+    
+    if (scope === 'next') {
+      weekStart.setDate(weekStart.getDate() + 7);
     }
     
-    const weekEnd = weekStart.clone().endOf('week');
+    const weekEnd = new Date(weekStart);
+    weekEnd.setDate(weekStart.getDate() + 6);
     
     return {
-      startDate: weekStart.format('YYYY-MM-DD'),
-      endDate: weekEnd.format('YYYY-MM-DD')
+      startDate: weekStart.toISOString().split('T')[0],
+      endDate: weekEnd.toISOString().split('T')[0]
     };
   }
 

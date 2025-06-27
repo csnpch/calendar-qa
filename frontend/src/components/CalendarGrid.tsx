@@ -35,16 +35,30 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({
 }) => {
   const [popoverOpen, setPopoverOpen] = useState(false);
   const [selectedPopoverDate, setSelectedPopoverDate] = useState<Date | null>(null);
+  const [maxVisibleEvents, setMaxVisibleEvents] = useState(2);
   
-  const year = currentDate.getFullYear();
-  const month = currentDate.getMonth();
+  // Safely handle window resize
+  React.useEffect(() => {
+    const updateMaxEvents = () => {
+      if (typeof window !== 'undefined') {
+        const width = window.innerWidth;
+        setMaxVisibleEvents(width < 640 ? 1 : width < 768 ? 1 : 2);
+      }
+    };
+    
+    updateMaxEvents();
+    window.addEventListener('resize', updateMaxEvents);
+    
+    return () => window.removeEventListener('resize', updateMaxEvents);
+  }, []);
+  
+  const year = moment(currentDate).year();
+  const month = moment(currentDate).month();
   const { holidays, isHoliday, isWeekend } = useHolidays(year);
 
   const isCompanyHoliday = (date: Date) => {
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
-    const dateString = `${year}-${month}-${day}`;
+    if (!Array.isArray(companyHolidays)) return null;
+    const dateString = moment(date).format('YYYY-MM-DD');
     return companyHolidays.find(holiday => holiday.date === dateString) || null;
   };
 
@@ -55,9 +69,8 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({
     }
   };
   
-  const firstDay = new Date(year, month, 1);
-  const lastDay = new Date(year, month + 1, 0);
-  const startDate = moment(firstDay).subtract(firstDay.getDay(), 'days');
+  const firstDay = moment().year(year).month(month).date(1);
+  const startDate = firstDay.clone().subtract(firstDay.day(), 'days');
   
   const getDaysInMonth = () => {
     const days = [];
@@ -72,24 +85,23 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({
   };
 
   const getEventsForDate = (date: Date) => {
-    const dateString = date.getFullYear() + '-' + 
-      String(date.getMonth() + 1).padStart(2, '0') + '-' + 
-      String(date.getDate()).padStart(2, '0');
+    if (!Array.isArray(events)) return [];
+    const dateString = moment(date).format('YYYY-MM-DD');
     return events.filter(event => event.date === dateString);
   };
 
   const getEmployeeName = (employeeId: number) => {
+    if (!Array.isArray(employees)) return 'Unknown Employee';
     const employee = employees.find(emp => emp.id === employeeId);
     return employee?.name || 'Unknown Employee';
   };
 
   const isCurrentMonth = (date: Date) => {
-    return date.getMonth() === month;
+    return moment(date).month() === month;
   };
 
   const isToday = (date: Date) => {
-    const today = new Date();
-    return date.toDateString() === today.toDateString();
+    return moment(date).isSame(moment(), 'day');
   };
 
   const handleDateClick = (date: Date) => {
@@ -239,7 +251,7 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({
                     onClick={() => handleDateClick(date)}
                   >
                     <div className={`text-xs font-semibold mb-0.5 ${isTodayDate && !isOtherMonth ? 'dark:text-white' : ''}`}>
-                      {date.getDate()}
+                      {moment(date).date()}
                     </div>
                     
                     {companyHoliday && !isOtherMonth && (
@@ -274,7 +286,7 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({
                     )}
                     
                     <div className="space-y-0.5">
-                      {dayEvents.slice(0, window.innerWidth < 640 ? 1 : window.innerWidth < 768 ? 1 : 2).map((event) => {
+                      {dayEvents.slice(0, maxVisibleEvents).map((event) => {
                         const employeeName = getEmployeeName(event.employeeId);
                         return (
                           <div
@@ -286,13 +298,13 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({
                             title={`${employeeName} - ${LEAVE_TYPE_LABELS[event.leaveType as keyof typeof LEAVE_TYPE_LABELS] || event.leaveType}`}
                           >
                             <span className="sm:inline truncate block">{employeeName.length > 12 ? employeeName.substring(0, 12) + '...' : employeeName}</span>
-                            <span className="sm:hidden truncate block">{employeeName.split(' ')[0].substring(0, 6)}</span>
+                            <span className="sm:hidden truncate block">{(employeeName.split(' ')[0] || employeeName).substring(0, 6)}</span>
                           </div>
                         );
                       })}
-                      {dayEvents.length > (window.innerWidth < 640 ? 1 : window.innerWidth < 768 ? 1 : 2) && (
+                      {dayEvents.length > maxVisibleEvents && (
                         <div className="text-xs text-gray-600 text-center font-medium">
-                          +{dayEvents.length - (window.innerWidth < 640 ? 1 : window.innerWidth < 768 ? 1 : 2)}
+                          +{dayEvents.length - maxVisibleEvents}
                         </div>
                       )}
                     </div>
@@ -302,7 +314,7 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({
                 return !hasEvents && !companyHoliday ? (
                   <CreateEventPopover
                     key={`${weekIndex}-${index}`}
-                    isOpen={popoverOpen && selectedPopoverDate?.toDateString() === date.toDateString()}
+                    isOpen={popoverOpen && selectedPopoverDate && moment(selectedPopoverDate).isSame(moment(date), 'day')}
                     onOpenChange={(open) => {
                       setPopoverOpen(open);
                       if (!open) setSelectedPopoverDate(null);

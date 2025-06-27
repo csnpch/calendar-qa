@@ -42,6 +42,7 @@ export const EventDetailsModal: React.FC<EventDetailsModalProps> = ({
   };
 
   const getEmployeeName = (employeeId: number) => {
+    if (!Array.isArray(employees)) return 'Unknown Employee';
     const employee = employees.find(emp => emp.id === employeeId);
     return employee?.name || 'Unknown Employee';
   };

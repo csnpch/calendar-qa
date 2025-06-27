@@ -60,7 +60,9 @@ const CompanyHolidays: React.FC = () => {
     const regex = /^\d{2}\/\d{2}\/\d{4}$/;
     if (!regex.test(date)) return false;
     
-    const [day, month, year] = date.split('/').map(Number);
+    const parts = date.split('/');
+    if (parts.length !== 3) return false;
+    const [day, month, year] = parts.map(Number);
     const dateObj = new Date(year, month - 1, day);
     return dateObj.getDate() === day && 
            dateObj.getMonth() === month - 1 && 
@@ -68,12 +70,16 @@ const CompanyHolidays: React.FC = () => {
   };
 
   const formatDateForAPI = (date: string): string => {
-    const [day, month, year] = date.split('/');
+    const parts = date.split('/');
+    if (parts.length !== 3) return date;
+    const [day, month, year] = parts;
     return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
   };
 
   const formatDateForDisplay = (date: string): string => {
-    const [year, month, day] = date.split('-');
+    const parts = date.split('-');
+    if (parts.length !== 3) return date;
+    const [year, month, day] = parts;
     return `${day}/${month}/${year}`;
   };
 

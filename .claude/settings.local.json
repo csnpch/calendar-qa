@@ -45,7 +45,11 @@
       "Bash(sudo docker-compose:*)",
       "WebFetch(domain:calendarific.com)",
       "WebFetch(domain:holidayapi.com)",
-      "WebFetch(domain:www.abstractapi.com)"
+      "WebFetch(domain:www.abstractapi.com)",
+      "Bash(cat:*)",
+      "Bash(sed:*)",
+      "Bash(cp:*)",
+      "Bash(mv:*)"
     ],
     "deny": []
   }

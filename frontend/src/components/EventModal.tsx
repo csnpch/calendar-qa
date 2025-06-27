@@ -58,6 +58,7 @@ export const EventModal: React.FC<EventModalProps> = ({
 
   const handleSave = () => {
     if (!selectedEmployeeId || !leaveType || !selectedDate) return;
+    if (!Array.isArray(employees)) return;
 
     const selectedEmployee = employees.find(emp => emp.id === selectedEmployeeId);
     if (!selectedEmployee) return;

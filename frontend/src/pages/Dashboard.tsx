@@ -69,17 +69,19 @@ const Dashboard = () => {
   }, [loadDashboardData]);
 
   // Filter and sort ranking based on event type
-  const filteredRanking = dashboardData?.employeeRanking?.filter(employee => {
-    if (selectedEventType === 'all') return true;
-    return employee.eventTypes[selectedEventType as keyof typeof employee.eventTypes] > 0;
-  }).sort((a, b) => {
-    if (selectedEventType === 'all') {
-      return b.totalEvents - a.totalEvents;
-    }
-    const aCount = a.eventTypes[selectedEventType as keyof typeof a.eventTypes] || 0;
-    const bCount = b.eventTypes[selectedEventType as keyof typeof b.eventTypes] || 0;
-    return bCount - aCount;
-  }) || [];
+  const filteredRanking = dashboardData?.employeeRanking && Array.isArray(dashboardData.employeeRanking) 
+    ? dashboardData.employeeRanking.filter(employee => {
+        if (selectedEventType === 'all') return true;
+        return employee.eventTypes[selectedEventType as keyof typeof employee.eventTypes] > 0;
+      }).sort((a, b) => {
+        if (selectedEventType === 'all') {
+          return b.totalEvents - a.totalEvents;
+        }
+        const aCount = a.eventTypes[selectedEventType as keyof typeof a.eventTypes] || 0;
+        const bCount = b.eventTypes[selectedEventType as keyof typeof b.eventTypes] || 0;
+        return bCount - aCount;
+      }) 
+    : [];
 
   const handleEmployeeClick = (employeeName: string) => {
     setSelectedEmployee(employeeName);
@@ -116,7 +118,7 @@ const Dashboard = () => {
     return undefined;
   };
 
-  const selectedEmployeeData = selectedEmployee && dashboardData 
+  const selectedEmployeeData = selectedEmployee && dashboardData && Array.isArray(dashboardData.employeeRanking)
     ? dashboardData.employeeRanking.find(emp => emp.name === selectedEmployee)
     : null;
 

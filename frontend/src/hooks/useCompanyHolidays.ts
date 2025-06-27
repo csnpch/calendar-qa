@@ -31,6 +31,7 @@ export const useCompanyHolidays = (year: number) => {
   };
 
   const isCompanyHoliday = (date: Date): CompanyHoliday | null => {
+    if (!Array.isArray(holidays)) return null;
     // Use local date components to avoid timezone issues
     const year = date.getFullYear();
     const month = String(date.getMonth() + 1).padStart(2, '0');
