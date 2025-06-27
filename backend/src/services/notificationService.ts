@@ -72,7 +72,6 @@ export class NotificationService {
 
   private static formatDate(dateString: string): string {
     const date = new Date(dateString);
-    date.setDate(date.getDate() + 1);
     return new Intl.DateTimeFormat('th-TH', {
       weekday: 'long',
       year: 'numeric',

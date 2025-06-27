@@ -194,8 +194,7 @@ export class EventService {
 
   getEventsByMonth(year: number, month: number): Event[] {
     const startDate = `${year}-${String(month).padStart(2, '0')}-01`;
-    const endDateObj = new Date(year, month, 0);
-    const endDate = endDateObj.toISOString().split('T')[0]!;
+    const endDate = moment().year(year).month(month - 1).endOf('month').format('YYYY-MM-DD');
     
     return this.getEventsByDateRange(startDate, endDate);
   }
@@ -274,11 +273,8 @@ export class EventService {
   }
 
   getUpcomingEvents(days: number = 30): Event[] {
-    const todayObj = new Date();
-    const today = todayObj.toISOString().split('T')[0]!;
-    const futureDate = new Date();
-    futureDate.setDate(futureDate.getDate() + days);
-    const endDate = futureDate.toISOString().split('T')[0]!;
+    const today = moment().utcOffset('+07:00').format('YYYY-MM-DD');
+    const endDate = moment().utcOffset('+07:00').add(days, 'days').format('YYYY-MM-DD');
     
     return this.getEventsByDateRange(today, endDate);
   }
