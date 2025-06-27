@@ -1,6 +1,7 @@
 import type { Database } from 'bun:sqlite';
 import type { Event, CronjobConfig } from '../types';
 import { NotificationService } from './notificationService';
+import moment from 'moment';
 
 export class CronjobService {
   private db: Database;
@@ -163,7 +164,7 @@ export class CronjobService {
     // Add 7 hours for Thailand timezone (UTC+7)
     const thailandDate = new Date(date.getTime() + (7 * 60 * 60 * 1000));
     thailandDate.setDate(thailandDate.getDate() + notificationDays);
-    return thailandDate.toISOString().split('T')[0];
+    return thailandDate.toISOString().split('T')[0]!;
   }
 
   // Get events for a date range (for weekly notifications)
@@ -205,8 +206,8 @@ export class CronjobService {
     weekEnd.setDate(weekStart.getDate() + 6);
     
     return {
-      startDate: weekStart.toISOString().split('T')[0],
-      endDate: weekEnd.toISOString().split('T')[0]
+      startDate: weekStart.toISOString().split('T')[0]!,
+      endDate: weekEnd.toISOString().split('T')[0]!
     };
   }
 
