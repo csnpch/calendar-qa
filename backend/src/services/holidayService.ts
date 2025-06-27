@@ -1,6 +1,7 @@
 import type { Holiday } from '../types';
 import { prisma } from '../database/prisma';
 import axios from 'axios';
+import moment from 'moment';
 
 interface NagerDateApiResponse {
   date: string;
@@ -201,8 +202,8 @@ export class HolidayService {
   }
 
   async getHolidaysForDateRange(startDate: string, endDate: string): Promise<Holiday[]> {
-    const startYear = new Date(startDate).getFullYear();
-    const endYear = new Date(endDate).getFullYear();
+    const startYear = moment(startDate).year();
+    const endYear = moment(endDate).year();
     
     const allHolidays: Holiday[] = [];
     
@@ -217,7 +218,7 @@ export class HolidayService {
   }
 
   async isHoliday(date: string): Promise<boolean> {
-    const year = new Date(date).getFullYear();
+    const year = moment(date).year();
     const holidays = await this.fetchThaiHolidays(year);
     
     return holidays.some(holiday => holiday.date === date);

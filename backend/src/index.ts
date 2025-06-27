@@ -12,6 +12,7 @@ import { loggerMiddleware } from './middleware/logger';
 import { CronjobService } from './services/cronjobService';
 import { getDatabase } from './database/connection';
 import Logger from './utils/logger';
+import moment from 'moment';
 
 // Initialize cronjob service
 const db = getDatabase();
@@ -49,7 +50,7 @@ const app = new Elysia()
     }
   }))
   .get('/', () => ({ message: 'Calendar API is running!' }))
-  .get('/health', () => ({ status: 'ok', timestamp: new Date().toISOString() }))
+  .get('/health', () => ({ status: 'ok', timestamp: moment().utcOffset('+07:00').toISOString() }))
   .use(employeesRoutes)
   .use(eventsRoutes)
   .use(holidaysRoutes)

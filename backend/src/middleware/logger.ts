@@ -1,9 +1,10 @@
 import { Elysia } from 'elysia';
 import Logger from '../utils/logger';
+import moment from 'moment';
 
 export const loggerMiddleware = new Elysia({ name: 'logger' })
   .derive(({ request }) => {
-    const start = Date.now();
+    const start = moment().valueOf();
     const method = request.method;
     const url = request.url;
     
@@ -12,7 +13,7 @@ export const loggerMiddleware = new Elysia({ name: 'logger' })
     return { startTime: start };
   })
   .onAfterHandle(({ request, startTime, set }) => {
-    const duration = Date.now() - startTime;
+    const duration = moment().valueOf() - startTime;
     const method = request.method;
     const url = request.url;
     const status = set.status || 200;
@@ -30,7 +31,7 @@ export const loggerMiddleware = new Elysia({ name: 'logger' })
     return {
       error: 'Internal Server Error',
       message: error.message,
-      timestamp: new Date().toISOString(),
+      timestamp: moment().utcOffset('+07:00').toISOString(),
       path: url,
       method: method
     };

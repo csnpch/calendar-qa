@@ -9,6 +9,7 @@ import { Combobox } from '@/components/ui/combobox';
 import { Textarea } from '@/components/ui/textarea';
 import { Event } from '@/services/apiDatabase';
 import { LEAVE_TYPE_LABELS, formatDate } from '@/lib/utils';
+import moment from 'moment';
 
 interface EventModalProps {
   isOpen: boolean;
@@ -65,9 +66,7 @@ export const EventModal: React.FC<EventModalProps> = ({
       employeeId: selectedEmployeeId,
       employeeName: selectedEmployee.name,
       leaveType,
-      date: selectedDate.getFullYear() + '-' + 
-        String(selectedDate.getMonth() + 1).padStart(2, '0') + '-' + 
-        String(selectedDate.getDate()).padStart(2, '0'),
+      date: moment(selectedDate).format('YYYY-MM-DD'),
       description
     });
 

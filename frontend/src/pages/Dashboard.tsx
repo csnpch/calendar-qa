@@ -41,14 +41,10 @@ const Dashboard = () => {
         params.startDate = dateFrom;
         params.endDate = dateTo;
       } else if (selectedPeriod === 'month') {
-        const startOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
-        const endOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0);
-        params.startDate = startOfMonth.getFullYear() + '-' + 
-          String(startOfMonth.getMonth() + 1).padStart(2, '0') + '-' + 
-          String(startOfMonth.getDate()).padStart(2, '0');
-        params.endDate = endOfMonth.getFullYear() + '-' + 
-          String(endOfMonth.getMonth() + 1).padStart(2, '0') + '-' + 
-          String(endOfMonth.getDate()).padStart(2, '0');
+        const startOfMonth = moment(currentDate).startOf('month');
+        const endOfMonth = moment(currentDate).endOf('month');
+        params.startDate = startOfMonth.format('YYYY-MM-DD');
+        params.endDate = endOfMonth.format('YYYY-MM-DD');
       } else if (selectedPeriod === 'year') {
         params.startDate = `${currentDate.getFullYear()}-01-01`;
         params.endDate = `${currentDate.getFullYear()}-12-31`;

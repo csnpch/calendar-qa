@@ -71,7 +71,7 @@ export class NotificationService {
   }
 
   private static formatDate(dateString: string): string {
-    const date = new Date(dateString);
+    const date = moment(dateString).utcOffset('+07:00').toDate();
     return new Intl.DateTimeFormat('th-TH', {
       weekday: 'long',
       year: 'numeric',
@@ -81,7 +81,7 @@ export class NotificationService {
   }
 
   private static formatDateShort(dateString: string): string {
-    const date = new Date(dateString);
+    const date = moment(dateString).utcOffset('+07:00').toDate();
     return new Intl.DateTimeFormat('th-TH', {
       day: '2-digit',
       month: '2-digit',

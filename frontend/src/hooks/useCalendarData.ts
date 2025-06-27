@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { getEmployeeService } from '../services/employeeService';
 import { getEventService } from '../services/eventService';
 import { Employee, Event } from '../services/apiDatabase';
+import moment from 'moment';
 
 export const useCalendarData = () => {
   const [employees, setEmployees] = useState<Employee[]>([]);
@@ -123,9 +124,7 @@ export const useCalendarData = () => {
 
   // Get events for a specific date
   const getEventsForDate = (date: Date): Event[] => {
-    const dateString = date.getFullYear() + '-' + 
-      String(date.getMonth() + 1).padStart(2, '0') + '-' + 
-      String(date.getDate()).padStart(2, '0');
+    const dateString = moment(date).format('YYYY-MM-DD');
     return events.filter(event => event.date === dateString);
   };
 

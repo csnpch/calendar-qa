@@ -6,6 +6,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import { useHolidays } from '@/hooks/useHolidays';
 import { Event } from '@/services/apiDatabase';
 import { DAYS_OF_WEEK, MONTHS, LEAVE_TYPE_COLORS, LEAVE_TYPE_LABELS } from '@/lib/utils';
+import moment from 'moment';
 
 interface CalendarGridProps {
   currentDate: Date;
@@ -56,16 +57,15 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({
   
   const firstDay = new Date(year, month, 1);
   const lastDay = new Date(year, month + 1, 0);
-  const startDate = new Date(firstDay);
-  startDate.setDate(startDate.getDate() - firstDay.getDay());
+  const startDate = moment(firstDay).subtract(firstDay.getDay(), 'days');
   
   const getDaysInMonth = () => {
     const days = [];
-    const currentDay = new Date(startDate);
+    let currentDay = moment(startDate);
     
     for (let i = 0; i < 42; i++) {
-      days.push(new Date(currentDay));
-      currentDay.setDate(currentDay.getDate() + 1);
+      days.push(currentDay.toDate());
+      currentDay = currentDay.clone().add(1, 'day');
     }
     
     return days;

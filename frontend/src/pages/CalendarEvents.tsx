@@ -8,9 +8,10 @@ import { useCompanyHolidays } from '@/hooks/useCompanyHolidays';
 import { Event } from '@/services/apiDatabase';
 import { Layout } from '@/components/Layout';
 import { deleteCompanyHoliday, updateCompanyHoliday } from '@/services/companyHolidayService';
+import moment from 'moment';
 
 const CalendarEvents = () => {
-  const [currentDate, setCurrentDate] = useState(new Date());
+  const [currentDate, setCurrentDate] = useState(moment().toDate());
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
   const [isCompanyHolidayModalOpen, setIsCompanyHolidayModalOpen] = useState(false);
@@ -32,7 +33,7 @@ const CalendarEvents = () => {
     loadData
   } = useCalendarData();
 
-  const { holidays: companyHolidays, isCompanyHoliday, refresh: refreshCompanyHolidays } = useCompanyHolidays(currentDate.getFullYear());
+  const { holidays: companyHolidays, isCompanyHoliday, refresh: refreshCompanyHolidays } = useCompanyHolidays(moment(currentDate).year());
 
   const handleDateClick = (date: Date) => {
     setSelectedDate(date);
@@ -112,22 +113,21 @@ const CalendarEvents = () => {
   };
 
   const handlePrevMonth = () => {
-    const newDate = new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1);
+    const newDate = moment(currentDate).subtract(1, 'month').startOf('month').toDate();
     setCurrentDate(newDate);
-    loadEventsForMonth(newDate.getFullYear(), newDate.getMonth());
+    loadEventsForMonth(moment(newDate).year(), moment(newDate).month());
   };
 
   const handleNextMonth = () => {
-    const newDate = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1);
+    const newDate = moment(currentDate).add(1, 'month').startOf('month').toDate();
     setCurrentDate(newDate);
-    loadEventsForMonth(newDate.getFullYear(), newDate.getMonth());
+    loadEventsForMonth(moment(newDate).year(), moment(newDate).month());
   };
 
   const handleTodayClick = () => {
-    const today = new Date();
-    const newDate = new Date(today.getFullYear(), today.getMonth(), 1);
+    const newDate = moment().startOf('month').toDate();
     setCurrentDate(newDate);
-    loadEventsForMonth(newDate.getFullYear(), newDate.getMonth());
+    loadEventsForMonth(moment(newDate).year(), moment(newDate).month());
   };
 
   const handleEditCompanyHoliday = (holiday: { id: number; name: string; description?: string }) => {
