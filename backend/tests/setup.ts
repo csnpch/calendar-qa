@@ -15,8 +15,11 @@ global.mockDatabase.exec(`
   CREATE TABLE events (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     employee_id INTEGER NOT NULL,
+    employee_name TEXT NOT NULL,
     leave_type TEXT NOT NULL,
-    date DATE NOT NULL,
+    date TEXT,
+    start_date TEXT NOT NULL,
+    end_date TEXT NOT NULL,
     description TEXT,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,

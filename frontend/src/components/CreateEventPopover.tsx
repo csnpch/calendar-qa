@@ -18,6 +18,7 @@ interface CreateEventPopoverProps {
   onHolidayAdded?: () => void;
   selectedDate: Date | null;
   triggerElement: React.ReactNode;
+  isRangeSelection?: boolean;
 }
 
 export const CreateEventPopover: React.FC<CreateEventPopoverProps> = ({
@@ -26,7 +27,8 @@ export const CreateEventPopover: React.FC<CreateEventPopoverProps> = ({
   onCreateEvent,
   onHolidayAdded,
   selectedDate,
-  triggerElement
+  triggerElement,
+  isRangeSelection = false
 }) => {
   const { isAdminAuthenticated } = useAuth();
   const [showHolidayDialog, setShowHolidayDialog] = useState(false);
@@ -142,7 +144,7 @@ export const CreateEventPopover: React.FC<CreateEventPopoverProps> = ({
                 สร้างเหตุการณ์ใหม่
               </Button>
               
-              {isAdminAuthenticated && (
+              {isAdminAuthenticated && !isRangeSelection && (
                 <Button 
                   onClick={handleAddHoliday}
                   className="w-full justify-start text-red-700 dark:text-red-300 hover:text-red-900 dark:hover:text-red-100"

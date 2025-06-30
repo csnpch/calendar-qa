@@ -446,15 +446,20 @@ export class NotificationService {
     }
 
     // Group events by date first, then by leave type
+    // For multi-day events, only include them on the first day (start date)
     const eventsByDate = events.reduce((acc, event) => {
-      if (!acc[event.date]) {
-        acc[event.date] = {};
+      // Use startDate if available, fallback to date for backward compatibility
+      const eventDate = event.startDate || event.date;
+      if (!eventDate) return acc;
+      
+      if (!acc[eventDate]) {
+        acc[eventDate] = {};
       }
       const thaiType = this.getLeaveTypeInThai(event.leaveType || 'other');
-      if (!acc[event.date]![thaiType]) {
-        acc[event.date]![thaiType] = [];
+      if (!acc[eventDate]![thaiType]) {
+        acc[eventDate]![thaiType] = [];
       }
-      acc[event.date]![thaiType]!.push(event);
+      acc[eventDate]![thaiType]!.push(event);
       return acc;
     }, {} as { [date: string]: { [type: string]: Event[] } });
 

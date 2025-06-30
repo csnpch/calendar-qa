@@ -17,14 +17,20 @@ export class EventService {
     }
     
     const stmt = this.db.prepare(`
-      INSERT INTO events (employee_id, leave_type, date, description, created_at, updated_at)
-      VALUES (?, ?, ?, ?, ?, ?)
+      INSERT INTO events (employee_id, employee_name, leave_type, start_date, end_date, date, description, created_at, updated_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
     `);
+    
+    // For backward compatibility, set date to startDate for single-day events
+    const legacyDate = data.startDate === data.endDate ? data.startDate : undefined;
     
     stmt.run(
       data.employeeId,
+      employee.name,
       data.leaveType,
-      data.date,
+      data.startDate,
+      data.endDate,
+      legacyDate || null,
       data.description || null,
       now,
       now
@@ -35,9 +41,11 @@ export class EventService {
     return {
       id: result.id,
       employeeId: data.employeeId,
-      employeeName: employee.name, // Get from current lookup
+      employeeName: employee.name,
       leaveType: data.leaveType,
-      date: data.date,
+      date: legacyDate,
+      startDate: data.startDate,
+      endDate: data.endDate,
       description: data.description,
       createdAt: now,
       updatedAt: now
@@ -49,15 +57,16 @@ export class EventService {
       SELECT 
         e.id,
         e.employee_id as employeeId,
-        emp.name as employeeName,
+        e.employee_name as employeeName,
         e.leave_type as leaveType,
         e.date,
+        e.start_date as startDate,
+        e.end_date as endDate,
         e.description,
         e.created_at as createdAt,
         e.updated_at as updatedAt
       FROM events e
-      LEFT JOIN employees emp ON e.employee_id = emp.id
-      ORDER BY e.date DESC
+      ORDER BY e.start_date DESC
     `);
     
     return stmt.all() as Event[];
@@ -68,14 +77,15 @@ export class EventService {
       SELECT 
         e.id,
         e.employee_id as employeeId,
-        emp.name as employeeName,
+        e.employee_name as employeeName,
         e.leave_type as leaveType,
         e.date,
+        e.start_date as startDate,
+        e.end_date as endDate,
         e.description,
         e.created_at as createdAt,
         e.updated_at as updatedAt
       FROM events e
-      LEFT JOIN employees emp ON e.employee_id = emp.id
       WHERE e.id = ?
     `);
     
@@ -88,19 +98,20 @@ export class EventService {
       SELECT 
         e.id,
         e.employee_id as employeeId,
-        emp.name as employeeName,
+        e.employee_name as employeeName,
         e.leave_type as leaveType,
         e.date,
+        e.start_date as startDate,
+        e.end_date as endDate,
         e.description,
         e.created_at as createdAt,
         e.updated_at as updatedAt
       FROM events e
-      LEFT JOIN employees emp ON e.employee_id = emp.id
-      WHERE e.date = ?
-      ORDER BY emp.name ASC
+      WHERE (e.date = ? OR (? >= e.start_date AND ? <= e.end_date))
+      ORDER BY e.employee_name ASC
     `);
     
-    return stmt.all(date) as Event[];
+    return stmt.all(date, date, date) as Event[];
   }
 
   getEventsByDateRange(startDate: string, endDate: string): Event[] {
@@ -108,19 +119,20 @@ export class EventService {
       SELECT 
         e.id,
         e.employee_id as employeeId,
-        emp.name as employeeName,
+        e.employee_name as employeeName,
         e.leave_type as leaveType,
         e.date,
+        e.start_date as startDate,
+        e.end_date as endDate,
         e.description,
         e.created_at as createdAt,
         e.updated_at as updatedAt
       FROM events e
-      LEFT JOIN employees emp ON e.employee_id = emp.id
-      WHERE e.date >= ? AND e.date <= ?
-      ORDER BY e.date ASC, emp.name ASC
+      WHERE (e.date >= ? AND e.date <= ?) OR (e.start_date <= ? AND e.end_date >= ?)
+      ORDER BY COALESCE(e.start_date, e.date) ASC, e.employee_name ASC
     `);
     
-    return stmt.all(startDate, endDate) as Event[];
+    return stmt.all(startDate, endDate, endDate, startDate) as Event[];
   }
 
   getEventsByEmployeeId(employeeId: number): Event[] {
@@ -128,16 +140,17 @@ export class EventService {
       SELECT 
         e.id,
         e.employee_id as employeeId,
-        emp.name as employeeName,
+        e.employee_name as employeeName,
         e.leave_type as leaveType,
         e.date,
+        e.start_date as startDate,
+        e.end_date as endDate,
         e.description,
         e.created_at as createdAt,
         e.updated_at as updatedAt
       FROM events e
-      LEFT JOIN employees emp ON e.employee_id = emp.id
       WHERE e.employee_id = ?
-      ORDER BY e.date DESC
+      ORDER BY COALESCE(e.start_date, e.date) DESC
     `);
     
     return stmt.all(employeeId) as Event[];
@@ -148,25 +161,26 @@ export class EventService {
       SELECT 
         e.id,
         e.employee_id as employeeId,
-        emp.name as employeeName,
+        e.employee_name as employeeName,
         e.leave_type as leaveType,
         e.date,
+        e.start_date as startDate,
+        e.end_date as endDate,
         e.description,
         e.created_at as createdAt,
         e.updated_at as updatedAt
       FROM events e
-      LEFT JOIN employees emp ON e.employee_id = emp.id
-      WHERE emp.name = ?
+      WHERE e.employee_name = ?
     `;
     
     const params: any[] = [employeeName];
     
     if (startDate && endDate) {
-      query += ' AND e.date >= ? AND e.date <= ?';
-      params.push(startDate, endDate);
+      query += ' AND ((e.date >= ? AND e.date <= ?) OR (e.start_date <= ? AND e.end_date >= ?))';
+      params.push(startDate, endDate, endDate, startDate);
     }
     
-    query += ' ORDER BY e.date DESC';
+    query += ' ORDER BY COALESCE(e.start_date, e.date) DESC';
     
     const stmt = this.db.prepare(query);
     return stmt.all(...params) as Event[];
@@ -177,16 +191,17 @@ export class EventService {
       SELECT 
         e.id,
         e.employee_id as employeeId,
-        emp.name as employeeName,
+        e.employee_name as employeeName,
         e.leave_type as leaveType,
         e.date,
+        e.start_date as startDate,
+        e.end_date as endDate,
         e.description,
         e.created_at as createdAt,
         e.updated_at as updatedAt
       FROM events e
-      LEFT JOIN employees emp ON e.employee_id = emp.id
       WHERE e.leave_type = ?
-      ORDER BY e.date DESC
+      ORDER BY COALESCE(e.start_date, e.date) DESC
     `);
     
     return stmt.all(leaveType) as Event[];
@@ -218,17 +233,27 @@ export class EventService {
       UPDATE events
       SET 
         employee_id = ?,
+        employee_name = ?,
         leave_type = ?,
+        start_date = ?,
+        end_date = ?,
         date = ?,
         description = ?,
         updated_at = ?
       WHERE id = ?
     `);
     
+    const newStartDate = data.startDate ?? existing.startDate;
+    const newEndDate = data.endDate ?? existing.endDate;
+    const legacyDate = newStartDate === newEndDate ? newStartDate : existing.date;
+    
     const result = stmt.run(
       newEmployeeId,
+      employee.name,
       data.leaveType ?? existing.leaveType,
-      data.date ?? existing.date,
+      newStartDate,
+      newEndDate,
+      legacyDate || null,
       data.description ?? existing.description ?? null,
       now,
       id
@@ -256,16 +281,17 @@ export class EventService {
       SELECT 
         e.id,
         e.employee_id as employeeId,
-        emp.name as employeeName,
+        e.employee_name as employeeName,
         e.leave_type as leaveType,
         e.date,
+        e.start_date as startDate,
+        e.end_date as endDate,
         e.description,
         e.created_at as createdAt,
         e.updated_at as updatedAt
       FROM events e
-      LEFT JOIN employees emp ON e.employee_id = emp.id
-      WHERE emp.name LIKE ? OR e.description LIKE ?
-      ORDER BY e.date DESC
+      WHERE e.employee_name LIKE ? OR e.description LIKE ?
+      ORDER BY COALESCE(e.start_date, e.date) DESC
     `);
     
     const searchTerm = `%${query}%`;
@@ -309,6 +335,42 @@ export class EventService {
     };
   }
 
+  deleteEventsByMonth(year: number, month: number): { deletedCount: number } {
+    const startDate = moment().year(year).month(month - 1).startOf('month').format('YYYY-MM-DD');
+    const endDate = moment().year(year).month(month - 1).endOf('month').format('YYYY-MM-DD');
+    
+    const stmt = this.db.prepare(`
+      DELETE FROM events 
+      WHERE start_date >= ? AND start_date <= ?
+         OR end_date >= ? AND end_date <= ?
+         OR (start_date <= ? AND end_date >= ?)
+    `);
+    
+    const result = stmt.run(startDate, endDate, startDate, endDate, startDate, endDate);
+    return { deletedCount: result.changes };
+  }
+
+  deleteEventsByYear(year: number): { deletedCount: number } {
+    const startDate = moment().year(year).startOf('year').format('YYYY-MM-DD');
+    const endDate = moment().year(year).endOf('year').format('YYYY-MM-DD');
+    
+    const stmt = this.db.prepare(`
+      DELETE FROM events 
+      WHERE start_date >= ? AND start_date <= ?
+         OR end_date >= ? AND end_date <= ?
+         OR (start_date <= ? AND end_date >= ?)
+    `);
+    
+    const result = stmt.run(startDate, endDate, startDate, endDate, startDate, endDate);
+    return { deletedCount: result.changes };
+  }
+
+  deleteAllEvents(): { deletedCount: number } {
+    const stmt = this.db.prepare('DELETE FROM events');
+    const result = stmt.run();
+    return { deletedCount: result.changes };
+  }
+
   getDashboardSummary(startDate?: string, endDate?: string, eventType?: string) {
     let whereClause = '';
     let joinWhereClause = '';
@@ -350,14 +412,13 @@ export class EventService {
     const rankingStmt = this.db.prepare(`
       SELECT 
         e.employee_id as employeeId,
-        emp.name as employeeName,
+        e.employee_name as employeeName,
         e.leave_type as leaveType,
         COUNT(*) as count
       FROM events e
-      LEFT JOIN employees emp ON e.employee_id = emp.id
       ${joinWhereClause}
-      GROUP BY e.employee_id, emp.name, e.leave_type
-      ORDER BY emp.name ASC
+      GROUP BY e.employee_id, e.employee_name, e.leave_type
+      ORDER BY e.employee_name ASC
     `);
     
     const rankingData = rankingStmt.all(...params) as Array<{

@@ -41,7 +41,7 @@ export const eventsRoutes = new Elysia({ prefix: '/events' })
     try {
       Logger.debug(`Creating new event: ${JSON.stringify(body)}`);
       const newEvent = eventService.createEvent(body);
-      Logger.info(`Created event: ${newEvent.employeeName} - ${newEvent.leaveType} on ${newEvent.date}`);
+      Logger.info(`Created event: ${newEvent.employeeName} - ${newEvent.leaveType} from ${newEvent.startDate} to ${newEvent.endDate}`);
       return newEvent;
     } catch (error) {
       Logger.error('Error creating event:', error);
@@ -65,7 +65,8 @@ export const eventsRoutes = new Elysia({ prefix: '/events' })
         t.Literal('compensatory'),
         t.Literal('other')
       ]),
-      date: t.String(),
+      startDate: t.String(),
+      endDate: t.String(),
       description: t.Optional(t.String())
     })
   })
@@ -105,7 +106,8 @@ export const eventsRoutes = new Elysia({ prefix: '/events' })
         t.Literal('compensatory'),
         t.Literal('other')
       ])),
-      date: t.Optional(t.String()),
+      startDate: t.Optional(t.String()),
+      endDate: t.Optional(t.String()),
       description: t.Optional(t.String())
     })
   })
@@ -242,5 +244,81 @@ export const eventsRoutes = new Elysia({ prefix: '/events' })
       startDate: t.Optional(t.String()),
       endDate: t.Optional(t.String()),
       eventType: t.Optional(t.String())
+    })
+  })
+
+  .delete('/bulk/month/:year/:month', ({ params: { year, month }, body }) => {
+    try {
+      Logger.debug(`Bulk deleting events for month ${month}/${year}`);
+      
+      // Validate password
+      if (!body.password || body.password !== '!C@len12') {
+        Logger.warn(`Invalid password attempt for bulk delete month ${month}/${year}`);
+        throw new Error('Invalid password');
+      }
+      
+      const result = eventService.deleteEventsByMonth(Number(year), Number(month));
+      Logger.info(`Bulk deleted ${result.deletedCount} events for month ${month}/${year}`);
+      return result;
+    } catch (error) {
+      Logger.error(`Error bulk deleting events for month ${month}/${year}:`, error);
+      throw error;
+    }
+  }, {
+    params: t.Object({
+      year: t.String(),
+      month: t.String()
+    }),
+    body: t.Object({
+      password: t.String()
+    })
+  })
+
+  .delete('/bulk/year/:year', ({ params: { year }, body }) => {
+    try {
+      Logger.debug(`Bulk deleting events for year ${year}`);
+      
+      // Validate password
+      if (!body.password || body.password !== '!C@len12') {
+        Logger.warn(`Invalid password attempt for bulk delete year ${year}`);
+        throw new Error('Invalid password');
+      }
+      
+      const result = eventService.deleteEventsByYear(Number(year));
+      Logger.info(`Bulk deleted ${result.deletedCount} events for year ${year}`);
+      return result;
+    } catch (error) {
+      Logger.error(`Error bulk deleting events for year ${year}:`, error);
+      throw error;
+    }
+  }, {
+    params: t.Object({
+      year: t.String()
+    }),
+    body: t.Object({
+      password: t.String()
+    })
+  })
+
+  .delete('/bulk/all', ({ body }) => {
+    try {
+      Logger.debug('Bulk deleting all events');
+      
+      // Validate password
+      if (!body.password || body.password !== '!C@len12') {
+        Logger.warn('Invalid password attempt for bulk delete all');
+        throw new Error('Invalid password');
+      }
+      
+      const result = eventService.deleteAllEvents();
+      Logger.info(`Bulk deleted ${result.deletedCount} events`);
+      return result;
+    } catch (error) {
+      Logger.error('Error bulk deleting all events:', error);
+      throw error;
+    }
+  }, {
+    body: t.Object({
+      password: t.String()
     })
   });

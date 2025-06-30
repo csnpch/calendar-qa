@@ -16,11 +16,12 @@ import {
   Shield,
   LayoutDashboard,
   LogOut,
-  Calendar
+  Calendar,
+  FileText
 } from 'lucide-react';
 
 interface NavbarProps {
-  currentPage?: 'calendar-events' | 'dashboard' | 'employees' | 'cronjob-config' | 'company-holidays';
+  currentPage?: 'calendar-events' | 'dashboard' | 'employees' | 'cronjob-config' | 'company-holidays' | 'events-management';
 }
 
 export const Navbar: React.FC<NavbarProps> = ({ currentPage = 'calendar-events' }) => {
@@ -40,7 +41,7 @@ export const Navbar: React.FC<NavbarProps> = ({ currentPage = 'calendar-events' 
 
   return (
     <div className="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-600">
-      <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-3 sm:py-4 md:py-6">
+      <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-3 sm:py-2 md:py-4">
         <div className="flex items-center justify-between">
           <Button
             variant="ghost"
@@ -73,14 +74,6 @@ export const Navbar: React.FC<NavbarProps> = ({ currentPage = 'calendar-events' 
                   >
                     <CalendarDays className="w-4 h-4 mr-2" />
                     ปฏิทินเหตุการณ์
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    onClick={() => navigate('/employees')}
-                    className={getButtonClasses('employees')}
-                  >
-                    <Users className="w-4 h-4 mr-2" />
-                    จัดการพนักงาน
                   </Button>
                 </>
               )}
@@ -124,6 +117,20 @@ export const Navbar: React.FC<NavbarProps> = ({ currentPage = 'calendar-events' 
                       >
                         <Calendar className="w-4 h-4 mr-2" />
                         วันหยุดบริษัท
+                      </DropdownMenuItem>
+                      <DropdownMenuItem 
+                        onClick={() => navigate('/events-management')} 
+                        className="px-4 py-3"
+                      >
+                        <FileText className="w-4 h-4 mr-2" />
+                        จัดการเหตุการณ์
+                      </DropdownMenuItem>
+                      <DropdownMenuItem 
+                        onClick={() => navigate('/employees')} 
+                        className="px-4 py-3"
+                      >
+                        <Users className="w-4 h-4 mr-2" />
+                        จัดการพนักงาน
                       </DropdownMenuItem>
                       <DropdownMenuItem 
                         onClick={() => navigate('/cronjob-config')} 

@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { X, User, Calendar, FileText } from 'lucide-react';
+import { X, User, Calendar, FileText, CalendarDays } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -18,10 +18,12 @@ interface EventModalProps {
     employeeId: number;
     employeeName: string;
     leaveType: string;
-    date: string;
+    startDate: string;
+    endDate: string;
     description?: string;
   }) => void;
   selectedDate: Date | null;
+  selectedDateRange?: Date[];
   employees: { id: number; name: string }[];
   editingEvent?: Event | null;
 }
@@ -36,12 +38,18 @@ export const EventModal: React.FC<EventModalProps> = ({
   onClose,
   onSave,
   selectedDate,
+  selectedDateRange,
   employees,
   editingEvent
 }) => {
   const [selectedEmployeeId, setSelectedEmployeeId] = useState<number | null>(null);
   const [leaveType, setLeaveType] = useState('');
   const [description, setDescription] = useState('');
+  
+  // Date range states
+  const [customStartDate, setCustomStartDate] = useState('');
+  const [customEndDate, setCustomEndDate] = useState('');
+  const [useCustomDates, setUseCustomDates] = useState(false);
 
   // Initialize form with editing event data
   useEffect(() => {
@@ -49,32 +57,107 @@ export const EventModal: React.FC<EventModalProps> = ({
       setSelectedEmployeeId(editingEvent.employeeId);
       setLeaveType(editingEvent.leaveType);
       setDescription(editingEvent.description || '');
+      setUseCustomDates(false);
     } else {
       setSelectedEmployeeId(null);
       setLeaveType('');
       setDescription('');
+      
+      // Initialize custom dates if we have a date range
+      if (selectedDateRange && selectedDateRange.length > 1) {
+        setCustomStartDate(moment(selectedDateRange[0]).format('YYYY-MM-DD'));
+        setCustomEndDate(moment(selectedDateRange[selectedDateRange.length - 1]).format('YYYY-MM-DD'));
+        setUseCustomDates(true); // Always show date inputs for multi-day events
+      } else {
+        setCustomStartDate('');
+        setCustomEndDate('');
+        setUseCustomDates(false);
+      }
     }
-  }, [editingEvent, isOpen]);
+  }, [editingEvent, isOpen, selectedDateRange]);
+
+  const generateDateRange = (startDate: string, endDate: string): Date[] => {
+    const dates = [];
+    let current = moment(startDate);
+    const end = moment(endDate);
+    
+    while (current.isSameOrBefore(end)) {
+      dates.push(current.toDate());
+      current = current.clone().add(1, 'day');
+    }
+    
+    return dates;
+  };
 
   const handleSave = () => {
-    if (!selectedEmployeeId || !leaveType || !selectedDate) return;
+    if (!selectedEmployeeId || !leaveType) return;
     if (!Array.isArray(employees)) return;
+    
+    // Validate custom dates if they're being used
+    if (useCustomDates && (!customStartDate || !customEndDate)) {
+      alert('กรุณาเลือกวันที่เริ่มต้นและสิ้นสุด');
+      return;
+    }
+    
+    // Validate that we have either selectedDate or custom dates
+    if (!selectedDate && (!useCustomDates || !customStartDate)) return;
 
     const selectedEmployee = employees.find(emp => emp.id === selectedEmployeeId);
     if (!selectedEmployee) return;
 
+    let startDate: string;
+    let endDate: string;
+
+    // Determine start and end dates
+    if (useCustomDates && customStartDate && customEndDate) {
+      // Use custom date range
+      startDate = customStartDate;
+      endDate = customEndDate;
+    } else if (selectedDateRange && selectedDateRange.length > 1) {
+      // Use original selected date range
+      startDate = moment(selectedDateRange[0]).format('YYYY-MM-DD');
+      endDate = moment(selectedDateRange[selectedDateRange.length - 1]).format('YYYY-MM-DD');
+    } else if (selectedDate) {
+      // Single date event
+      startDate = moment(selectedDate).format('YYYY-MM-DD');
+      endDate = moment(selectedDate).format('YYYY-MM-DD');
+    } else {
+      return; // No valid dates
+    }
+
+    // Auto-generate description for multi-day events
+    let finalDescription = description;
+    
+    // If it's a multi-day event (different start and end dates), add date range info to description
+    if (startDate !== endDate) {
+      const startFormatted = moment(startDate).format('DD/MM/YYYY');
+      const endFormatted = moment(endDate).format('DD/MM/YYYY');
+      const dateRangeInfo = `ช่วงวันที่: ${startFormatted} - ${endFormatted}`;
+      
+      if (description.trim()) {
+        finalDescription = `${dateRangeInfo} - ${description}`;
+      } else {
+        finalDescription = dateRangeInfo;
+      }
+    }
+
+    // Create a single multi-day event
     onSave({
       employeeId: selectedEmployeeId,
       employeeName: selectedEmployee.name,
       leaveType,
-      date: moment(selectedDate).format('YYYY-MM-DD'),
-      description
+      startDate,
+      endDate,
+      description: finalDescription
     });
 
     // Reset form
     setSelectedEmployeeId(null);
     setLeaveType('');
     setDescription('');
+    setCustomStartDate('');
+    setCustomEndDate('');
+    setUseCustomDates(false);
     onClose();
   };
 
@@ -113,7 +196,10 @@ export const EventModal: React.FC<EventModalProps> = ({
             </Button>
           </div>
           <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-300 mt-1 sm:mt-2">
-            {formatDate(selectedDate)}
+            {selectedDateRange && selectedDateRange.length > 1 
+              ? `${formatDate(selectedDateRange[0])} - ${formatDate(selectedDateRange[selectedDateRange.length - 1])} (${selectedDateRange.length} วัน)`
+              : formatDate(selectedDate)
+            }
           </p>
         </div>
 
@@ -152,6 +238,44 @@ export const EventModal: React.FC<EventModalProps> = ({
               className="h-8 sm:h-9 text-xs sm:text-sm"
             />
           </div>
+
+          {/* Date Range Section - Only show for multi-day events */}
+          {(selectedDateRange && selectedDateRange.length > 1) && (
+            <div className="space-y-2 sm:space-y-3 p-3 border rounded-lg bg-blue-50 dark:bg-blue-900/20">
+              <div className="flex items-center space-x-2">
+                <CalendarDays className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                <Label className="text-xs sm:text-sm font-medium text-blue-700 dark:text-blue-300">
+                  ช่วงวันที่เหตุการณ์ ({selectedDateRange.length} วัน)
+                </Label>
+              </div>
+              
+              <div className="text-xs text-blue-600 dark:text-blue-400 mb-2">
+                เริ่มต้น: {formatDate(selectedDateRange[0])} - สิ้นสุด: {formatDate(selectedDateRange[selectedDateRange.length - 1])}
+              </div>
+              
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <Label className="text-xs text-gray-600 dark:text-gray-400">วันเริ่มต้น</Label>
+                  <Input
+                    type="date"
+                    value={customStartDate}
+                    onChange={(e) => setCustomStartDate(e.target.value)}
+                    className="text-xs sm:text-sm h-8"
+                  />
+                </div>
+                <div>
+                  <Label className="text-xs text-gray-600 dark:text-gray-400">วันสิ้นสุด</Label>
+                  <Input
+                    type="date"
+                    value={customEndDate}
+                    onChange={(e) => setCustomEndDate(e.target.value)}
+                    min={customStartDate}
+                    className="text-xs sm:text-sm h-8"
+                  />
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Description */}
           <div className="space-y-1 sm:space-y-2">

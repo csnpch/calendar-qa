@@ -24,8 +24,11 @@ model Employee {
 model Event {
   id           Int      @id @default(autoincrement())
   employeeId   Int      @map("employee_id")
+  employeeName String   @map("employee_name")
   leaveType    String   @map("leave_type")
-  date         String
+  date         String?  // Keep for backward compatibility, but make optional
+  startDate    String   @map("start_date")
+  endDate      String   @map("end_date")
   description  String?
   createdAt    DateTime @default(now()) @map("created_at")
   updatedAt    DateTime @updatedAt @map("updated_at")
@@ -35,6 +38,9 @@ model Event {
   @@map("events")
   @@index([employeeId])
   @@index([date])
+  @@index([startDate])
+  @@index([endDate])
+  @@index([startDate, endDate])
   @@index([leaveType])
 }
 

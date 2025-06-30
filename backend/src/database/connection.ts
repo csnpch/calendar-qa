@@ -44,8 +44,11 @@ class DatabaseConnection {
         CREATE TABLE IF NOT EXISTS events (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             employee_id INTEGER NOT NULL,
+            employee_name TEXT NOT NULL,
             leave_type TEXT NOT NULL CHECK (leave_type IN ('vacation', 'personal', 'sick', 'absent', 'maternity', 'bereavement', 'study', 'military', 'sabbatical', 'unpaid', 'compensatory', 'other')),
-            date TEXT NOT NULL,
+            date TEXT,
+            start_date TEXT,
+            end_date TEXT,
             description TEXT,
             created_at TEXT NOT NULL DEFAULT (datetime('now')),
             updated_at TEXT NOT NULL DEFAULT (datetime('now')),
@@ -71,6 +74,9 @@ class DatabaseConnection {
         CREATE INDEX IF NOT EXISTS idx_events_employee_id ON events(employee_id);
         CREATE INDEX IF NOT EXISTS idx_events_date ON events(date);
         CREATE INDEX IF NOT EXISTS idx_events_leave_type ON events(leave_type);
+        CREATE INDEX IF NOT EXISTS idx_events_start_date ON events(start_date);
+        CREATE INDEX IF NOT EXISTS idx_events_end_date ON events(end_date);
+        CREATE INDEX IF NOT EXISTS idx_events_date_range ON events(start_date, end_date);
         CREATE INDEX IF NOT EXISTS idx_cronjob_config_enabled ON cronjob_config(enabled);
 
         -- Insert default employees
@@ -104,6 +110,52 @@ class DatabaseConnection {
     
     try {
       console.log('Running database migrations...');
+      
+      // Check if events table exists and get its columns
+      const eventsTableInfo = this.instance.prepare("PRAGMA table_info(events)").all();
+      const eventsColumns = eventsTableInfo.map((col: any) => col.name);
+      
+      // Add missing columns to events table if they don't exist
+      if (!eventsColumns.includes('employee_name')) {
+        console.log('Adding employee_name column to events table...');
+        this.instance.exec("ALTER TABLE events ADD COLUMN employee_name TEXT");
+        
+        // Populate employee_name from employees table
+        console.log('Populating employee_name from employees table...');
+        this.instance.exec(`
+          UPDATE events 
+          SET employee_name = (
+            SELECT name FROM employees WHERE employees.id = events.employee_id
+          )
+          WHERE employee_name IS NULL
+        `);
+        
+        // Make employee_name NOT NULL after population
+        // Note: SQLite doesn't support ALTER COLUMN, so we'll work with what we have
+      }
+      
+      if (!eventsColumns.includes('start_date')) {
+        console.log('Adding start_date column to events table...');
+        this.instance.exec("ALTER TABLE events ADD COLUMN start_date TEXT");
+        
+        // Populate start_date from date column
+        console.log('Populating start_date from date column...');
+        this.instance.exec("UPDATE events SET start_date = date WHERE start_date IS NULL");
+      }
+      
+      if (!eventsColumns.includes('end_date')) {
+        console.log('Adding end_date column to events table...');
+        this.instance.exec("ALTER TABLE events ADD COLUMN end_date TEXT");
+        
+        // Populate end_date from date column
+        console.log('Populating end_date from date column...');
+        this.instance.exec("UPDATE events SET end_date = date WHERE end_date IS NULL");
+      }
+      
+      // Create indexes if they don't exist
+      this.instance.exec("CREATE INDEX IF NOT EXISTS idx_events_start_date ON events(start_date)");
+      this.instance.exec("CREATE INDEX IF NOT EXISTS idx_events_end_date ON events(end_date)");
+      this.instance.exec("CREATE INDEX IF NOT EXISTS idx_events_date_range ON events(start_date, end_date)");
       
       // Check if cronjob_config table exists and get its columns
       const tableInfo = this.instance.prepare("PRAGMA table_info(cronjob_config)").all();

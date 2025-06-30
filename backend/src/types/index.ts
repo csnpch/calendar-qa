@@ -10,7 +10,9 @@ export type Event = {
   employeeId: number;
   employeeName: string;
   leaveType: 'vacation' | 'personal' | 'sick' | 'absent' | 'maternity' | 'bereavement' | 'study' | 'military' | 'sabbatical' | 'unpaid' | 'compensatory' | 'other';
-  date: string;
+  date?: string; // Keep for backward compatibility
+  startDate: string;
+  endDate: string;
   description?: string;
   createdAt: string;
   updatedAt: string;
@@ -33,14 +35,16 @@ export type UpdateEmployeeRequest = {
 export type CreateEventRequest = {
   employeeId: number;
   leaveType: 'vacation' | 'personal' | 'sick' | 'absent' | 'maternity' | 'bereavement' | 'study' | 'military' | 'sabbatical' | 'unpaid' | 'compensatory' | 'other';
-  date: string;
+  startDate: string;
+  endDate: string;
   description?: string;
 };
 
 export type UpdateEventRequest = {
   employeeId?: number;
   leaveType?: 'vacation' | 'personal' | 'sick' | 'absent' | 'maternity' | 'bereavement' | 'study' | 'military' | 'sabbatical' | 'unpaid' | 'compensatory' | 'other';
-  date?: string;
+  startDate?: string;
+  endDate?: string;
   description?: string;
 };
 

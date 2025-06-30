@@ -14,7 +14,7 @@ interface CalendarGridProps {
   employees: { id: number; name: string }[];
   companyHolidays: any[];
   onDateClick: (date: Date) => void;
-  onCreateEvent: (date: Date) => void;
+  onCreateEvent: (date: Date, dateRange?: Date[]) => void;
   onHolidayAdded?: () => void;
   onPrevMonth: () => void;
   onNextMonth: () => void;
@@ -36,6 +36,13 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({
   const [popoverOpen, setPopoverOpen] = useState(false);
   const [selectedPopoverDate, setSelectedPopoverDate] = useState<Date | null>(null);
   const [maxVisibleEvents, setMaxVisibleEvents] = useState(2);
+  
+  // Drag selection state
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragStartDate, setDragStartDate] = useState<Date | null>(null);
+  const [dragEndDate, setDragEndDate] = useState<Date | null>(null);
+  const [selectedDateRange, setSelectedDateRange] = useState<Date[]>([]);
+  const [hoverDateRange, setHoverDateRange] = useState<Date[]>([]);
   
   // Safely handle window resize
   React.useEffect(() => {
@@ -87,7 +94,36 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({
   const getEventsForDate = (date: Date) => {
     if (!Array.isArray(events)) return [];
     const dateString = moment(date).format('YYYY-MM-DD');
-    return events.filter(event => event.date === dateString);
+    const filteredEvents = events.filter(event => {
+      // Check both legacy date field and new date range fields
+      if (event.date === dateString) return true;
+      if (event.startDate && event.endDate) {
+        return dateString >= event.startDate && dateString <= event.endDate;
+      }
+      return false;
+    });
+    
+    // Sort events for consistent layering
+    return filteredEvents.sort((a, b) => {
+      // First sort by start date (earlier events first)
+      const aStart = a.startDate || a.date;
+      const bStart = b.startDate || b.date;
+      if (aStart !== bStart) {
+        return aStart < bStart ? -1 : 1;
+      }
+      
+      // Then by duration (longer events first)
+      const aEnd = a.endDate || a.date;
+      const bEnd = b.endDate || b.date;
+      const aDuration = moment(aEnd).diff(moment(aStart), 'days');
+      const bDuration = moment(bEnd).diff(moment(bStart), 'days');
+      if (aDuration !== bDuration) {
+        return bDuration - aDuration;
+      }
+      
+      // Finally by employee ID for consistency
+      return a.employeeId - b.employeeId;
+    });
   };
 
   const getEmployeeName = (employeeId: number) => {
@@ -105,6 +141,14 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({
   };
 
   const handleDateClick = (date: Date) => {
+    // If we have a date range selected (either valid dates or just hover range), create events for the range
+    if (selectedDateRange.length > 1 || hoverDateRange.length > 1) {
+      const popoverDate = selectedDateRange.length > 0 ? selectedDateRange[0] : hoverDateRange[0];
+      setSelectedPopoverDate(popoverDate);
+      setPopoverOpen(true);
+      return;
+    }
+    
     const dayEvents = getEventsForDate(date);
     const companyHoliday = isCompanyHoliday(date);
     
@@ -116,10 +160,163 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({
     }
   };
 
+  const handleMouseDown = (date: Date) => {
+    setIsDragging(true);
+    setDragStartDate(date);
+    setDragEndDate(date);
+    
+    // Check if starting date is valid for event creation (only block company holidays)
+    const companyHoliday = isCompanyHoliday(date);
+    
+    if (!companyHoliday) {
+      // Valid starting date (allow overlapping with existing events)
+      setSelectedDateRange([date]);
+      setHoverDateRange([date]);
+    } else {
+      // Invalid starting date, but allow drag to continue
+      setSelectedDateRange([]);
+      setHoverDateRange([date]);
+    }
+  };
+
+  const handleMouseEnter = (date: Date) => {
+    if (!isDragging || !dragStartDate) return;
+    
+    setDragEndDate(date);
+    
+    // Calculate all dates in the drag range for visual feedback
+    const startMoment = moment(dragStartDate);
+    const endMoment = moment(date);
+    const allDatesInRange = [];
+    const validDatesInRange = [];
+    
+    if (startMoment.isBefore(endMoment) || startMoment.isSame(endMoment)) {
+      let current = startMoment.clone();
+      while (current.isSameOrBefore(endMoment)) {
+        const currentDate = current.toDate();
+        allDatesInRange.push(currentDate);
+        
+        // Only exclude company holidays (allow overlapping with existing events)
+        const currentHoliday = isCompanyHoliday(currentDate);
+        
+        if (!currentHoliday) {
+          validDatesInRange.push(currentDate);
+        }
+        current.add(1, 'day');
+      }
+    } else {
+      let current = endMoment.clone();
+      while (current.isSameOrBefore(startMoment)) {
+        const currentDate = current.toDate();
+        allDatesInRange.push(currentDate);
+        
+        // Only exclude company holidays (allow overlapping with existing events)
+        const currentHoliday = isCompanyHoliday(currentDate);
+        
+        if (!currentHoliday) {
+          validDatesInRange.push(currentDate);
+        }
+        current.add(1, 'day');
+      }
+      allDatesInRange.reverse();
+      validDatesInRange.reverse();
+    }
+    
+    // Set hover range for visual feedback (all dates)
+    setHoverDateRange(allDatesInRange);
+    // Set selected range for final selection (only valid dates)
+    setSelectedDateRange(validDatesInRange);
+  };
+
+  const handleMouseUp = () => {
+    if (isDragging && hoverDateRange.length > 1) {
+      // Show popover for multi-day selection (use hoverDateRange to include all dragged dates)
+      // Use the first valid date from selectedDateRange, or first date from hoverDateRange if no valid dates
+      const popoverDate = selectedDateRange.length > 0 ? selectedDateRange[0] : hoverDateRange[0];
+      setSelectedPopoverDate(popoverDate);
+      setPopoverOpen(true);
+    }
+    setIsDragging(false);
+    // Keep hoverDateRange to show the full drag selection until cleared
+  };
+
+  // Add global mouse up event listener
+  React.useEffect(() => {
+    const handleGlobalMouseUp = () => {
+      if (isDragging) {
+        setIsDragging(false);
+      }
+    };
+    
+    document.addEventListener('mouseup', handleGlobalMouseUp);
+    return () => document.removeEventListener('mouseup', handleGlobalMouseUp);
+  }, [isDragging]);
+
+  const isDateInSelectedRange = (date: Date) => {
+    return selectedDateRange.some(rangeDate => 
+      moment(rangeDate).isSame(moment(date), 'day')
+    );
+  };
+
+  const isDateInHoverRange = (date: Date) => {
+    return hoverDateRange.some(rangeDate => 
+      moment(rangeDate).isSame(moment(date), 'day')
+    );
+  };
+
+  const clearSelection = () => {
+    setSelectedDateRange([]);
+    setHoverDateRange([]);
+    setDragStartDate(null);
+    setDragEndDate(null);
+  };
+
+  // Helper function to check if an event continues to adjacent days
+  const getEventContinuity = (event: Event, date: Date) => {
+    // For multi-day events, check if this date is at the start, middle, or end of the range
+    if (event.startDate && event.endDate && event.startDate !== event.endDate) {
+      const currentDateStr = moment(date).format('YYYY-MM-DD');
+      const prevDateStr = moment(date).subtract(1, 'day').format('YYYY-MM-DD');
+      const nextDateStr = moment(date).add(1, 'day').format('YYYY-MM-DD');
+      
+      // Check if this is a multi-day event that spans multiple dates
+      const hasPrevious = prevDateStr >= event.startDate && prevDateStr <= event.endDate && !isWeekend(moment(date).subtract(1, 'day').toDate());
+      const hasNext = nextDateStr >= event.startDate && nextDateStr <= event.endDate && !isWeekend(moment(date).add(1, 'day').toDate());
+      
+      return { hasPrevious, hasNext };
+    }
+    
+    // Fallback to legacy logic for single-day events or old data
+    const currentDate = moment(date);
+    const prevDate = currentDate.clone().subtract(1, 'day');
+    const nextDate = currentDate.clone().add(1, 'day');
+    
+    const prevEvents = getEventsForDate(prevDate.toDate());
+    const nextEvents = getEventsForDate(nextDate.toDate());
+    
+    const hasPrevious = prevEvents.some(e => 
+      e.employeeId === event.employeeId && 
+      e.leaveType === event.leaveType &&
+      !isWeekend(prevDate.toDate()) // Don't connect over weekends
+    );
+    
+    const hasNext = nextEvents.some(e => 
+      e.employeeId === event.employeeId && 
+      e.leaveType === event.leaveType &&
+      !isWeekend(nextDate.toDate()) // Don't connect over weekends
+    );
+    
+    return { hasPrevious, hasNext };
+  };
+
   const handleCreateEvent = () => {
-    if (selectedPopoverDate) {
+    if (selectedDateRange.length > 1) {
+      // Create event for date range
+      onCreateEvent(selectedDateRange[0], selectedDateRange);
+    } else if (selectedPopoverDate) {
       onCreateEvent(selectedPopoverDate);
     }
+    clearSelection();
   };
 
   const days = getDaysInMonth();
@@ -243,17 +440,83 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({
                     key={`${weekIndex}-${index}`}
                     className={`
                       min-h-[45px] sm:min-h-[60px] md:min-h-[75px] lg:min-h-[90px] 
-                      p-0.5 sm:p-1 border rounded cursor-pointer transition-all duration-200
+                      p-0.5 sm:p-1 border rounded cursor-pointer transition-all duration-200 select-none
                       hover:shadow-sm hover:scale-[1.01] transform
                       ${!isOtherMonth ? 'hover:bg-blue-50 dark:hover:bg-gray-800/30 hover:border-blue-300 dark:hover:border-gray-500' : 'hover:bg-gray-200 dark:hover:bg-gray-700'}
-                      ${bgColor} ${textColor} ${borderColor}
+                      ${isDateInSelectedRange(date) || isDateInHoverRange(date) ? 'bg-blue-100 dark:bg-blue-900/30 border-blue-300 dark:border-blue-600 ring-2 ring-blue-200 dark:ring-blue-700' : bgColor} ${textColor} ${!(isDateInSelectedRange(date) || isDateInHoverRange(date)) ? borderColor : ''}
                     `}
                     onClick={() => handleDateClick(date)}
+                    onMouseDown={() => handleMouseDown(date)}
+                    onMouseEnter={() => handleMouseEnter(date)}
+                    onMouseUp={handleMouseUp}
                   >
                     <div className={`text-xs font-medium mb-0.5 ${isTodayDate && !isOtherMonth ? 'dark:text-white' : ''}`}>
                       {moment(date).date()}
                     </div>
                     
+                    {/* Only show events if it's not a weekend */}
+                    {!weekend && (
+                      <div className="space-y-0.5">
+                        {dayEvents.slice(0, maxVisibleEvents).map((event, eventIndex) => {
+                          const employeeName = getEmployeeName(event.employeeId);
+                          const { hasPrevious, hasNext } = getEventContinuity(event, date);
+                          
+                          // Determine border radius based on continuity
+                          let borderRadius = 'rounded';
+                          if (hasPrevious && hasNext) {
+                            borderRadius = 'rounded-none';
+                          } else if (hasPrevious && !hasNext) {
+                            borderRadius = 'rounded-l-none rounded-r';
+                          } else if (!hasPrevious && hasNext) {
+                            borderRadius = 'rounded-l rounded-r-none';
+                          }
+                          
+                          // Display text formatting - add dashes for middle days
+                          let displayText = employeeName;
+                          if (hasPrevious && hasNext) {
+                            displayText = `- ${employeeName} -`;
+                          }
+                          
+                          // Z-index based on sorted position to ensure proper layering
+                          // Events that appear first in sorted order get lower z-index (appear below)
+                          const zIndex = hasPrevious || hasNext ? 10 + eventIndex : 1 + eventIndex;
+                          
+                          return (
+                            <div
+                              key={event.id}
+                              className={`
+                                text-xs py-0.5 ${borderRadius} border text-center font-normal
+                                ${LEAVE_TYPE_COLORS[event.leaveType as keyof typeof LEAVE_TYPE_COLORS] || LEAVE_TYPE_COLORS.other}
+                                ${hasPrevious ? 'border-l-0' : 'px-0.5 sm:px-1'}
+                                ${hasNext ? 'border-r-0' : 'px-0.5 sm:px-1'}
+                                ${hasPrevious ? '-ml-1 sm:-ml-2 pl-1 sm:pl-2' : ''}
+                                ${hasNext ? '-mr-1 sm:-mr-2 pr-1 sm:pr-2' : ''}
+                                relative overflow-visible
+                              `}
+                              style={{ zIndex }}
+                              title={`${employeeName} - ${LEAVE_TYPE_LABELS[event.leaveType as keyof typeof LEAVE_TYPE_LABELS] || event.leaveType}`}
+                            >
+                              <span className="sm:inline truncate block">
+                                {displayText.length > 12 ? displayText.substring(0, 12) + '...' : displayText}
+                              </span>
+                              <span className="sm:hidden truncate block">
+                                {hasPrevious && hasNext 
+                                  ? `- ${(employeeName.split(' ')[0] || employeeName).substring(0, 4)} -`
+                                  : (employeeName.split(' ')[0] || employeeName).substring(0, 6)
+                                }
+                              </span>
+                            </div>
+                          );
+                        })}
+                        {dayEvents.length > maxVisibleEvents && (
+                          <div className="text-xs text-gray-600 text-center font-normal">
+                            +{dayEvents.length - maxVisibleEvents}
+                          </div>
+                        )}
+                      </div>
+                    )}
+                    
+                    {/* Show holidays after events (lower priority) */}
                     {companyHoliday && !isOtherMonth && (
                       <Tooltip>
                         <TooltipTrigger asChild>
@@ -284,45 +547,35 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({
                         </div>
                       </div>
                     )}
-                    
-                    <div className="space-y-0.5">
-                      {dayEvents.slice(0, maxVisibleEvents).map((event) => {
-                        const employeeName = getEmployeeName(event.employeeId);
-                        return (
-                          <div
-                            key={event.id}
-                            className={`
-                              text-xs px-0.5 py-0.5 sm:px-1 sm:py-0.5 rounded border text-center font-normal truncate
-                              ${LEAVE_TYPE_COLORS[event.leaveType as keyof typeof LEAVE_TYPE_COLORS] || LEAVE_TYPE_COLORS.other}
-                            `}
-                            title={`${employeeName} - ${LEAVE_TYPE_LABELS[event.leaveType as keyof typeof LEAVE_TYPE_LABELS] || event.leaveType}`}
-                          >
-                            <span className="sm:inline truncate block">{employeeName.length > 12 ? employeeName.substring(0, 12) + '...' : employeeName}</span>
-                            <span className="sm:hidden truncate block">{(employeeName.split(' ')[0] || employeeName).substring(0, 6)}</span>
-                          </div>
-                        );
-                      })}
-                      {dayEvents.length > maxVisibleEvents && (
-                        <div className="text-xs text-gray-600 text-center font-normal">
-                          +{dayEvents.length - maxVisibleEvents}
-                        </div>
-                      )}
-                    </div>
                   </div>
                 );
 
-                return !hasEvents && !companyHoliday ? (
+                // Check if this date should show the popover for multi-day selection
+                const shouldShowPopover = popoverOpen && selectedPopoverDate && (
+                  moment(selectedPopoverDate).isSame(moment(date), 'day') ||
+                  (selectedDateRange.length > 1 && isDateInSelectedRange(date) && moment(selectedDateRange[0]).isSame(moment(date), 'day')) ||
+                  (hoverDateRange.length > 1 && selectedDateRange.length === 0 && isDateInHoverRange(date) && moment(hoverDateRange[0]).isSame(moment(date), 'day'))
+                );
+
+                // For multi-day selection, show popover even if the date has events
+                const isMultiDaySelection = (selectedDateRange.length > 1) || (hoverDateRange.length > 1);
+                
+                return (!hasEvents && !companyHoliday) || (isMultiDaySelection && shouldShowPopover) ? (
                   <CreateEventPopover
                     key={`${weekIndex}-${index}`}
-                    isOpen={popoverOpen && selectedPopoverDate && moment(selectedPopoverDate).isSame(moment(date), 'day')}
+                    isOpen={shouldShowPopover}
                     onOpenChange={(open) => {
                       setPopoverOpen(open);
-                      if (!open) setSelectedPopoverDate(null);
+                      if (!open) {
+                        setSelectedPopoverDate(null);
+                        clearSelection();
+                      }
                     }}
                     onCreateEvent={handleCreateEvent}
                     onHolidayAdded={handleHolidayAdded}
                     selectedDate={selectedPopoverDate}
                     triggerElement={dayElement}
+                    isRangeSelection={isMultiDaySelection}
                   />
                 ) : (
                   dayElement

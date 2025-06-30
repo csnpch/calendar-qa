@@ -18,7 +18,8 @@ describe('EventService', () => {
       const eventData = {
         employeeId: 1,
         leaveType: 'vacation' as const,
-        date: '2025-06-15',
+        startDate: '2025-06-15',
+        endDate: '2025-06-15',
         description: 'Summer vacation'
       };
 
@@ -27,7 +28,9 @@ describe('EventService', () => {
       expect(result.employeeId).toBe(eventData.employeeId);
       expect(result.employeeName).toBe('John Smith'); // Should come from employee lookup
       expect(result.leaveType).toBe(eventData.leaveType);
-      expect(result.date).toBe(eventData.date);
+      expect(result.startDate).toBe(eventData.startDate);
+      expect(result.endDate).toBe(eventData.endDate);
+      expect(result.date).toBe(eventData.startDate); // Legacy field for single-day events
       expect(result.description).toBe(eventData.description);
       expect(result.id).toBeGreaterThan(0);
       expect(result.createdAt).toBeDefined();
@@ -38,7 +41,8 @@ describe('EventService', () => {
       const eventData = {
         employeeId: 2,
         leaveType: 'sick' as const,
-        date: '2025-06-16'
+        startDate: '2025-06-16',
+        endDate: '2025-06-16'
       };
 
       const result = eventService.createEvent(eventData);
@@ -53,14 +57,14 @@ describe('EventService', () => {
       eventService.createEvent({
         employeeId: 1,
         leaveType: 'vacation',
-        date: '2025-06-15',
+        startDate: '2025-06-15', endDate: '2025-06-15',
         description: 'Test event 1'
       });
 
       eventService.createEvent({
         employeeId: 2,
         leaveType: 'sick',
-        date: '2025-06-20',
+        startDate: '2025-06-20', endDate: '2025-06-20',
         description: 'Test event 2'
       });
 
@@ -76,7 +80,7 @@ describe('EventService', () => {
       const created = eventService.createEvent({
         employeeId: 1,
         leaveType: 'vacation',
-        date: '2025-06-15',
+        startDate: '2025-06-15', endDate: '2025-06-15',
         description: 'Summer vacation'
       });
 
@@ -98,7 +102,7 @@ describe('EventService', () => {
       eventService.createEvent({
         employeeId: 1,
         leaveType: 'vacation',
-        date: '2025-06-15',
+        startDate: '2025-06-15', endDate: '2025-06-15',
         description: 'Vacation'
       });
 
@@ -114,7 +118,7 @@ describe('EventService', () => {
       eventService.createEvent({
         employeeId: 1,
         leaveType: 'vacation',
-        date: '2025-06-15',
+        startDate: '2025-06-15', endDate: '2025-06-15',
         description: 'Vacation'
       });
 
@@ -129,7 +133,7 @@ describe('EventService', () => {
       const created = eventService.createEvent({
         employeeId: 1,
         leaveType: 'vacation',
-        date: '2025-06-15',
+        startDate: '2025-06-15', endDate: '2025-06-15',
         description: 'Summer vacation'
       });
 
@@ -162,7 +166,7 @@ describe('EventService', () => {
       const created = eventService.createEvent({
         employeeId: 1,
         leaveType: 'vacation',
-        date: '2025-06-15'
+        startDate: '2025-06-15', endDate: '2025-06-15'
       });
 
       const deleted = eventService.deleteEvent(created.id);
@@ -184,7 +188,7 @@ describe('EventService', () => {
       eventService.createEvent({
         employeeId: 1,
         leaveType: 'vacation',
-        date: '2025-06-15',
+        startDate: '2025-06-15', endDate: '2025-06-15',
         description: 'Test vacation'
       });
 
@@ -201,13 +205,13 @@ describe('EventService', () => {
       eventService.createEvent({
         employeeId: 1,
         leaveType: 'vacation',
-        date: '2025-06-15'
+        startDate: '2025-06-15', endDate: '2025-06-15'
       });
 
       eventService.createEvent({
         employeeId: 2,
         leaveType: 'sick',
-        date: '2025-06-16'
+        startDate: '2025-06-16', endDate: '2025-06-16'
       });
 
       const stats = eventService.getEventStats();

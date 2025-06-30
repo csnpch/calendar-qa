@@ -17,6 +17,7 @@ const CalendarEvents = () => {
   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
   const [isCompanyHolidayModalOpen, setIsCompanyHolidayModalOpen] = useState(false);
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+  const [selectedDateRange, setSelectedDateRange] = useState<Date[]>([]);
   const [selectedDateEvents, setSelectedDateEvents] = useState<Event[]>([]);
   const [editingEvent, setEditingEvent] = useState<Event | null>(null);
   const [editingCompanyHoliday, setEditingCompanyHoliday] = useState<{ id: number; name: string; description?: string } | null>(null);
@@ -43,8 +44,9 @@ const CalendarEvents = () => {
     setIsDetailsModalOpen(true);
   };
 
-  const handleCreateEvent = (date: Date) => {
+  const handleCreateEvent = (date: Date, dateRange?: Date[]) => {
     setSelectedDate(date);
+    setSelectedDateRange(dateRange || []);
     setIsModalOpen(true);
   };
 
@@ -79,7 +81,8 @@ const CalendarEvents = () => {
     employeeId: number;
     employeeName: string;
     leaveType: string;
-    date: string;
+    startDate: string;
+    endDate: string;
     description?: string;
   }) => {
     try {
@@ -87,14 +90,17 @@ const CalendarEvents = () => {
         await updateEvent(editingEvent.id, {
           employeeId: eventData.employeeId,
           leaveType: eventData.leaveType as any,
-          date: eventData.date,
+          startDate: eventData.startDate,
+          endDate: eventData.endDate,
           description: eventData.description
         });
       } else {
         await addEvent({
           employeeId: eventData.employeeId,
+          employeeName: eventData.employeeName,
           leaveType: eventData.leaveType as any,
-          date: eventData.date,
+          startDate: eventData.startDate,
+          endDate: eventData.endDate,
           description: eventData.description
         });
       }
@@ -107,6 +113,7 @@ const CalendarEvents = () => {
       }
       
       setEditingEvent(null);
+      setSelectedDateRange([]);
       setIsModalOpen(false);
     } catch (err) {
       console.error('Failed to save event:', err);
@@ -221,9 +228,8 @@ const CalendarEvents = () => {
                 onNextMonth={handleNextMonth}
                 onTodayClick={handleTodayClick}
               />
-              
               {/* Upcoming Events Section */}
-              <div className="mt-6">
+              <div style={{ marginTop: '2rem' }}>
                 <UpcomingEvents events={events} employees={employees} />
               </div>
             </>
@@ -234,9 +240,14 @@ const CalendarEvents = () => {
       {/* Event Creation Modal */}
       <EventModal
         isOpen={isModalOpen}
-        onClose={() => { setIsModalOpen(false); setEditingEvent(null); }}
+        onClose={() => { 
+          setIsModalOpen(false); 
+          setEditingEvent(null);
+          setSelectedDateRange([]);
+        }}
         onSave={handleEventSave}
         selectedDate={selectedDate}
+        selectedDateRange={selectedDateRange}
         employees={employees}
         editingEvent={editingEvent}
       />

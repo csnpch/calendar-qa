@@ -125,7 +125,14 @@ export const useCalendarData = () => {
   // Get events for a specific date
   const getEventsForDate = (date: Date): Event[] => {
     const dateString = moment(date).format('YYYY-MM-DD');
-    return events.filter(event => event.date === dateString);
+    return events.filter(event => {
+      // Check both legacy date field and new date range fields
+      if (event.date === dateString) return true;
+      if (event.startDate && event.endDate) {
+        return dateString >= event.startDate && dateString <= event.endDate;
+      }
+      return false;
+    });
   };
 
   // Search functions

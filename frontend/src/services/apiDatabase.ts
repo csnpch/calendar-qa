@@ -12,7 +12,9 @@ export interface Event {
   employeeId: number;
   employeeName: string;
   leaveType: 'vacation' | 'personal' | 'sick' | 'other';
-  date: string;
+  date?: string; // Keep for backward compatibility
+  startDate: string;
+  endDate: string;
   description?: string;
   createdAt: string;
   updatedAt: string;
@@ -29,14 +31,16 @@ interface UpdateEmployeeRequest {
 interface CreateEventRequest {
   employeeId: number;
   leaveType: 'vacation' | 'personal' | 'sick' | 'other';
-  date: string;
+  startDate: string;
+  endDate: string;
   description?: string;
 }
 
 interface UpdateEventRequest {
   employeeId?: number;
   leaveType?: 'vacation' | 'personal' | 'sick' | 'other';
-  date?: string;
+  startDate?: string;
+  endDate?: string;
   description?: string;
 }
 
@@ -143,6 +147,18 @@ class ApiDatabaseService {
 
   async getEmployeeStats(): Promise<any> {
     return await apiClient.get('/employees/stats/overview');
+  }
+
+  async deleteEventsByMonth(year: number, month: number, password: string): Promise<{ deletedCount: number }> {
+    return await apiClient.delete(`/events/bulk/month/${year}/${month}`, { password });
+  }
+
+  async deleteEventsByYear(year: number, password: string): Promise<{ deletedCount: number }> {
+    return await apiClient.delete(`/events/bulk/year/${year}`, { password });
+  }
+
+  async deleteAllEvents(password: string): Promise<{ deletedCount: number }> {
+    return await apiClient.delete('/events/bulk/all', { password });
   }
 }
 
