@@ -103,7 +103,7 @@ const UpcomingEvents: React.FC<UpcomingEventsProps> = ({ events, employees }) =>
               </div>
               
               {/* Employee Name */}
-              <div className="flex-shrink-0 font-medium text-gray-900 dark:text-white min-w-0 max-w-16 truncate">
+              <div className="flex-shrink-0 font-medium text-gray-900 dark:text-white min-w-0 max-w-32 truncate" title={getEmployeeName(event.employeeId)}>
                 {getEmployeeName(event.employeeId)}
               </div>
               

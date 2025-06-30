@@ -115,16 +115,16 @@ const EventsManagement = () => {
         // Check if search term matches any field (OR condition)
         return employeeName.includes(searchTerm) ||
                leaveTypeThai.includes(searchTerm) ||
-               startDate.includes(searchTerm) ||
-               endDate.includes(searchTerm) ||
-               rawStartDate.includes(searchTerm) ||
-               rawEndDate.includes(searchTerm) ||
-               startYear.includes(searchTerm) ||
-               endYear.includes(searchTerm) ||
-               startMonth.includes(searchTerm) ||
-               endMonth.includes(searchTerm) ||
+               (startDate || '').includes(searchTerm) ||
+               (endDate || '').includes(searchTerm) ||
+               (rawStartDate || '').includes(searchTerm) ||
+               (rawEndDate || '').includes(searchTerm) ||
+               (startYear || '').includes(searchTerm) ||
+               (endYear || '').includes(searchTerm) ||
+               (startMonth || '').includes(searchTerm) ||
+               (endMonth || '').includes(searchTerm) ||
                description.includes(searchTerm) ||
-               event.leaveType.toLowerCase().includes(searchTerm); // Also search original leave type
+               (event.leaveType || '').toLowerCase().includes(searchTerm); // Also search original leave type
       });
     }
 

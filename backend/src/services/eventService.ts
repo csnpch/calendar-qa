@@ -412,13 +412,14 @@ export class EventService {
     const rankingStmt = this.db.prepare(`
       SELECT 
         e.employee_id as employeeId,
-        e.employee_name as employeeName,
+        COALESCE(e.employee_name, emp.name) as employeeName,
         e.leave_type as leaveType,
         COUNT(*) as count
       FROM events e
+      LEFT JOIN employees emp ON e.employee_id = emp.id
       ${joinWhereClause}
-      GROUP BY e.employee_id, e.employee_name, e.leave_type
-      ORDER BY e.employee_name ASC
+      GROUP BY e.employee_id, COALESCE(e.employee_name, emp.name), e.leave_type
+      ORDER BY COALESCE(e.employee_name, emp.name) ASC
     `);
     
     const rankingData = rankingStmt.all(...params) as Array<{
@@ -433,7 +434,7 @@ export class EventService {
     rankingData.forEach(row => {
       if (!employeeMap.has(row.employeeId)) {
         employeeMap.set(row.employeeId, {
-          name: row.employeeName,
+          name: row.employeeName || 'ไม่ทราบชื่อ',
           totalEvents: 0,
           eventTypes: {}
         });
