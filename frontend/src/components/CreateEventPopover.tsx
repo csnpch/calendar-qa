@@ -10,6 +10,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { createCompanyHoliday } from '@/services/companyHolidayService';
 import { toast } from '@/hooks/use-toast';
 import { formatDate } from '@/lib/utils';
+import moment from 'moment';
 
 interface CreateEventPopoverProps {
   isOpen: boolean;
@@ -128,7 +129,7 @@ export const CreateEventPopover: React.FC<CreateEventPopoverProps> = ({
         <PopoverTrigger asChild>
           {triggerElement}
         </PopoverTrigger>
-        <PopoverContent className="w-80 p-0" align="center">
+        <PopoverContent className="w-80 p-0" align="center" side="bottom">
           <div className="p-4">
             <div className="mb-4">
               <p className="text-sm text-gray-500 dark:text-gray-400">{formatDate(selectedDate)}</p>

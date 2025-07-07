@@ -13,6 +13,7 @@ interface CalendarGridProps {
   events: Event[];
   employees: { id: number; name: string }[];
   companyHolidays: any[];
+  highlightedDates?: string[];
   onDateClick: (date: Date) => void;
   onCreateEvent: (date: Date, dateRange?: Date[]) => void;
   onHolidayAdded?: () => void;
@@ -26,6 +27,7 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({
   events,
   employees,
   companyHolidays,
+  highlightedDates = [],
   onDateClick,
   onCreateEvent,
   onHolidayAdded,
@@ -36,6 +38,7 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({
   const [popoverOpen, setPopoverOpen] = useState(false);
   const [selectedPopoverDate, setSelectedPopoverDate] = useState<Date | null>(null);
   const [maxVisibleEvents, setMaxVisibleEvents] = useState(2);
+  const [popoverJustOpened, setPopoverJustOpened] = useState(false);
   
   // Drag selection state
   const [isDragging, setIsDragging] = useState(false);
@@ -151,12 +154,20 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({
     
     const dayEvents = getEventsForDate(date);
     const companyHoliday = isCompanyHoliday(date);
+    const thaiHoliday = isHoliday(date);
     
-    if (dayEvents.length > 0 || companyHoliday) {
+    if (dayEvents.length > 0 || companyHoliday || thaiHoliday) {
       onDateClick(date);
     } else {
-      setSelectedPopoverDate(date);
-      setPopoverOpen(true);
+      // Clear any previous selections for clean single-day click
+      clearSelection();
+      setTimeout(() => {
+        setSelectedPopoverDate(date);
+        setPopoverOpen(true);
+        setPopoverJustOpened(true);
+        // Allow normal closing after a short delay
+        setTimeout(() => setPopoverJustOpened(false), 100);
+      }, 0);
     }
   };
 
@@ -383,6 +394,7 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({
                 const thaiHoliday = isHoliday(date);
                 const companyHoliday = isCompanyHoliday(date);
                 const weekend = isWeekend(date);
+                const isHighlighted = highlightedDates.includes(moment(date).format('YYYY-MM-DD'));
 
                 let bgColor = 'bg-white dark:bg-gray-700';
                 let textColor = 'text-gray-900 dark:text-white';
@@ -433,9 +445,15 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({
                       bgColor = 'bg-blue-25 dark:bg-gray-800/20';
                     }
                   }
+
+                  // Highlight styling (overrides other styling when highlighted)
+                  if (isHighlighted && !isOtherMonth) {
+                    bgColor = 'bg-yellow-100 dark:bg-yellow-900/30';
+                    borderColor = 'border-yellow-400 dark:border-yellow-600 ring-1 ring-yellow-300 dark:ring-yellow-700';
+                  }
                 }
 
-                const dayElement = (
+                const dayContent = (
                   <div
                     key={`${weekIndex}-${index}`}
                     className={`
@@ -450,12 +468,12 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({
                     onMouseEnter={() => handleMouseEnter(date)}
                     onMouseUp={handleMouseUp}
                   >
-                    <div className={`text-xs font-medium mb-0.5 ${isTodayDate && !isOtherMonth ? 'dark:text-white' : ''}`}>
-                      {moment(date).date()}
-                    </div>
+                        <div className={`text-xs font-medium mb-0.5 ${isTodayDate && !isOtherMonth ? 'dark:text-white' : ''}`}>
+                          {moment(date).date()}{thaiHoliday && !isOtherMonth ? '*' : ''}
+                        </div>
                     
-                    {/* Only show events if it's not a weekend */}
-                    {!weekend && (
+                    {/* Only show events if it's not a weekend and not a company holiday */}
+                    {!weekend && !companyHoliday && (
                       <div className="space-y-0.5">
                         {dayEvents.slice(0, maxVisibleEvents).map((event, eventIndex) => {
                           const employeeName = getEmployeeName(event.employeeId);
@@ -518,37 +536,41 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({
                     
                     {/* Show holidays after events (lower priority) */}
                     {companyHoliday && !isOtherMonth && (
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <div className="text-xs bg-red-200 dark:bg-red-600 text-black dark:text-red-100 px-1 py-0.5 rounded mb-0.5 font-normal leading-tight cursor-pointer">
-                            <div className="break-words overflow-hidden leading-tight" style={{
-                              display: '-webkit-box',
-                              WebkitLineClamp: 3,
-                              WebkitBoxOrient: 'vertical'
-                            }}>
-                              {companyHoliday.name}
-                            </div>
-                          </div>
-                        </TooltipTrigger>
-                        <TooltipContent>
-                          <p>{companyHoliday.description || companyHoliday.name}</p>
-                        </TooltipContent>
-                      </Tooltip>
-                    )}
-                    
-                    {thaiHoliday && !isOtherMonth && (
-                      <div className="text-xs bg-green-100 dark:bg-green-900/50 text-green-800 dark:text-green-200 px-1 py-0.5 rounded mb-0.5 font-normal leading-tight">
+                      <div className="text-xs bg-red-200 dark:bg-red-600 text-black dark:text-red-100 px-1 py-0.5 rounded mb-0.5 font-normal leading-tight cursor-pointer">
                         <div className="break-words overflow-hidden leading-tight" style={{
                           display: '-webkit-box',
                           WebkitLineClamp: 3,
                           WebkitBoxOrient: 'vertical'
                         }}>
-                          {thaiHoliday.name}
+                          {companyHoliday.name}
                         </div>
                       </div>
                     )}
+                    
                   </div>
                 );
+
+                const dayElement = (thaiHoliday || companyHoliday) && !isOtherMonth ? (
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      {dayContent}
+                    </TooltipTrigger>
+                    <TooltipContent side="bottom">
+                      <div className="space-y-1">
+                        {thaiHoliday && (
+                          <div className="text-sm">
+                            วันหยุดไทย: {thaiHoliday.name}
+                          </div>
+                        )}
+                        {companyHoliday && (
+                          <div className="text-sm">
+                            วันหยุดบริษัท: {companyHoliday.name}
+                          </div>
+                        )}
+                      </div>
+                    </TooltipContent>
+                  </Tooltip>
+                ) : dayContent;
 
                 // Check if this date should show the popover for multi-day selection
                 const shouldShowPopover = popoverOpen && selectedPopoverDate && (
@@ -560,15 +582,31 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({
                 // For multi-day selection, show popover even if the date has events
                 const isMultiDaySelection = (selectedDateRange.length > 1) || (hoverDateRange.length > 1);
                 
-                return (!hasEvents && !companyHoliday) || (isMultiDaySelection && shouldShowPopover) ? (
+                const isEmptyDate = !hasEvents && !companyHoliday && !thaiHoliday;
+                const isThisDateSelected = selectedPopoverDate && moment(selectedPopoverDate).isSame(moment(date), 'day');
+                const isPopoverOpenForThisDate = shouldShowPopover || 
+                  (isEmptyDate && popoverOpen && isThisDateSelected);
+                
+                // Only render popover for the specific date that should show it
+                const shouldUsePopover = isPopoverOpenForThisDate;
+                
+                
+                return shouldUsePopover ? (
                   <CreateEventPopover
                     key={`${weekIndex}-${index}`}
-                    isOpen={shouldShowPopover}
+                    isOpen={isPopoverOpenForThisDate}
                     onOpenChange={(open) => {
+                      // Prevent immediate close only if just opened
+                      if (!open && popoverJustOpened) {
+                        return;
+                      }
                       setPopoverOpen(open);
                       if (!open) {
                         setSelectedPopoverDate(null);
-                        clearSelection();
+                        setPopoverJustOpened(false);
+                        if (isMultiDaySelection) {
+                          clearSelection();
+                        }
                       }
                     }}
                     onCreateEvent={handleCreateEvent}

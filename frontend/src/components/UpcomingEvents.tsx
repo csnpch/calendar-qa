@@ -6,25 +6,28 @@ import 'moment/locale/th';
 interface UpcomingEventsProps {
   events: Event[];
   employees: Employee[];
+  onNavigateToMonth?: (year: number, month: number) => void;
+  onEventHover?: (startDate: string, endDate: string) => void;
+  onEventHoverEnd?: () => void;
 }
 
-const UpcomingEvents: React.FC<UpcomingEventsProps> = ({ events, employees }) => {
+const UpcomingEvents: React.FC<UpcomingEventsProps> = ({ events, employees, onNavigateToMonth, onEventHover, onEventHoverEnd }) => {
   moment.locale('th');
   
-  // กรองเหตุการณ์ที่จะเกิดขึ้นตั้งแต่พรุ่งนี้เป็นต้นไป และเรียงลำดับตามวันที่
+  // กรองเหตุการณ์ที่จะเกิดขึ้นในอนาคต
   const upcomingEvents = events
     .filter(event => {
-      const tomorrow = moment().add(1, 'day').startOf('day');
+      const today = moment().startOf('day');
       
       // Check both legacy date field and new range fields
       if (event.startDate && event.endDate) {
-        // For range events, check if event starts tomorrow or later
+        // For range events, check if event starts today or later
         const startDate = moment(event.startDate);
-        return startDate.isSameOrAfter(tomorrow);
+        return startDate.isSameOrAfter(today);
       } else if (event.date) {
         // For legacy single-day events
         const eventDate = moment(event.date);
-        return eventDate.isSameOrAfter(tomorrow);
+        return eventDate.isSameOrAfter(today);
       }
       
       return false;
@@ -35,7 +38,7 @@ const UpcomingEvents: React.FC<UpcomingEventsProps> = ({ events, employees }) =>
       const bStart = moment(b.startDate || b.date);
       return aStart.diff(bStart);
     })
-    .slice(0, 12); // Show more items since they're compact
+    .slice(0, 20); // Show more items since they're compact
 
   // ฟังก์ชันหาชื่อพนักงานจาก ID
   const getEmployeeName = (employeeId: number) => {
@@ -92,10 +95,20 @@ const UpcomingEvents: React.FC<UpcomingEventsProps> = ({ events, employees }) =>
           const endDate = event.endDate || event.date;
           const isMultiDay = startDate !== endDate;
           
+          const handleClick = () => {
+            if (onNavigateToMonth) {
+              const eventMoment = moment(startDate);
+              onNavigateToMonth(eventMoment.year(), eventMoment.month());
+            }
+          };
+          
           return (
             <div
               key={event.id}
-              className="flex items-center gap-2 p-1.5 hover:bg-gray-50 dark:hover:bg-gray-700/50 rounded text-xs transition-colors"
+              className="flex items-center gap-2 p-1.5 hover:bg-gray-50 dark:hover:bg-gray-700/50 rounded text-xs transition-colors cursor-pointer"
+              onClick={handleClick}
+              onMouseEnter={() => onEventHover && onEventHover(startDate, endDate)}
+              onMouseLeave={() => onEventHoverEnd && onEventHoverEnd()}
             >
               {/* Number */}
               <div className="flex-shrink-0 w-4 h-4 bg-blue-500 rounded-full flex items-center justify-center text-white text-[10px] font-medium">
@@ -121,9 +134,9 @@ const UpcomingEvents: React.FC<UpcomingEventsProps> = ({ events, employees }) =>
                 )}
               </div>
               
-              {/* Time Until */}
+              {/* Year if not current year */}
               <div className="flex-shrink-0 text-gray-500 dark:text-gray-500 text-[10px]">
-                {moment(startDate).fromNow()}
+                {moment(startDate).year() !== moment().year() ? moment(startDate).format('YYYY') : ''}
               </div>
               
               {/* Description */}

@@ -21,6 +21,7 @@ const CalendarEvents = () => {
   const [selectedDateEvents, setSelectedDateEvents] = useState<Event[]>([]);
   const [editingEvent, setEditingEvent] = useState<Event | null>(null);
   const [editingCompanyHoliday, setEditingCompanyHoliday] = useState<{ id: number; name: string; description?: string } | null>(null);
+  const [highlightedDates, setHighlightedDates] = useState<string[]>([]);
   
   const {
     employees,
@@ -123,19 +124,46 @@ const CalendarEvents = () => {
   const handlePrevMonth = () => {
     const newDate = moment(currentDate).subtract(1, 'month').startOf('month').toDate();
     setCurrentDate(newDate);
-    loadEventsForMonth(moment(newDate).year(), moment(newDate).month());
+    // Don't reload events - keep all events visible
   };
 
   const handleNextMonth = () => {
     const newDate = moment(currentDate).add(1, 'month').startOf('month').toDate();
     setCurrentDate(newDate);
-    loadEventsForMonth(moment(newDate).year(), moment(newDate).month());
+    // Don't reload events - keep all events visible
   };
 
   const handleTodayClick = () => {
     const newDate = moment().startOf('month').toDate();
     setCurrentDate(newDate);
-    loadEventsForMonth(moment(newDate).year(), moment(newDate).month());
+    // Don't reload events - keep all events visible
+  };
+
+  const handleNavigateToMonth = (year: number, month: number) => {
+    const newDate = moment().year(year).month(month).startOf('month').toDate();
+    setCurrentDate(newDate);
+    // Don't reload events - keep all events visible
+  };
+
+  const handleEventHover = (startDate: string, endDate: string) => {
+    const dates = [];
+    const start = moment(startDate);
+    const end = moment(endDate);
+    let current = start.clone();
+    
+    while (current.isSameOrBefore(end)) {
+      // Only highlight if date is in current calendar month view
+      if (current.month() === moment(currentDate).month() && current.year() === moment(currentDate).year()) {
+        dates.push(current.format('YYYY-MM-DD'));
+      }
+      current.add(1, 'day');
+    }
+    
+    setHighlightedDates(dates);
+  };
+
+  const handleEventHoverEnd = () => {
+    setHighlightedDates([]);
   };
 
   const handleEditCompanyHoliday = (holiday: { id: number; name: string; description?: string }) => {
@@ -221,6 +249,7 @@ const CalendarEvents = () => {
                 events={events}
                 employees={employees}
                 companyHolidays={companyHolidays}
+                highlightedDates={highlightedDates}
                 onDateClick={handleDateClick}
                 onCreateEvent={handleCreateEvent}
                 onHolidayAdded={refreshCompanyHolidays}
@@ -230,7 +259,13 @@ const CalendarEvents = () => {
               />
               {/* Upcoming Events Section */}
               <div style={{ marginTop: '2rem' }}>
-                <UpcomingEvents events={events} employees={employees} />
+                <UpcomingEvents 
+                  events={events} 
+                  employees={employees} 
+                  onNavigateToMonth={handleNavigateToMonth}
+                  onEventHover={handleEventHover}
+                  onEventHoverEnd={handleEventHoverEnd}
+                />
               </div>
             </>
           )}
