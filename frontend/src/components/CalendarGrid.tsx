@@ -39,6 +39,11 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({
   const [selectedPopoverDate, setSelectedPopoverDate] = useState<Date | null>(null);
   const [maxVisibleEvents, setMaxVisibleEvents] = useState(2);
   const [popoverJustOpened, setPopoverJustOpened] = useState(false);
+  const [showHolidayDialog, setShowHolidayDialog] = useState(false);
+  const [holidayDate, setHolidayDate] = useState<Date | null>(null);
+  const [holidayName, setHolidayName] = useState('');
+  const [holidayDescription, setHolidayDescription] = useState('');
+  
   
   // Drag selection state
   const [isDragging, setIsDragging] = useState(false);
@@ -623,6 +628,13 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({
                   <CreateEventPopover
                     key={`${weekIndex}-${index}`}
                     isOpen={isPopoverOpenForThisDate}
+                    showHolidayDialog={showHolidayDialog}
+                    onHolidayDialogChange={(value, date) => {
+                      setShowHolidayDialog(value);
+                      if (value && date) {
+                        setHolidayDate(date);
+                      }
+                    }}
                     onOpenChange={(open) => {
                       // Prevent immediate close only if just opened
                       if (!open && popoverJustOpened) {
@@ -632,6 +644,8 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({
                       if (!open) {
                         setSelectedPopoverDate(null);
                         setPopoverJustOpened(false);
+                        // Don't reset holiday dialog immediately when popover closes
+                        // setShowHolidayDialog(false); 
                         if (isMultiDaySelection) {
                           clearSelection();
                         }
@@ -652,6 +666,112 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({
         </div>
       </div>
       </div>
+      
+      {/* Holiday Modal - rendered at CalendarGrid level */}
+      {showHolidayDialog && (
+        <div 
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.5)',
+            zIndex: 999999,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center'
+          }}
+          onClick={() => {
+            setShowHolidayDialog(false);
+            setHolidayDate(null);
+            setHolidayName('');
+            setHolidayDescription('');
+          }}
+        >
+          <div 
+            className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg max-w-md w-[90%]"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h2 className="text-lg font-bold mb-4 text-gray-900 dark:text-white">
+              เพิ่มวันหยุดบริษัท
+            </h2>
+            <p className="mb-4 text-gray-600 dark:text-gray-400">
+              วันที่: {holidayDate ? holidayDate.toLocaleDateString('th-TH') : 'ไม่ระบุ'}
+            </p>
+            <div className="mb-4">
+              <label className="block mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">ชื่อวันหยุด:</label>
+              <input
+                type="text"
+                value={holidayName}
+                onChange={(e) => setHolidayName(e.target.value)}
+                placeholder="เช่น วันหยุดบริษัท"
+                className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
+              />
+            </div>
+            <div className="mb-6">
+              <label className="block mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">คำอธิบาย:</label>
+              <input
+                type="text"
+                value={holidayDescription}
+                onChange={(e) => setHolidayDescription(e.target.value)}
+                placeholder="คำอธิบายเพิ่มเติม (ไม่บังคับ)"
+                className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
+              />
+            </div>
+            <div className="flex gap-2 justify-end">
+              <button
+                onClick={() => {
+                  setShowHolidayDialog(false);
+                  setHolidayDate(null);
+                  setHolidayName('');
+                  setHolidayDescription('');
+                }}
+                className="px-4 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded hover:bg-gray-50 dark:hover:bg-gray-600"
+              >
+                ยกเลิก
+              </button>
+              <button
+                onClick={async () => {
+                  try {
+                    const { createCompanyHoliday } = await import('@/services/companyHolidayService');
+                    
+                    if (!holidayDate) return;
+                    
+                    // Use local date format to avoid timezone issues
+                    const year = holidayDate.getFullYear();
+                    const month = String(holidayDate.getMonth() + 1).padStart(2, '0');
+                    const day = String(holidayDate.getDate()).padStart(2, '0');
+                    const dateString = `${year}-${month}-${day}`;
+                    await createCompanyHoliday({
+                      name: holidayName,
+                      date: dateString,
+                      description: holidayDescription || ''
+                    });
+                    
+                    // Refresh calendar data
+                    if (onHolidayAdded) {
+                      onHolidayAdded();
+                    }
+                    
+                    setShowHolidayDialog(false);
+                    setHolidayDate(null);
+                    setHolidayName('');
+                    setHolidayDescription('');
+                  } catch (error) {
+                    console.error('Error creating holiday:', error);
+                    alert('เกิดข้อผิดพลาดในการเพิ่มวันหยุด');
+                  }
+                }}
+                disabled={!holidayName.trim()}
+                className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                เพิ่ม
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </TooltipProvider>
   );
 };

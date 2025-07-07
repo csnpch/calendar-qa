@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogPortal, DialogOverlay } from '@/components/ui/dialog';
 import { useAuth } from '@/contexts/AuthContext';
 import { createCompanyHoliday } from '@/services/companyHolidayService';
 import { toast } from '@/hooks/use-toast';
@@ -20,6 +20,8 @@ interface CreateEventPopoverProps {
   selectedDate: Date | null;
   triggerElement: React.ReactNode;
   isRangeSelection?: boolean;
+  showHolidayDialog?: boolean;
+  onHolidayDialogChange?: (open: boolean, date?: Date | null) => void;
 }
 
 export const CreateEventPopover: React.FC<CreateEventPopoverProps> = ({
@@ -29,13 +31,15 @@ export const CreateEventPopover: React.FC<CreateEventPopoverProps> = ({
   onHolidayAdded,
   selectedDate,
   triggerElement,
-  isRangeSelection = false
+  isRangeSelection = false,
+  showHolidayDialog = false,
+  onHolidayDialogChange
 }) => {
   const { isAdminAuthenticated } = useAuth();
-  const [showHolidayDialog, setShowHolidayDialog] = useState(false);
   const [holidayName, setHolidayName] = useState('');
   const [holidayDescription, setHolidayDescription] = useState('');
   const [holidayDate, setHolidayDate] = useState<Date | null>(null);
+
 
   const handleCreateEvent = () => {
     onCreateEvent();
@@ -43,10 +47,12 @@ export const CreateEventPopover: React.FC<CreateEventPopoverProps> = ({
   };
 
   const handleAddHoliday = () => {
-    console.log('Selected date for holiday:', selectedDate); // Debug log
-    setHolidayDate(selectedDate); // Store the selected date
-    setShowHolidayDialog(true);
-    onOpenChange(false);
+    setHolidayDate(selectedDate);
+    onHolidayDialogChange?.(true, selectedDate);
+    
+    setTimeout(() => {
+      onOpenChange(false);
+    }, 50);
   };
 
   const formatDateForAPI = (date: Date): string => {
@@ -98,10 +104,10 @@ export const CreateEventPopover: React.FC<CreateEventPopoverProps> = ({
         description: "เพิ่มวันหยุดบริษัทเรียบร้อยแล้ว",
       });
 
-      setShowHolidayDialog(false);
+      onHolidayDialogChange?.(false);
+      setHolidayDate(null);
       setHolidayName('');
       setHolidayDescription('');
-      setHolidayDate(null);
       
       if (onHolidayAdded) {
         onHolidayAdded();
@@ -117,10 +123,10 @@ export const CreateEventPopover: React.FC<CreateEventPopoverProps> = ({
   };
 
   const handleCancelHoliday = () => {
-    setShowHolidayDialog(false);
+    onHolidayDialogChange?.(false);
+    setHolidayDate(null);
     setHolidayName('');
     setHolidayDescription('');
-    setHolidayDate(null);
   };
 
   return (
@@ -155,58 +161,128 @@ export const CreateEventPopover: React.FC<CreateEventPopoverProps> = ({
                   เพิ่มเป็นวันหยุดบริษัท
                 </Button>
               )}
+              
+              {/* Debug info */}
+              <div className="text-xs text-gray-500 dark:text-gray-400">
+                Debug: Admin={isAdminAuthenticated ? 'Yes' : 'No'}, Range={isRangeSelection ? 'Yes' : 'No'}
+              </div>
             </div>
           </div>
         </PopoverContent>
       </Popover>
 
-      <Dialog open={showHolidayDialog} onOpenChange={setShowHolidayDialog}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle>เพิ่มวันหยุดบริษัท</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div className="text-sm text-gray-500 dark:text-gray-400">
+      
+      {/* Holiday modal */}
+      {showHolidayDialog && (
+        <div 
+          style={{
+            position: 'fixed !important',
+            top: '0 !important',
+            left: '0 !important',
+            right: '0 !important',
+            bottom: '0 !important',
+            backgroundColor: 'rgba(255, 0, 0, 0.8) !important',
+            zIndex: '999999 !important',
+            display: 'flex !important',
+            alignItems: 'center !important',
+            justifyContent: 'center !important',
+            visibility: 'visible !important',
+            opacity: '1 !important'
+          }}
+          onClick={() => {
+            onHolidayDialogChange?.(false);
+            setHolidayDate(null);
+            setHolidayName('');
+            setHolidayDescription('');
+          }}
+        >
+          {console.log('Modal backdrop is rendering!')}
+          <div 
+            style={{
+              backgroundColor: 'white !important',
+              padding: '24px !important',
+              borderRadius: '8px !important',
+              maxWidth: '400px !important',
+              width: '90% !important',
+              boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1) !important',
+              border: '2px solid red !important'
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {console.log('Modal content is rendering!')}
+            <h2 style={{marginBottom: '16px', fontSize: '18px', fontWeight: 'bold'}}>
+              เพิ่มวันหยุดบริษัท
+            </h2>
+            <p style={{marginBottom: '16px', color: '#666'}}>
               วันที่: {formatDate(holidayDate)}
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="holiday-name">ชื่อวันหยุด *</Label>
-              <Input
-                id="holiday-name"
-                placeholder="ระบุชื่อวันหยุด"
+            </p>
+            <div style={{marginBottom: '16px'}}>
+              <label style={{display: 'block', marginBottom: '8px'}}>ชื่อวันหยุด:</label>
+              <input
+                type="text"
                 value={holidayName}
                 onChange={(e) => setHolidayName(e.target.value)}
+                placeholder="เช่น วันหยุดบริษัท"
+                style={{
+                  width: '100%',
+                  padding: '8px',
+                  border: '1px solid #ccc',
+                  borderRadius: '4px'
+                }}
               />
             </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="holiday-description">หมายเหตุ</Label>
-              <Input
-                id="holiday-description"
-                placeholder="หมายเหตุ (ไม่บังคับ)"
+            <div style={{marginBottom: '16px'}}>
+              <label style={{display: 'block', marginBottom: '8px'}}>คำอธิบาย:</label>
+              <input
+                type="text"
                 value={holidayDescription}
                 onChange={(e) => setHolidayDescription(e.target.value)}
+                placeholder="คำอธิบายเพิ่มเติม (ไม่บังคับ)"
+                style={{
+                  width: '100%',
+                  padding: '8px',
+                  border: '1px solid #ccc',
+                  borderRadius: '4px'
+                }}
               />
             </div>
-            
-            <div className="flex justify-end gap-2">
-              <Button 
-                onClick={handleCancelHoliday} 
-                variant="outline"
+            <div style={{display: 'flex', gap: '8px', justifyContent: 'flex-end'}}>
+              <button
+                onClick={() => {
+                  onHolidayDialogChange?.(false);
+                  setHolidayDate(null);
+                  setHolidayName('');
+                  setHolidayDescription('');
+                }}
+                style={{
+                  padding: '8px 16px',
+                  border: '1px solid #ccc',
+                  backgroundColor: 'white',
+                  borderRadius: '4px',
+                  cursor: 'pointer'
+                }}
               >
                 ยกเลิก
-              </Button>
-              <Button 
+              </button>
+              <button
                 onClick={handleSaveHoliday}
                 disabled={!holidayName.trim()}
+                style={{
+                  padding: '8px 16px',
+                  backgroundColor: '#007bff',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '4px',
+                  cursor: holidayName.trim() ? 'pointer' : 'not-allowed',
+                  opacity: holidayName.trim() ? 1 : 0.5
+                }}
               >
                 เพิ่ม
-              </Button>
+              </button>
             </div>
           </div>
-        </DialogContent>
-      </Dialog>
+        </div>
+      )}
     </>
   );
 };
