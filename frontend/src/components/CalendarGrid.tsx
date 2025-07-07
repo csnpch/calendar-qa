@@ -64,7 +64,38 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({
   
   const year = moment(currentDate).year();
   const month = moment(currentDate).month();
-  const { holidays, isHoliday, isWeekend } = useHolidays(year);
+  
+  // Calculate the range of years that will be visible in the calendar grid
+  const firstDay = moment().year(year).month(month).date(1);
+  const startDate = firstDay.clone().subtract(firstDay.day(), 'days');
+  const endDate = startDate.clone().add(41, 'days'); // 42 days total (6 weeks)
+  
+  const startYear = startDate.year();
+  const endYear = endDate.year();
+  
+  // Load holidays for all years that appear in the calendar grid
+  const { holidays: currentYearHolidays, isHoliday: isCurrentYearHoliday, isWeekend } = useHolidays(year);
+  const { holidays: startYearHolidays, isHoliday: isStartYearHoliday } = useHolidays(startYear);
+  const { holidays: endYearHolidays, isHoliday: isEndYearHoliday } = useHolidays(endYear);
+  
+  // Combine all holidays and create a unified holiday checker
+  const allHolidays = React.useMemo(() => {
+    const combined = [...currentYearHolidays];
+    if (startYear !== year) {
+      combined.push(...startYearHolidays);
+    }
+    if (endYear !== year && endYear !== startYear) {
+      combined.push(...endYearHolidays);
+    }
+    return combined;
+  }, [currentYearHolidays, startYearHolidays, endYearHolidays, year, startYear, endYear]);
+  
+  const isHoliday = (date: Date) => {
+    const dateString = moment(date).format('YYYY-MM-DD');
+    return allHolidays.find(holiday => holiday.date === dateString) || null;
+  };
+  
+  const holidays = allHolidays;
 
   const isCompanyHoliday = (date: Date) => {
     if (!Array.isArray(companyHolidays)) return null;
@@ -78,9 +109,6 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({
       onHolidayAdded();
     }
   };
-  
-  const firstDay = moment().year(year).month(month).date(1);
-  const startDate = firstDay.clone().subtract(firstDay.day(), 'days');
   
   const getDaysInMonth = () => {
     const days = [];
@@ -469,7 +497,7 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({
                     onMouseUp={handleMouseUp}
                   >
                         <div className={`text-xs font-medium mb-0.5 ${isTodayDate && !isOtherMonth ? 'dark:text-white' : ''}`}>
-                          {moment(date).date()}{thaiHoliday && !isOtherMonth ? '*' : ''}
+                          {moment(date).date()}{thaiHoliday ? '*' : ''}
                         </div>
                     
                     {/* Only show events if it's not a weekend and not a company holiday */}
@@ -535,7 +563,7 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({
                     )}
                     
                     {/* Show holidays after events (lower priority) */}
-                    {companyHoliday && !isOtherMonth && (
+                    {companyHoliday && (
                       <div className="text-xs bg-red-200 dark:bg-red-600 text-black dark:text-red-100 px-1 py-0.5 rounded mb-0.5 font-normal leading-tight cursor-pointer">
                         <div className="break-words overflow-hidden leading-tight" style={{
                           display: '-webkit-box',
@@ -550,7 +578,7 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({
                   </div>
                 );
 
-                const dayElement = (thaiHoliday || companyHoliday) && !isOtherMonth ? (
+                const dayElement = (thaiHoliday || companyHoliday) ? (
                   <Tooltip>
                     <TooltipTrigger asChild>
                       {dayContent}
@@ -559,12 +587,12 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({
                       <div className="space-y-1">
                         {thaiHoliday && (
                           <div className="text-sm">
-                            วันหยุดไทย: {thaiHoliday.name}
+                            {thaiHoliday.name}
                           </div>
                         )}
                         {companyHoliday && (
                           <div className="text-sm">
-                            วันหยุดบริษัท: {companyHoliday.name}
+                            {companyHoliday.name}
                           </div>
                         )}
                       </div>

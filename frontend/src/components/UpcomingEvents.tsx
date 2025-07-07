@@ -102,13 +102,25 @@ const UpcomingEvents: React.FC<UpcomingEventsProps> = ({ events, employees, onNa
             }
           };
           
+          const handleMouseEnter = () => {
+            if (onEventHover) {
+              onEventHover(startDate, endDate);
+            }
+          };
+          
+          const handleMouseLeave = () => {
+            if (onEventHoverEnd) {
+              onEventHoverEnd();
+            }
+          };
+          
           return (
             <div
               key={event.id}
               className="flex items-center gap-2 p-1.5 hover:bg-gray-50 dark:hover:bg-gray-700/50 rounded text-xs transition-colors cursor-pointer"
               onClick={handleClick}
-              onMouseEnter={() => onEventHover && onEventHover(startDate, endDate)}
-              onMouseLeave={() => onEventHoverEnd && onEventHoverEnd()}
+              onMouseEnter={handleMouseEnter}
+              onMouseLeave={handleMouseLeave}
             >
               {/* Number */}
               <div className="flex-shrink-0 w-4 h-4 bg-blue-500 rounded-full flex items-center justify-center text-white text-[10px] font-medium">

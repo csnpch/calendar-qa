@@ -136,7 +136,7 @@ export class CronjobService {
     return result.changes > 0;
   }
 
-  // Get events for a specific date
+  // Get events for a specific date (including date ranges)
   private getEventsForDate(dateString: string): Event[] {
     const stmt = this.db.prepare(`
       SELECT 
@@ -145,15 +145,19 @@ export class CronjobService {
         emp.name as employeeName,
         e.leave_type as leaveType,
         e.date,
+        e.start_date as startDate,
+        e.end_date as endDate,
         e.description,
         e.created_at as createdAt,
         e.updated_at as updatedAt
       FROM events e
       LEFT JOIN employees emp ON e.employee_id = emp.id
       WHERE e.date = ? 
+         OR (e.start_date IS NOT NULL AND e.end_date IS NOT NULL 
+             AND ? >= e.start_date AND ? <= e.end_date)
       ORDER BY emp.name
     `);
-    return stmt.all(dateString) as Event[];
+    return stmt.all(dateString, dateString, dateString) as Event[];
   }
 
   // Get date string for notification (today or advance days based on config)
@@ -167,7 +171,7 @@ export class CronjobService {
     return thailandDate.toISOString().split('T')[0]!;
   }
 
-  // Get events for a date range (for weekly notifications)
+  // Get events for a date range (for weekly notifications, including date ranges)
   private getEventsForDateRange(startDate: string, endDate: string): Event[] {
     const stmt = this.db.prepare(`
       SELECT 
@@ -176,15 +180,19 @@ export class CronjobService {
         emp.name as employeeName,
         e.leave_type as leaveType,
         e.date,
+        e.start_date as startDate,
+        e.end_date as endDate,
         e.description,
         e.created_at as createdAt,
         e.updated_at as updatedAt
       FROM events e
       LEFT JOIN employees emp ON e.employee_id = emp.id
-      WHERE e.date >= ? AND e.date <= ?
-      ORDER BY e.date, emp.name
+      WHERE (e.date >= ? AND e.date <= ?)
+         OR (e.start_date IS NOT NULL AND e.end_date IS NOT NULL 
+             AND NOT (e.end_date < ? OR e.start_date > ?))
+      ORDER BY COALESCE(e.date, e.start_date), emp.name
     `);
-    return stmt.all(startDate, endDate) as Event[];
+    return stmt.all(startDate, endDate, startDate, endDate) as Event[];
   }
 
   // Get week date range based on scope

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { CalendarGrid } from '@/components/CalendarGrid';
 import { EventModal } from '@/components/EventModal';
 import { EventDetailsModal } from '@/components/EventDetailsModal';
@@ -22,6 +22,7 @@ const CalendarEvents = () => {
   const [editingEvent, setEditingEvent] = useState<Event | null>(null);
   const [editingCompanyHoliday, setEditingCompanyHoliday] = useState<{ id: number; name: string; description?: string } | null>(null);
   const [highlightedDates, setHighlightedDates] = useState<string[]>([]);
+  const [currentHoverEvent, setCurrentHoverEvent] = useState<{ startDate: string; endDate: string } | null>(null);
   
   const {
     employees,
@@ -36,7 +37,51 @@ const CalendarEvents = () => {
     loadData
   } = useCalendarData();
 
-  const { holidays: companyHolidays, isCompanyHoliday, refresh: refreshCompanyHolidays } = useCompanyHolidays(moment(currentDate).year());
+  // Calculate the range of years that will be visible in the calendar grid
+  const currentYear = moment(currentDate).year();
+  const currentMonth = moment(currentDate).month();
+  const firstDay = moment().year(currentYear).month(currentMonth).date(1);
+  const startDate = firstDay.clone().subtract(firstDay.day(), 'days');
+  const endDate = startDate.clone().add(41, 'days'); // 42 days total (6 weeks)
+  
+  const startYear = startDate.year();
+  const endYear = endDate.year();
+  
+  // Load company holidays for all years that appear in the calendar grid
+  const { holidays: currentYearHolidays, refresh: refreshCurrentYear } = useCompanyHolidays(currentYear);
+  const { holidays: startYearHolidays, refresh: refreshStartYear } = useCompanyHolidays(startYear);
+  const { holidays: endYearHolidays, refresh: refreshEndYear } = useCompanyHolidays(endYear);
+  
+  // Combine all company holidays
+  const companyHolidays = useMemo(() => {
+    const combined = [...currentYearHolidays];
+    if (startYear !== currentYear) {
+      combined.push(...startYearHolidays);
+    }
+    if (endYear !== currentYear && endYear !== startYear) {
+      combined.push(...endYearHolidays);
+    }
+    return combined;
+  }, [currentYearHolidays, startYearHolidays, endYearHolidays, currentYear, startYear, endYear]);
+  
+  const isCompanyHoliday = (date: Date) => {
+    if (!Array.isArray(companyHolidays)) return null;
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    const dateString = `${year}-${month}-${day}`;
+    return companyHolidays.find(holiday => holiday.date === dateString) || null;
+  };
+  
+  const refreshCompanyHolidays = () => {
+    refreshCurrentYear();
+    if (startYear !== currentYear) {
+      refreshStartYear();
+    }
+    if (endYear !== currentYear && endYear !== startYear) {
+      refreshEndYear();
+    }
+  };
 
   const handleDateClick = (date: Date) => {
     setSelectedDate(date);
@@ -146,6 +191,11 @@ const CalendarEvents = () => {
   };
 
   const handleEventHover = (startDate: string, endDate: string) => {
+    setCurrentHoverEvent({ startDate, endDate });
+    updateHighlightedDates(startDate, endDate);
+  };
+
+  const updateHighlightedDates = useCallback((startDate: string, endDate: string) => {
     const dates = [];
     const start = moment(startDate);
     const end = moment(endDate);
@@ -154,15 +204,29 @@ const CalendarEvents = () => {
     while (current.isSameOrBefore(end)) {
       // Only highlight if date is in current calendar month view
       if (current.month() === moment(currentDate).month() && current.year() === moment(currentDate).year()) {
-        dates.push(current.format('YYYY-MM-DD'));
+        const currentDate = current.toDate();
+        
+        // Skip weekends (Saturday = 6, Sunday = 0)
+        const dayOfWeek = current.day();
+        const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
+        
+        // Skip company holidays
+        const dateString = current.format('YYYY-MM-DD');
+        const isCompanyHolidayDate = companyHolidays.find(holiday => holiday.date === dateString);
+        
+        // Only add to highlight if it's not weekend and not company holiday
+        if (!isWeekend && !isCompanyHolidayDate) {
+          dates.push(current.format('YYYY-MM-DD'));
+        }
       }
       current.add(1, 'day');
     }
     
     setHighlightedDates(dates);
-  };
+  }, [currentDate, companyHolidays]);
 
   const handleEventHoverEnd = () => {
+    setCurrentHoverEvent(null);
     setHighlightedDates([]);
   };
 
@@ -227,6 +291,13 @@ const CalendarEvents = () => {
       setSelectedDateEvents(dayEvents);
     }
   }, [events, selectedDate, getEventsForDate]);
+
+  // Re-trigger highlight when currentDate changes if there's a hover event
+  useEffect(() => {
+    if (currentHoverEvent) {
+      updateHighlightedDates(currentHoverEvent.startDate, currentHoverEvent.endDate);
+    }
+  }, [currentDate, currentHoverEvent, updateHighlightedDates]);
 
   return (
     <Layout currentPage="calendar-events">

@@ -118,10 +118,10 @@ export default function CronjobConfig() {
 
   const handleCreate = async () => {
     try {
-      // Adjust notification_days: UI shows "Today"=0, "Tomorrow"=1 but backend needs "Today"=-1, "Tomorrow"=0
+      // notification_days: UI shows "Today"=0, "Tomorrow"=1 and backend uses "Today"=0, "Tomorrow"=1 (same values)
       const adjustedFormData = {
         ...formData,
-        notification_days: formData.notification_type === 'daily' ? formData.notification_days - 1 : formData.notification_days,
+        notification_days: formData.notification_days,
         weekly_days: formData.notification_type === 'weekly' ? formData.weekly_days : undefined,
         weekly_scope: formData.notification_type === 'weekly' ? formData.weekly_scope : undefined
       };
@@ -151,10 +151,10 @@ export default function CronjobConfig() {
     if (!editingConfig) return;
 
     try {
-      // Adjust notification_days: UI shows "Today"=0, "Tomorrow"=1 but backend needs "Today"=-1, "Tomorrow"=0
+      // notification_days: UI shows "Today"=0, "Tomorrow"=1 and backend uses "Today"=0, "Tomorrow"=1 (same values)
       const adjustedFormData = {
         ...formData,
-        notification_days: formData.notification_type === 'daily' ? formData.notification_days - 1 : formData.notification_days,
+        notification_days: formData.notification_days,
         weekly_days: formData.notification_type === 'weekly' ? formData.weekly_days : undefined,
         weekly_scope: formData.notification_type === 'weekly' ? formData.weekly_scope : undefined
       };
@@ -255,8 +255,8 @@ export default function CronjobConfig() {
       enabled: Boolean(config.enabled),
       schedule_time: config.schedule_time,
       webhook_url: config.webhook_url,
-      // Convert backend value to UI value: backend "Today"=-1, "Tomorrow"=0 → UI "Today"=0, "Tomorrow"=1
-      notification_days: config.notification_type === 'daily' ? config.notification_days + 1 : config.notification_days,
+      // notification_days: backend and UI use same values ("Today"=0, "Tomorrow"=1)
+      notification_days: config.notification_days,
       notification_type: config.notification_type || 'daily',
       weekly_days: config.weekly_days || [5],
       weekly_scope: config.weekly_scope === 'current_week' ? 'current' : config.weekly_scope === 'next_week' ? 'next' : config.weekly_scope || 'current'

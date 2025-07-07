@@ -158,21 +158,21 @@ export class NotificationService {
 
   static createTeamsPayload(events: Event[], notificationDate: string, notificationDays: number): TeamsNotificationPayload {
     let dateLabel: string;
-    if (notificationDays === -1) {
+    if (notificationDays === 0) {
       dateLabel = 'วันนี้';
-    } else if (notificationDays === 0) {
-      dateLabel = 'พรุ่งนี้';
     } else if (notificationDays === 1) {
-      dateLabel = '2 วันข้างหน้า';
+      dateLabel = 'พรุ่งนี้';
     } else if (notificationDays === 2) {
+      dateLabel = '2 วันข้างหน้า';
+    } else if (notificationDays === 3) {
       dateLabel = '3 วันข้างหน้า';
-    } else if (notificationDays === 6) {
+    } else if (notificationDays === 7) {
       dateLabel = '1 สัปดาห์ข้างหน้า';
     } else {
-      dateLabel = `${notificationDays + 1} วันข้างหน้า`;
+      dateLabel = `${notificationDays} วันข้างหน้า`;
     }
     
-    const isToday = notificationDays === -1;
+    const isToday = notificationDays === 0;
     const dateFormatted = this.formatDate(notificationDate);
     
     if (events.length === 0) {
@@ -249,7 +249,7 @@ export class NotificationService {
     });
     
     // Create event header text
-    const eventHeader = isToday ? '⏰ วันนี้มีเหตุการณ์:' : '⏰ พรุ่งนี้มีเหตุการณ์:';
+    const eventHeader = `⏰ ${dateLabel}มีเหตุการณ์:`;
 
     return {
       type: 'AdaptiveCard',
