@@ -75,7 +75,7 @@ const UpcomingEvents: React.FC<UpcomingEventsProps> = ({ events, employees, onNa
     return (
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-3">
         <h3 className="text-sm font-medium text-gray-900 dark:text-white mb-2">
-          เหตุการณ์ที่จะเกิดขึ้นในอนาคต
+          ลำดับเหตุการณ์
         </h3>
         <p className="text-xs text-gray-500 dark:text-gray-400 text-center py-4">
           ไม่มีเหตุการณ์ที่จะเกิดขึ้น
@@ -87,7 +87,7 @@ const UpcomingEvents: React.FC<UpcomingEventsProps> = ({ events, employees, onNa
   return (
     <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-3">
       <h3 className="text-sm font-medium text-gray-900 dark:text-white mb-2">
-        เหตุการณ์ที่จะเกิดขึ้นในอนาคต ({upcomingEvents.length})
+        ลำดับเหตุการณ์ ({upcomingEvents.length})
       </h3>
       <div className="space-y-1">
         {upcomingEvents.map((event, index) => {
