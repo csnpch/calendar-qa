@@ -48,8 +48,8 @@ export class CronjobService {
   // Create new cronjob configuration
   createConfig(config: Omit<CronjobConfig, 'id' | 'created_at' | 'updated_at'>): CronjobConfig {
     const stmt = this.db.prepare(`
-      INSERT INTO cronjob_config (name, enabled, schedule_time, webhook_url, notification_days, notification_type, weekly_days, weekly_scope)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+      INSERT INTO cronjob_config (name, enabled, schedule_time, webhook_url, notification_days, notification_type, weekly_days, weekly_scope, created_at, updated_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, datetime('now'), datetime('now'))
     `);
     
     const result = stmt.run(
