@@ -161,11 +161,6 @@ export const CreateEventPopover: React.FC<CreateEventPopoverProps> = ({
                   เพิ่มเป็นวันหยุดบริษัท
                 </Button>
               )}
-              
-              {/* Debug info */}
-              <div className="text-xs text-gray-500 dark:text-gray-400">
-                Debug: Admin={isAdminAuthenticated ? 'Yes' : 'No'}, Range={isRangeSelection ? 'Yes' : 'No'}
-              </div>
             </div>
           </div>
         </PopoverContent>
