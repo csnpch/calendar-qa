@@ -455,18 +455,9 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({
 
                   // Today's styling (overrides previous settings for the current day)
                   if (isTodayDate) {
-                    borderColor = 'ring-2 ring-blue-500 dark:ring-gray-400 ring-offset-1';
-                    // Don't override background - keep original (default or weekend/holiday)
-                    // Keep text color as white in dark mode, but preserve the appropriate color in light mode
-                    if (weekend) {
-                      textColor = 'text-red-700 dark:text-white';
-                    } else if (companyHoliday) {
-                      textColor = 'text-red-600 dark:text-white';
-                    } else if (thaiHoliday) {
-                      textColor = 'text-gray-600 dark:text-white';
-                    } else {
-                      textColor = 'text-blue-700 dark:text-white';
-                    }
+                    bgColor = 'bg-green-50 dark:bg-green-900/20';
+                    borderColor = 'border-green-300 dark:border-green-600 ring-2 ring-green-200 dark:ring-green-700';
+                    textColor = 'text-green-800 dark:text-green-200 font-semibold';
                   }
 
                   // Event styling (modifies border and bgColor if it's a plain day with events)
@@ -481,8 +472,8 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({
 
                   // Highlight styling (overrides other styling when highlighted)
                   if (isHighlighted && !isOtherMonth) {
-                    bgColor = 'bg-yellow-100 dark:bg-yellow-900/30';
-                    borderColor = 'border-yellow-400 dark:border-yellow-600 ring-1 ring-yellow-300 dark:ring-yellow-700';
+                    bgColor = 'bg-green-100 dark:bg-green-900/30';
+                    borderColor = 'border-green-400 dark:border-green-600 ring-1 ring-green-300 dark:ring-green-700';
                   }
                 }
 

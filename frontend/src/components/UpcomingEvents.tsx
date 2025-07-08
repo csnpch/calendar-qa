@@ -21,11 +21,11 @@ const UpcomingEvents: React.FC<UpcomingEventsProps> = ({ events, employees, onNa
       
       // Check both legacy date field and new range fields
       if (event.startDate && event.endDate) {
-        // For range events, check if event starts today or later
-        const startDate = moment(event.startDate);
-        return startDate.isSameOrAfter(today);
+        // For range events, check if event end date is after today (future only)
+        const endDate = moment(event.endDate);
+        return endDate.isAfter(today);
       } else if (event.date) {
-        // For legacy single-day events
+        // For legacy single-day events, check if date is today or later
         const eventDate = moment(event.date);
         return eventDate.isSameOrAfter(today);
       }
@@ -75,7 +75,7 @@ const UpcomingEvents: React.FC<UpcomingEventsProps> = ({ events, employees, onNa
     return (
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-3">
         <h3 className="text-sm font-medium text-gray-900 dark:text-white mb-2">
-          เหตุการณ์ที่จะเกิดขึ้น
+          เหตุการณ์ที่จะเกิดขึ้นในอนาคต
         </h3>
         <p className="text-xs text-gray-500 dark:text-gray-400 text-center py-4">
           ไม่มีเหตุการณ์ที่จะเกิดขึ้น
@@ -87,7 +87,7 @@ const UpcomingEvents: React.FC<UpcomingEventsProps> = ({ events, employees, onNa
   return (
     <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-3">
       <h3 className="text-sm font-medium text-gray-900 dark:text-white mb-2">
-        เหตุการณ์ที่จะเกิดขึ้น ({upcomingEvents.length})
+        เหตุการณ์ที่จะเกิดขึ้นในอนาคต ({upcomingEvents.length})
       </h3>
       <div className="space-y-1">
         {upcomingEvents.map((event, index) => {
@@ -117,7 +117,7 @@ const UpcomingEvents: React.FC<UpcomingEventsProps> = ({ events, employees, onNa
           return (
             <div
               key={event.id}
-              className="flex items-center gap-2 p-1.5 hover:bg-gray-50 dark:hover:bg-gray-700/50 rounded text-xs transition-colors cursor-pointer"
+              className="flex items-center gap-2 p-1.5 hover:bg-green-50 dark:hover:bg-green-900/30 rounded text-xs transition-colors cursor-pointer"
               onClick={handleClick}
               onMouseEnter={handleMouseEnter}
               onMouseLeave={handleMouseLeave}
