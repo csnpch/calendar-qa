@@ -29,6 +29,11 @@ export interface TeamsNotificationPayload {
           width: string;
         }>;
       }>;
+      actions?: Array<{
+        type: 'Action.OpenUrl';
+        title: string;
+        url: string;
+      }>;
     };
   }>;
 }
@@ -188,7 +193,14 @@ export class NotificationService {
                 type: 'TextBlock',
                 size: 'Medium',
                 weight: 'Bolder',
-                text: '🗓️ **Calendar QA**',
+                text: '✳️ **Calendar QA**',
+              },
+              {
+                type: 'TextBlock',
+                spacing: 'Medium',
+                text: '[เปิด Calendar QA](http://192.168.42.106:8080/)',
+                wrap: true,
+                color: 'accent',
               },
               {
                 type: 'ColumnSet',
@@ -215,6 +227,13 @@ export class NotificationService {
                 }],
               },
             ],
+            actions: [
+              {
+                type: 'Action.OpenUrl',
+                title: 'Open Calendar QA',
+                url: 'http://192.168.42.106:8080/'
+              }
+            ]
           },
         }],
       };
@@ -263,7 +282,7 @@ export class NotificationService {
               type: 'TextBlock',
               size: 'Medium',
               weight: 'Bolder',
-              text: '🗓️ **Calendar QA**',
+              text: '✳️ **Calendar QA**',
             },
             {
               type: 'ColumnSet',
@@ -273,7 +292,7 @@ export class NotificationService {
                   {
                     type: 'TextBlock',
                     spacing: 'None',
-                    text: `🔔 แจ้งเตือนปฏิทิน - ${dateLabel}`,
+                    text: `📅 แจ้งเตือนปฏิทิน - ${dateLabel}`,
                     wrap: true,
                     color: 'default',
                     weight: 'Bolder',
@@ -305,6 +324,13 @@ export class NotificationService {
               }],
             },
           ],
+          actions: [
+            {
+              type: 'Action.OpenUrl',
+              title: 'Open Calendar QA',
+              url: 'http://192.168.42.106:8080/'
+            }
+          ]
         },
       }],
     };
@@ -413,7 +439,14 @@ export class NotificationService {
                 type: 'TextBlock',
                 size: 'Medium',
                 weight: 'Bolder',
-                text: '🗓️ **Calendar QA**',
+                text: '✳️ **Calendar QA**',
+              },
+              {
+                type: 'TextBlock',
+                spacing: 'Medium',
+                text: '[เปิด Calendar QA](http://192.168.42.106:8080/)',
+                wrap: true,
+                color: 'accent',
               },
               {
                 type: 'ColumnSet',
@@ -440,6 +473,13 @@ export class NotificationService {
                 }],
               },
             ],
+            actions: [
+              {
+                type: 'Action.OpenUrl',
+                title: 'Open Calendar QA',
+                url: 'http://192.168.42.106:8080/'
+              }
+            ]
           },
         }],
       };
@@ -501,7 +541,7 @@ export class NotificationService {
               type: 'TextBlock',
               size: 'Medium',
               weight: 'Bolder',
-              text: '🗓️ **Calendar QA**',
+              text: '✳️ **Calendar QA**',
             },
             {
               type: 'ColumnSet',
@@ -511,7 +551,7 @@ export class NotificationService {
                   {
                     type: 'TextBlock',
                     spacing: 'None',
-                    text: `🔔 แจ้งเตือนปฏิทิน - ${scopeText}`,
+                    text: `📅 แจ้งเตือนปฏิทิน - ${scopeText}`,
                     wrap: true,
                     color: 'default',
                     weight: 'Bolder',
@@ -543,6 +583,13 @@ export class NotificationService {
               }],
             },
           ],
+          actions: [
+            {
+              type: 'Action.OpenUrl',
+              title: 'Open Calendar QA',
+              url: 'http://192.168.42.106:8080/'
+            }
+          ]
         },
       }],
     };
