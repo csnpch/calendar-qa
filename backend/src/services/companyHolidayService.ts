@@ -4,7 +4,7 @@ export interface CompanyHoliday {
   id: number;
   name: string;
   date: string;
-  description?: string;
+  description?: string | null;
   createdAt: Date;
   updatedAt: Date;
 }

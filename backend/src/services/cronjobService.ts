@@ -1,14 +1,20 @@
 import type { Database } from 'bun:sqlite';
 import type { Event, CronjobConfig } from '../types';
 import { NotificationService } from './notificationService';
+import { CompanyHolidayService } from './companyHolidayService';
+import { HolidayService } from './holidayService';
 import moment from 'moment';
 
 export class CronjobService {
   private db: Database;
   private lastExecutionTimes: Map<number, string> = new Map(); // Track last execution time per config ID
+  private companyHolidayService: CompanyHolidayService;
+  private holidayService: HolidayService;
 
   constructor(db: Database) {
     this.db = db;
+    this.companyHolidayService = new CompanyHolidayService();
+    this.holidayService = new HolidayService();
   }
 
   // Get all cronjob configurations
@@ -225,6 +231,67 @@ export class CronjobService {
     return weeklyDays.includes(today);
   }
 
+  // Check if a date should skip notification (company holiday or weekend only)
+  private async shouldSkipNotification(dateString: string): Promise<boolean> {
+    try {
+      // Check if it's a company holiday
+      const isCompanyHoliday = await this.companyHolidayService.isCompanyHoliday(dateString);
+      if (isCompanyHoliday) {
+        return true;
+      }
+
+      // Check if it's a weekend (Saturday or Sunday)
+      const date = moment(dateString);
+      const dayOfWeek = date.day(); // 0=Sunday, 6=Saturday
+      if (dayOfWeek === 0 || dayOfWeek === 6) {
+        return true;
+      }
+
+      // NOTE: National holidays (Thai holidays) do NOT skip notifications
+      // unless they are also set as company holidays
+      return false;
+    } catch (error) {
+      console.error(`Error checking skip notification status for ${dateString}:`, error);
+      return false; // Default to false if error occurs
+    }
+  }
+
+  // Filter events to exclude those that fall only on company holidays or weekends
+  private async filterEventsForNotification(events: Event[]): Promise<Event[]> {
+    const filteredEvents: Event[] = [];
+
+    for (const event of events) {
+      let shouldInclude = false;
+
+      if (event.startDate && event.endDate) {
+        // For range events, check if ANY day in the range should NOT be skipped
+        const startDate = moment(event.startDate);
+        const endDate = moment(event.endDate);
+        
+        // Check each day in the range
+        for (let date = startDate.clone(); date.isSameOrBefore(endDate); date.add(1, 'day')) {
+          const dateString = date.format('YYYY-MM-DD');
+          const shouldSkip = await this.shouldSkipNotification(dateString);
+          
+          if (!shouldSkip) {
+            shouldInclude = true;
+            break; // If any day should not be skipped, include the event
+          }
+        }
+      } else if (event.date) {
+        // For single-day events, check if the date should NOT be skipped
+        const shouldSkip = await this.shouldSkipNotification(event.date);
+        shouldInclude = !shouldSkip;
+      }
+
+      if (shouldInclude) {
+        filteredEvents.push(event);
+      }
+    }
+
+    return filteredEvents;
+  }
+
   // Execute cronjob notification
   async executeNotification(config: CronjobConfig): Promise<boolean> {
     try {
@@ -244,9 +311,13 @@ export class CronjobService {
   // Execute daily notification
   private async executeDailyNotification(config: CronjobConfig): Promise<boolean> {
     const notificationDate = this.getNotificationDate(config.notification_days);
-    const events = this.getEventsForDate(notificationDate);
+    const allEvents = this.getEventsForDate(notificationDate);
     
-    console.log(`Found ${events.length} events for ${notificationDate}`);
+    console.log(`Found ${allEvents.length} events for ${notificationDate}`);
+    
+    // Filter out events that fall only on company holidays or weekends
+    const events = await this.filterEventsForNotification(allEvents);
+    console.log(`After filtering company holidays and weekends: ${events.length} events remaining`);
     
     if (events.length > 0) {
       const success = await NotificationService.sendEventsNotification(
@@ -265,7 +336,7 @@ export class CronjobService {
         return false;
       }
     } else {
-      console.log(`No events found for ${notificationDate}, skipping notification`);
+      console.log(`No events remaining after filtering company holidays and weekends for ${notificationDate}, skipping notification`);
       return true;
     }
   }
@@ -280,9 +351,13 @@ export class CronjobService {
 
     const scope = config.weekly_scope || 'current';
     const { startDate, endDate } = this.getWeekDateRange(scope);
-    const events = this.getEventsForDateRange(startDate, endDate);
+    const allEvents = this.getEventsForDateRange(startDate, endDate);
     
-    console.log(`Found ${events.length} events for ${scope} (${startDate} to ${endDate})`);
+    console.log(`Found ${allEvents.length} events for ${scope} (${startDate} to ${endDate})`);
+    
+    // Filter out events that fall only on company holidays or weekends
+    const events = await this.filterEventsForNotification(allEvents);
+    console.log(`After filtering company holidays and weekends: ${events.length} events remaining`);
     
     if (events.length > 0) {
       const success = await NotificationService.sendWeeklyEventsNotification(
@@ -302,7 +377,7 @@ export class CronjobService {
         return false;
       }
     } else {
-      console.log(`No events found for ${scope}, skipping notification`);
+      console.log(`No events remaining after filtering company holidays and weekends for ${scope}, skipping notification`);
       return true;
     }
   }
@@ -329,9 +404,13 @@ export class CronjobService {
   // Execute daily notification with error reporting
   private async executeDailyNotificationWithError(config: CronjobConfig): Promise<{ success: boolean; error?: string }> {
     const notificationDate = this.getNotificationDate(config.notification_days);
-    const events = this.getEventsForDate(notificationDate);
+    const allEvents = this.getEventsForDate(notificationDate);
     
-    console.log(`Found ${events.length} events for ${notificationDate}`);
+    console.log(`Found ${allEvents.length} events for ${notificationDate}`);
+    
+    // Filter out events that fall only on company holidays or weekends
+    const events = await this.filterEventsForNotification(allEvents);
+    console.log(`After filtering company holidays and weekends: ${events.length} events remaining`);
     
     if (events.length > 0) {
       const result = await NotificationService.sendEventsNotificationWithError(
@@ -350,7 +429,7 @@ export class CronjobService {
         return { success: false, error: result.error };
       }
     } else {
-      console.log(`No events found for ${notificationDate}, skipping notification`);
+      console.log(`No events remaining after filtering company holidays and weekends for ${notificationDate}, skipping notification`);
       return { success: true };
     }
   }
@@ -365,9 +444,13 @@ export class CronjobService {
 
     const scope = config.weekly_scope || 'current';
     const { startDate, endDate } = this.getWeekDateRange(scope);
-    const events = this.getEventsForDateRange(startDate, endDate);
+    const allEvents = this.getEventsForDateRange(startDate, endDate);
     
-    console.log(`Found ${events.length} events for ${scope} (${startDate} to ${endDate})`);
+    console.log(`Found ${allEvents.length} events for ${scope} (${startDate} to ${endDate})`);
+    
+    // Filter out events that fall only on company holidays or weekends
+    const events = await this.filterEventsForNotification(allEvents);
+    console.log(`After filtering company holidays and weekends: ${events.length} events remaining`);
     
     if (events.length > 0) {
       const result = await NotificationService.sendWeeklyEventsNotificationWithError(
@@ -387,7 +470,7 @@ export class CronjobService {
         return { success: false, error: result.error };
       }
     } else {
-      console.log(`No events found for ${scope}, skipping notification`);
+      console.log(`No events remaining after filtering company holidays and weekends for ${scope}, skipping notification`);
       return { success: true };
     }
   }
@@ -404,7 +487,10 @@ export class CronjobService {
     if (config.notification_type === 'weekly') {
       const scope = config.weekly_scope || 'current';
       const { startDate, endDate } = this.getWeekDateRange(scope);
-      const events = this.getEventsForDateRange(startDate, endDate);
+      const allEvents = this.getEventsForDateRange(startDate, endDate);
+      
+      // Filter events for company holidays and weekends during testing too
+      const events = await this.filterEventsForNotification(allEvents);
       
       // Always send test notification (even with 0 events) to validate webhook
       const result = await NotificationService.sendWeeklyEventsNotificationWithError(
@@ -417,7 +503,10 @@ export class CronjobService {
       return result;
     } else {
       const notificationDate = this.getNotificationDate(config.notification_days);
-      const events = this.getEventsForDate(notificationDate);
+      const allEvents = this.getEventsForDate(notificationDate);
+      
+      // Filter events for company holidays and weekends during testing too
+      const events = await this.filterEventsForNotification(allEvents);
       
       // Always send test notification (even with 0 events) to validate webhook
       const result = await NotificationService.sendEventsNotificationWithError(
