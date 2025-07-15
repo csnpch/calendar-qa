@@ -267,8 +267,8 @@ export class NotificationService {
       });
     });
     
-    // Create event header text
-    const eventHeader = `⏰ ${dateLabel}มีเหตุการณ์:`;
+    // Create event header text - removed for cleaner format
+    const eventHeader = ``;
 
     return {
       type: 'AdaptiveCard',
@@ -303,14 +303,6 @@ export class NotificationService {
                     text: eventDetails.trim(),
                     wrap: true,
                     color: 'default',
-                  },
-                  {
-                    type: 'TextBlock',
-                    spacing: 'Small',
-                    text: eventHeader,
-                    wrap: true,
-                    color: 'default',
-                    weight: 'Bolder',
                   },
                   {
                     type: 'TextBlock',
@@ -527,7 +519,7 @@ export class NotificationService {
       });
     });
     
-    const eventHeader = `⏰ ${scopeText}มีเหตุการณ์:`;
+    const eventHeader = ``;
 
     return {
       type: 'AdaptiveCard',
@@ -562,14 +554,6 @@ export class NotificationService {
                     text: eventDetails.trim(),
                     wrap: true,
                     color: 'default',
-                  },
-                  {
-                    type: 'TextBlock',
-                    spacing: 'Small',
-                    text: eventHeader,
-                    wrap: true,
-                    color: 'default',
-                    weight: 'Bolder',
                   },
                   {
                     type: 'TextBlock',
