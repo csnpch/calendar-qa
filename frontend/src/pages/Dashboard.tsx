@@ -15,7 +15,7 @@ import { UserDetailsModal } from '@/components/UserDetailsModal';
 
 const Dashboard = () => {
   const { theme } = useTheme();
-  const [selectedPeriod, setSelectedPeriod] = useState('month');
+  const [selectedPeriod, setSelectedPeriod] = useState('year');
   const [selectedEventType, setSelectedEventType] = useState('all');
   const [dateFrom, setDateFrom] = useState('2025-06-01');
   const [dateTo, setDateTo] = useState('2025-06-30');
