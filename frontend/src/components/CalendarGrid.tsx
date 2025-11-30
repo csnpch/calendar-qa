@@ -14,6 +14,7 @@ interface CalendarGridProps {
   employees: { id: number; name: string }[];
   companyHolidays: any[];
   highlightedDates?: string[];
+  filteredEmployeeId?: number | null;
   onDateClick: (date: Date) => void;
   onCreateEvent: (date: Date, dateRange?: Date[]) => void;
   onHolidayAdded?: () => void;
@@ -28,6 +29,7 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({
   employees,
   companyHolidays,
   highlightedDates = [],
+  filteredEmployeeId = null,
   onDateClick,
   onCreateEvent,
   onHolidayAdded,
@@ -131,6 +133,11 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({
     if (!Array.isArray(events)) return [];
     const dateString = moment(date).format('YYYY-MM-DD');
     const filteredEvents = events.filter(event => {
+      // Filter by employee if filteredEmployeeId is set
+      if (filteredEmployeeId !== null && event.employeeId !== filteredEmployeeId) {
+        return false;
+      }
+      
       // Check both legacy date field and new date range fields
       if (event.date === dateString) return true;
       if (event.startDate && event.endDate) {
@@ -385,6 +392,13 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({
             <h2 className="text-sm sm:text-base md:text-lg lg:text-xl font-semibold text-gray-900 dark:text-white">
               {MONTHS[month]} {year}
             </h2>
+            {filteredEmployeeId && (
+              <div className="flex items-center gap-1.5 bg-blue-100 dark:bg-blue-900/50 border border-blue-400 dark:border-blue-600 rounded px-2 py-1">
+                <span className="text-xs text-blue-700 dark:text-blue-300 font-medium">
+                  กรอง: {getEmployeeName(filteredEmployeeId)}
+                </span>
+              </div>
+            )}
           </div>
           <div className="flex space-x-1">
             <Button variant="outline" size="sm" onClick={onTodayClick} className="h-6 sm:h-7 px-2 text-xs sm:text-sm text-gray-500 hover:text-gray-700 dark:text-white dark:hover:text-gray-300 border-gray-200 dark:border-gray-600">

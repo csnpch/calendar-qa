@@ -41,7 +41,7 @@ export const Navbar: React.FC<NavbarProps> = ({ currentPage = 'calendar-events' 
 
   return (
     <div className="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-600">
-      <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-3 sm:py-2 md:py-4">
+      <div className="max-w-[1920px] mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-3 sm:py-2 md:py-4">
         <div className="flex items-center justify-between">
           <Button
             variant="ghost"

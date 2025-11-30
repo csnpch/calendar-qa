@@ -23,6 +23,7 @@ const CalendarEvents = () => {
   const [editingCompanyHoliday, setEditingCompanyHoliday] = useState<{ id: number; name: string; description?: string } | null>(null);
   const [highlightedDates, setHighlightedDates] = useState<string[]>([]);
   const [currentHoverEvent, setCurrentHoverEvent] = useState<{ startDate: string; endDate: string } | null>(null);
+  const [filteredEmployeeId, setFilteredEmployeeId] = useState<number | null>(null);
   
   const {
     employees,
@@ -230,6 +231,15 @@ const CalendarEvents = () => {
     setHighlightedDates([]);
   };
 
+  const handleEmployeeFilter = (employeeId: number) => {
+    // Toggle filter - if same employee clicked, clear filter
+    if (filteredEmployeeId === employeeId) {
+      setFilteredEmployeeId(null);
+    } else {
+      setFilteredEmployeeId(employeeId);
+    }
+  };
+
   const handleEditCompanyHoliday = (holiday: { id: number; name: string; description?: string }) => {
     setEditingCompanyHoliday(holiday);
     setIsDetailsModalOpen(false);
@@ -301,26 +311,28 @@ const CalendarEvents = () => {
 
   return (
     <Layout currentPage="calendar-events">
-      <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-3 sm:py-4 md:py-8">
-        <div className="flex flex-col space-y-2 sm:space-y-3 md:space-y-4">
-          {error && (
-            <div className="bg-red-50 dark:bg-red-800/30 border border-red-200 dark:border-red-600 text-red-700 dark:text-red-300 px-4 py-3 rounded">
-              Error: {error}
-            </div>
-          )}
-          
-          {loading ? (
-            <div className="flex justify-center items-center h-64">
-              <div className="text-gray-500 dark:text-gray-300">Loading calendar data...</div>
-            </div>
-          ) : (
-            <>
+      <div className="max-w-[1920px] mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-3 sm:py-4 md:py-8">
+        {error && (
+          <div className="bg-red-50 dark:bg-red-800/30 border border-red-200 dark:border-red-600 text-red-700 dark:text-red-300 px-4 py-3 rounded mb-4">
+            Error: {error}
+          </div>
+        )}
+        
+        {loading ? (
+          <div className="flex justify-center items-center h-64">
+            <div className="text-gray-500 dark:text-gray-300">Loading calendar data...</div>
+          </div>
+        ) : (
+          <div className="flex flex-col lg:flex-row gap-4 lg:gap-6">
+            {/* Calendar Grid - 70% width */}
+            <div className="flex-1 lg:w-[70%]">
               <CalendarGrid
                 currentDate={currentDate}
                 events={events}
                 employees={employees}
                 companyHolidays={companyHolidays}
                 highlightedDates={highlightedDates}
+                filteredEmployeeId={filteredEmployeeId}
                 onDateClick={handleDateClick}
                 onCreateEvent={handleCreateEvent}
                 onHolidayAdded={refreshCompanyHolidays}
@@ -328,19 +340,22 @@ const CalendarEvents = () => {
                 onNextMonth={handleNextMonth}
                 onTodayClick={handleTodayClick}
               />
-              {/* Upcoming Events Section */}
-              <div style={{ marginTop: '2rem' }}>
-                <UpcomingEvents 
-                  events={events} 
-                  employees={employees} 
-                  onNavigateToMonth={handleNavigateToMonth}
-                  onEventHover={handleEventHover}
-                  onEventHoverEnd={handleEventHoverEnd}
-                />
-              </div>
-            </>
-          )}
-        </div>
+            </div>
+            
+            {/* Upcoming Events Section - 30% width */}
+            <div className="lg:w-[30%]">
+              <UpcomingEvents 
+                events={events} 
+                employees={employees} 
+                filteredEmployeeId={filteredEmployeeId}
+                onNavigateToMonth={handleNavigateToMonth}
+                onEventHover={handleEventHover}
+                onEventHoverEnd={handleEventHoverEnd}
+                onEmployeeFilter={handleEmployeeFilter}
+              />
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Event Creation Modal */}

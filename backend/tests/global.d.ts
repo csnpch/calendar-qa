@@ -1,5 +1,5 @@
-import Database from 'better-sqlite3';
-
 declare global {
-  var mockDatabase: Database.Database;
+  var mockDatabase: any; // bun:sqlite Database type
 }
+
+export {};

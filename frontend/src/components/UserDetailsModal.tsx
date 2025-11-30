@@ -80,10 +80,12 @@ export const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
 
   // Group events by year, month, then date
   const groupedEvents = events.reduce((groups: Record<string, Record<string, Record<string, EmployeeEvent[]>>>, event) => {
-    const eventDate = new Date(event.date);
+    // Use startDate for multi-day events, fallback to date for legacy single-day events
+    const dateToUse = event.date || event.startDate;
+    const eventDate = new Date(dateToUse);
     const year = eventDate.getFullYear().toString();
     const month = eventDate.toLocaleDateString('th-TH', { month: 'long' });
-    const date = event.date;
+    const date = dateToUse;
     
     if (!groups[year]) {
       groups[year] = {};

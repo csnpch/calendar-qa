@@ -1,20 +1,18 @@
+import { describe, test, expect, beforeEach, afterEach, afterAll } from "bun:test";
+import { cleanupDatabase } from "../setup";
 import { EventService } from '../../src/services/eventService';
 import type { CreateEventRequest, UpdateEventRequest } from '../../src/types';
-
-// Mock the database connection
-jest.mock('../../src/database/connection', () => ({
-  getDatabase: () => global.mockDatabase,
-}));
 
 describe('EventService', () => {
   let eventService: EventService;
 
   beforeEach(() => {
+    cleanupDatabase();
     eventService = new EventService();
   });
 
   describe('createEvent', () => {
-    it('should create an event successfully', () => {
+    test('should create an event successfully', () => {
       const eventData = {
         employeeId: 1,
         leaveType: 'vacation' as const,
@@ -37,7 +35,7 @@ describe('EventService', () => {
       expect(result.updatedAt).toBeDefined();
     });
 
-    it('should create an event without description', () => {
+    test('should create an event without description', () => {
       const eventData = {
         employeeId: 2,
         leaveType: 'sick' as const,
@@ -52,7 +50,7 @@ describe('EventService', () => {
   });
 
   describe('getAllEvents', () => {
-    it('should return all events ordered by date descending', () => {
+    test('should return all events ordered by date descending', () => {
       // Create test events
       eventService.createEvent({
         employeeId: 1,
@@ -76,7 +74,7 @@ describe('EventService', () => {
   });
 
   describe('getEventById', () => {
-    it('should return event by ID', () => {
+    test('should return event by ID', () => {
       const created = eventService.createEvent({
         employeeId: 1,
         leaveType: 'vacation',
@@ -90,7 +88,7 @@ describe('EventService', () => {
       expect(found?.employeeName).toBe('John Smith');
     });
 
-    it('should return null for non-existent event', () => {
+    test('should return null for non-existent event', () => {
       const event = eventService.getEventById(999);
 
       expect(event).toBeNull();
@@ -98,7 +96,7 @@ describe('EventService', () => {
   });
 
   describe('getEventsByDate', () => {
-    it('should return events for specific date', () => {
+    test('should return events for specific date', () => {
       eventService.createEvent({
         employeeId: 1,
         leaveType: 'vacation',
@@ -114,7 +112,7 @@ describe('EventService', () => {
   });
 
   describe('getEventsByDateRange', () => {
-    it('should return events within date range', () => {
+    test('should return events within date range', () => {
       eventService.createEvent({
         employeeId: 1,
         leaveType: 'vacation',
@@ -129,7 +127,7 @@ describe('EventService', () => {
   });
 
   describe('updateEvent', () => {
-    it('should update event successfully', async () => {
+    test('should update event successfully', async () => {
       const created = eventService.createEvent({
         employeeId: 1,
         leaveType: 'vacation',
@@ -152,7 +150,7 @@ describe('EventService', () => {
       expect(updated?.updatedAt).not.toBe(created.updatedAt);
     });
 
-    it('should return null for non-existent event', () => {
+    test('should return null for non-existent event', () => {
       const updateData = { description: 'New description' };
 
       const updated = eventService.updateEvent(999, updateData);
@@ -162,7 +160,7 @@ describe('EventService', () => {
   });
 
   describe('deleteEvent', () => {
-    it('should delete event successfully', () => {
+    test('should delete event successfully', () => {
       const created = eventService.createEvent({
         employeeId: 1,
         leaveType: 'vacation',
@@ -176,7 +174,7 @@ describe('EventService', () => {
       expect(found).toBeNull();
     });
 
-    it('should return false for non-existent event', () => {
+    test('should return false for non-existent event', () => {
       const result = eventService.deleteEvent(999);
 
       expect(result).toBe(false);
@@ -184,7 +182,7 @@ describe('EventService', () => {
   });
 
   describe('searchEvents', () => {
-    it('should search events by employee name', () => {
+    test('should search events by employee name', () => {
       eventService.createEvent({
         employeeId: 1,
         leaveType: 'vacation',
@@ -200,7 +198,7 @@ describe('EventService', () => {
   });
 
   describe('getEventStats', () => {
-    it('should return event statistics', () => {
+    test('should return event statistics', () => {
       // Create test events
       eventService.createEvent({
         employeeId: 1,

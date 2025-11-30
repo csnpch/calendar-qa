@@ -1,81 +1,103 @@
-import Database from 'better-sqlite3';
+import { Database } from "bun:sqlite";
+import { beforeEach, afterEach, afterAll } from "bun:test";
 
-// Mock database for testing
-global.mockDatabase = new Database(':memory:');
+// Mock database for testing (singleton)
+if (!global.mockDatabase) {
+  global.mockDatabase = new Database(":memory:") as any;
 
-// Create test schema
-global.mockDatabase.exec(`
-  CREATE TABLE employees (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    name TEXT NOT NULL,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
-  );
+  // Create test schema (only once)
+  global.mockDatabase.exec(`
+    CREATE TABLE employees (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT NOT NULL,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    );
 
-  CREATE TABLE events (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    employee_id INTEGER NOT NULL,
-    employee_name TEXT NOT NULL,
-    leave_type TEXT NOT NULL,
-    date TEXT,
-    start_date TEXT NOT NULL,
-    end_date TEXT NOT NULL,
-    description TEXT,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (employee_id) REFERENCES employees (id)
-  );
+    CREATE TABLE events (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      employee_id INTEGER NOT NULL,
+      employee_name TEXT NOT NULL,
+      leave_type TEXT NOT NULL,
+      date TEXT,
+      start_date TEXT NOT NULL,
+      end_date TEXT NOT NULL,
+      description TEXT,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (employee_id) REFERENCES employees (id)
+    );
 
-  CREATE TABLE holidays (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    name TEXT NOT NULL,
-    date DATE NOT NULL,
-    type TEXT DEFAULT 'public'
-  );
+    CREATE TABLE holidays (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT NOT NULL,
+      date DATE NOT NULL,
+      type TEXT DEFAULT 'public'
+    );
 
-  CREATE TABLE cronjob_config (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    name TEXT NOT NULL,
-    enabled INTEGER NOT NULL DEFAULT 1,
-    schedule_time TEXT NOT NULL,
-    webhook_url TEXT NOT NULL,
-    notification_days INTEGER NOT NULL DEFAULT 0,
-    notification_type TEXT NOT NULL DEFAULT 'daily' CHECK (notification_type IN ('daily', 'weekly')),
-    weekly_days TEXT,
-    weekly_scope TEXT DEFAULT 'current' CHECK (weekly_scope IN ('current', 'next')),
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
-  );
-`);
+    CREATE TABLE cronjob_config (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT NOT NULL,
+      enabled INTEGER NOT NULL DEFAULT 1,
+      schedule_time TEXT NOT NULL,
+      webhook_url TEXT NOT NULL,
+      notification_days INTEGER NOT NULL DEFAULT 0,
+      notification_type TEXT NOT NULL DEFAULT 'daily' CHECK (notification_type IN ('daily', 'weekly')),
+      weekly_days TEXT,
+      weekly_scope TEXT DEFAULT 'current' CHECK (weekly_scope IN ('current', 'next')),
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    );
+  `);
 
-// Insert test data  
-global.mockDatabase.exec(`
-  INSERT INTO employees (name) VALUES 
-    ('John Smith'),
-    ('Jane Doe');
-    
-  INSERT INTO holidays (name, date) VALUES 
-    ('วันปีใหม่', '2025-01-01'),
-    ('วันลอยกระทง', '2025-11-15');
-`);
-
-
-beforeEach(() => {
-  // Clean all tables before each test
-  global.mockDatabase.exec('DELETE FROM events');
-  global.mockDatabase.exec('DELETE FROM cronjob_config');
-  global.mockDatabase.exec('DELETE FROM employees');
-  
-  // Reset auto-increment
-  global.mockDatabase.exec("DELETE FROM sqlite_sequence WHERE name='employees'");
-  
-  // Re-insert test data
+  // Insert test data (only once)
   global.mockDatabase.exec(`
     INSERT INTO employees (name) VALUES 
       ('John Smith'),
-      ('Jane Doe');
+      ('Sarah Johnson'),
+      ('Michael Brown'),
+      ('Emily Davis'),
+      ('David Wilson');
+      
+    INSERT INTO holidays (name, date) VALUES 
+      ('วันปีใหม่', '2025-01-01'),
+      ('วันลอยกระทง', '2025-11-15');
   `);
-});
+}
+
+// Cleanup function to be called in each test file's beforeEach
+export function cleanupDatabase() {
+  const db = global.mockDatabase as any;
+
+  // Clean all tables
+  try {
+    db.run("DELETE FROM events");
+  } catch (e) {}
+
+  try {
+    db.run("DELETE FROM cronjob_config");
+  } catch (e) {}
+
+  try {
+    db.run("DELETE FROM employees");
+  } catch (e) {}
+
+  try {
+    db.run(
+      "DELETE FROM sqlite_sequence WHERE name IN ('employees', 'events', 'cronjob_config')"
+    );
+  } catch (e) {}
+
+  // Re-insert test data
+  db.run(`
+    INSERT INTO employees (name) VALUES 
+      ('John Smith'),
+      ('Sarah Johnson'),
+      ('Michael Brown'),
+      ('Emily Davis'),
+      ('David Wilson')
+  `);
+}
 
 afterAll(() => {
   global.mockDatabase.close();

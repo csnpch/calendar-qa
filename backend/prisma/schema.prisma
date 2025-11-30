@@ -40,17 +40,17 @@ model Event {
 }
 
 model CronjobConfig {
-  id               Int                      @id @default(autoincrement())
-  name             String                   @unique
-  enabled          Boolean                  @default(true)
-  scheduleTime     String                   @map("schedule_time")
-  webhookUrl       String                   @map("webhook_url")
-  notificationDays Int                      @default(1) @map("notification_days")
-  notificationType NotificationType         @default(daily) @map("notification_type")
-  weeklyDays       String?                  @map("weekly_days")
-  weeklyScope      WeeklyScope?             @default(current) @map("weekly_scope")
-  createdAt        DateTime                 @default(now()) @map("created_at")
-  updatedAt        DateTime                 @updatedAt @map("updated_at")
+  id               Int              @id @default(autoincrement())
+  name             String           @unique
+  enabled          Boolean          @default(true)
+  scheduleTime     String           @map("schedule_time")
+  webhookUrl       String           @map("webhook_url")
+  notificationDays Int              @default(1) @map("notification_days")
+  notificationType NotificationType @default(daily) @map("notification_type")
+  weeklyDays       String?          @map("weekly_days")
+  weeklyScope      WeeklyScope?     @default(current) @map("weekly_scope")
+  createdAt        DateTime         @default(now()) @map("created_at")
+  updatedAt        DateTime         @updatedAt @map("updated_at")
 
   @@index([enabled])
   @@map("cronjob_config")

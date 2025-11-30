@@ -196,5 +196,11 @@ class DatabaseConnection {
   }
 }
 
-export const getDatabase = () => DatabaseConnection.getInstance();
+export const getDatabase = () => {
+  // Use mock database in test environment
+  if (typeof global !== 'undefined' && (global as any).mockDatabase) {
+    return (global as any).mockDatabase;
+  }
+  return DatabaseConnection.getInstance();
+};
 export default DatabaseConnection;
