@@ -242,7 +242,7 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({
     const validDatesInRange = [];
     
     if (startMoment.isBefore(endMoment) || startMoment.isSame(endMoment)) {
-      let current = startMoment.clone();
+      const current = startMoment.clone();
       while (current.isSameOrBefore(endMoment)) {
         const currentDate = current.toDate();
         allDatesInRange.push(currentDate);
@@ -256,7 +256,7 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({
         current.add(1, 'day');
       }
     } else {
-      let current = endMoment.clone();
+      const current = endMoment.clone();
       while (current.isSameOrBefore(startMoment)) {
         const currentDate = current.toDate();
         allDatesInRange.push(currentDate);
@@ -400,16 +400,38 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({
               </div>
             )}
           </div>
-          <div className="flex space-x-1">
-            <Button variant="outline" size="sm" onClick={onTodayClick} className="h-6 sm:h-7 px-2 text-xs sm:text-sm text-gray-500 hover:text-gray-700 dark:text-white dark:hover:text-gray-300 border-gray-200 dark:border-gray-600">
-              Today
-            </Button>
-            <Button variant="outline" size="sm" onClick={onPrevMonth} className="h-6 w-6 sm:h-7 sm:w-7 p-0 text-gray-500 hover:text-gray-700 dark:text-white dark:hover:text-gray-300 border-gray-200 dark:border-gray-600">
-              <ChevronLeft className="w-3 h-3 sm:w-4 sm:h-4" />
-            </Button>
-            <Button variant="outline" size="sm" onClick={onNextMonth} className="h-6 w-6 sm:h-7 sm:w-7 p-0 text-gray-500 hover:text-gray-700 dark:text-white dark:hover:text-gray-300 border-gray-200 dark:border-gray-600">
-              <ChevronRight className="w-3 h-3 sm:w-4 sm:h-4" />
-            </Button>
+          <div className="flex items-center gap-8">
+            {/* Leave Type Legend */}
+            <div className="flex items-center gap-2 text-xs">
+              <div className="flex items-center gap-1">
+                <div className="w-3 h-3 rounded-full bg-blue-100 dark:bg-blue-800 border border-blue-200 dark:border-blue-600"></div>
+                <span className="text-gray-600 dark:text-gray-300">{LEAVE_TYPE_LABELS.vacation}</span>
+              </div>
+              <div className="flex items-center gap-1">
+                <div className="w-3 h-3 rounded-full bg-purple-100 dark:bg-purple-800 border border-purple-200 dark:border-purple-600"></div>
+                <span className="text-gray-600 dark:text-gray-300">{LEAVE_TYPE_LABELS.sick}</span>
+              </div>
+              <div className="flex items-center gap-1">
+                <div className="w-3 h-3 rounded-full bg-stone-50 dark:bg-stone-600 border border-stone-200 dark:border-stone-400"></div>
+                <span className="text-gray-600 dark:text-gray-300">{LEAVE_TYPE_LABELS.personal}</span>
+              </div>
+              <div className="flex items-center gap-1">
+                <div className="w-3 h-3 rounded-full bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-500"></div>
+                <span className="text-gray-600 dark:text-gray-300">{LEAVE_TYPE_LABELS.other}</span>
+              </div>
+            </div>
+            
+            <div className="flex space-x-1">
+              <Button variant="outline" size="sm" onClick={onTodayClick} className="h-6 sm:h-7 px-2 text-xs sm:text-sm text-gray-500 hover:text-gray-700 dark:text-white dark:hover:text-gray-300 border-gray-200 dark:border-gray-600">
+                Today
+              </Button>
+              <Button variant="outline" size="sm" onClick={onPrevMonth} className="h-6 w-6 sm:h-7 sm:w-7 p-0 text-gray-500 hover:text-gray-700 dark:text-white dark:hover:text-gray-300 border-gray-200 dark:border-gray-600">
+                <ChevronLeft className="w-3 h-3 sm:w-4 sm:h-4" />
+              </Button>
+              <Button variant="outline" size="sm" onClick={onNextMonth} className="h-6 w-6 sm:h-7 sm:w-7 p-0 text-gray-500 hover:text-gray-700 dark:text-white dark:hover:text-gray-300 border-gray-200 dark:border-gray-600">
+                <ChevronRight className="w-3 h-3 sm:w-4 sm:h-4" />
+              </Button>
+            </div>
           </div>
         </div>
       </div>
