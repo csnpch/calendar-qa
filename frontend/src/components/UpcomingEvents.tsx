@@ -109,8 +109,9 @@ const UpcomingEvents: React.FC<UpcomingEventsProps> = ({ events, employees, filt
   }
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-3 max-h-[calc(100vh-200px)] overflow-y-auto">
+    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-3 flex flex-col max-h-[calc(100vh-200px)]">
       <EventListHeader count={upcomingEvents.length} />
+      <div className="overflow-y-auto flex-1">
       <div className="space-y-1">
         {upcomingEvents.map((event, index) => {
           const startDate = event.startDate || event.date;
@@ -194,6 +195,7 @@ const UpcomingEvents: React.FC<UpcomingEventsProps> = ({ events, employees, filt
             </div>
           );
         })}
+      </div>
       </div>
     </div>
   );
