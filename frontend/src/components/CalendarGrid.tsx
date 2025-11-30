@@ -5,7 +5,7 @@ import { CreateEventPopover } from '@/components/CreateEventPopover';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useHolidays } from '@/hooks/useHolidays';
 import { Event } from '@/services/apiDatabase';
-import { DAYS_OF_WEEK, MONTHS, LEAVE_TYPE_COLORS, LEAVE_TYPE_LABELS } from '@/lib/utils';
+import { DAYS_OF_WEEK, MONTHS, LEAVE_TYPE_COLORS_SOLID, LEAVE_TYPE_LABELS } from '@/lib/utils';
 import moment from 'moment';
 
 interface CalendarGridProps {
@@ -564,7 +564,7 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({
                               key={event.id}
                               className={`
                                 text-xs py-0.5 ${borderRadius} border text-center font-normal
-                                ${LEAVE_TYPE_COLORS[event.leaveType as keyof typeof LEAVE_TYPE_COLORS] || LEAVE_TYPE_COLORS.other}
+                                ${LEAVE_TYPE_COLORS_SOLID[event.leaveType as keyof typeof LEAVE_TYPE_COLORS_SOLID] || LEAVE_TYPE_COLORS_SOLID.other}
                                 ${hasPrevious ? 'border-l-0' : 'px-0.5 sm:px-1'}
                                 ${hasNext ? 'border-r-0' : 'px-0.5 sm:px-1'}
                                 ${hasPrevious ? '-ml-1 sm:-ml-2 pl-1 sm:pl-2' : ''}
