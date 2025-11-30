@@ -65,11 +65,13 @@ export interface DashboardSummary {
   monthlyStats: {
     totalEvents: number;
     totalEmployees: number;
+    totalBusinessDays: number;
     mostCommonType: string;
   };
   employeeRanking: Array<{
     name: string;
     totalEvents: number;
+    totalBusinessDays: number;
     eventTypes: { [key: string]: number };
   }>;
 }
@@ -78,12 +80,19 @@ export const getDashboardSummary = async (params?: {
   startDate?: string;
   endDate?: string;
   eventType?: string;
+  includeFutureEvents?: boolean;
 }): Promise<DashboardSummary> => {
   const queryParams = new URLSearchParams();
 
   if (params?.startDate) queryParams.append("startDate", params.startDate);
   if (params?.endDate) queryParams.append("endDate", params.endDate);
   if (params?.eventType) queryParams.append("eventType", params.eventType);
+  if (params?.includeFutureEvents !== undefined) {
+    queryParams.append(
+      "includeFutureEvents",
+      String(params.includeFutureEvents)
+    );
+  }
 
   const query = queryParams.toString();
   const endpoint = `/events/dashboard/summary${query ? `?${query}` : ""}`;
@@ -100,6 +109,7 @@ export interface EmployeeEvent {
   startDate: string;
   endDate: string;
   description?: string;
+  businessDays?: number;
   createdAt: string;
   updatedAt: string;
 }

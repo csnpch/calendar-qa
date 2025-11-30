@@ -227,11 +227,12 @@ export const eventsRoutes = new Elysia({ prefix: '/events' })
   .get('/dashboard/summary', ({ query }) => {
     try {
       Logger.debug('Fetching dashboard summary with query:', query);
-      const { startDate, endDate, eventType } = query;
+      const { startDate, endDate, eventType, includeFutureEvents } = query;
       const summary = eventService.getDashboardSummary(
         startDate as string,
         endDate as string,
-        eventType as string
+        eventType as string,
+        includeFutureEvents === 'true'
       );
       Logger.debug('Dashboard summary retrieved successfully');
       return summary;
@@ -243,7 +244,8 @@ export const eventsRoutes = new Elysia({ prefix: '/events' })
     query: t.Object({
       startDate: t.Optional(t.String()),
       endDate: t.Optional(t.String()),
-      eventType: t.Optional(t.String())
+      eventType: t.Optional(t.String()),
+      includeFutureEvents: t.Optional(t.String())
     })
   })
 

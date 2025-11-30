@@ -4,6 +4,7 @@ import { TrendingUp, Calendar, Award, Users } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Switch } from '@/components/ui/switch';
 import { Combobox } from '@/components/ui/combobox';
 import { Input } from '@/components/ui/input';
 import { useTheme } from '@/contexts/ThemeContext';
@@ -18,6 +19,7 @@ const Dashboard = () => {
   const [selectedEventType, setSelectedEventType] = useState('all');
   const [dateFrom, setDateFrom] = useState('2025-06-01');
   const [dateTo, setDateTo] = useState('2025-06-30');
+  const [includeFutureEvents, setIncludeFutureEvents] = useState(false);
   const [dashboardData, setDashboardData] = useState<DashboardSummary | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -55,6 +57,8 @@ const Dashboard = () => {
         params.eventType = selectedEventType;
       }
       
+      params.includeFutureEvents = includeFutureEvents;
+      
       const data = await getDashboardSummary(params);
       setDashboardData(data);
     } catch (err) {
@@ -62,7 +66,7 @@ const Dashboard = () => {
     } finally {
       setLoading(false);
     }
-  }, [selectedPeriod, selectedEventType, dateFrom, dateTo, currentDate]);
+  }, [selectedPeriod, selectedEventType, dateFrom, dateTo, currentDate, includeFutureEvents]);
 
   useEffect(() => {
     loadDashboardData();
@@ -140,7 +144,7 @@ const Dashboard = () => {
         {!loading && !error && dashboardData && (
           <>
             {/* Summary Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle className="text-sm font-normal">เหตุการณ์ทั้งหมด</CardTitle>
@@ -155,6 +159,19 @@ const Dashboard = () => {
                       ? 'ข้อมูลทั้งหมด'
                       : `ประจำ${selectedPeriod === 'month' ? 'เดือน' : 'ปี'} ${selectedPeriod === 'month' ? currentMonth : currentYear}`
                     }
+                  </p>
+                </CardContent>
+              </Card>
+              
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-normal">วันทำงานรวม</CardTitle>
+                  <Calendar className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-normal">{dashboardData.monthlyStats.totalBusinessDays}</div>
+                  <p className="text-xs text-muted-foreground">
+                    วันทำงาน (หักวันหยุดแล้ว)
                   </p>
                 </CardContent>
               </Card>
@@ -227,6 +244,20 @@ const Dashboard = () => {
               searchPlaceholder="ค้นหาประเภท..."
               emptyMessage="ไม่พบประเภทเหตุการณ์"
             />
+          </div>
+
+          <div className="flex items-center gap-2 bg-gray-50 dark:bg-gray-800 p-3 rounded-lg">
+            <Switch 
+              id="include-future"
+              checked={includeFutureEvents}
+              onCheckedChange={setIncludeFutureEvents}
+            />
+            <label 
+              htmlFor="include-future"
+              className="text-sm font-normal cursor-pointer text-gray-700 dark:text-gray-300"
+            >
+              รวมเหตุการณ์ในอนาคต
+            </label>
           </div>
 
           {selectedPeriod === 'custom' && (
@@ -308,7 +339,7 @@ const Dashboard = () => {
                         <div>
                           <div className="font-normal text-gray-900 dark:text-white">{employee.name}</div>
                           <div className="text-sm text-gray-500 dark:text-gray-400">
-                            รวม {selectedEventType === 'all' ? employee.totalEvents : (employee.eventTypes[selectedEventType as keyof typeof employee.eventTypes] || 0)} เหตุการณ์
+                            {selectedEventType === 'all' ? employee.totalEvents : (employee.eventTypes[selectedEventType as keyof typeof employee.eventTypes] || 0)} เหตุการณ์ • {employee.totalBusinessDays} วันทำงาน
                           </div>
                         </div>
                       </div>

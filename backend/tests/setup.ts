@@ -35,20 +35,29 @@ if (!global.mockDatabase) {
       type TEXT DEFAULT 'public'
     );
 
-    CREATE TABLE cronjob_config (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      name TEXT NOT NULL,
-      enabled INTEGER NOT NULL DEFAULT 1,
-      schedule_time TEXT NOT NULL,
-      webhook_url TEXT NOT NULL,
-      notification_days INTEGER NOT NULL DEFAULT 0,
-      notification_type TEXT NOT NULL DEFAULT 'daily' CHECK (notification_type IN ('daily', 'weekly')),
-      weekly_days TEXT,
-      weekly_scope TEXT DEFAULT 'current' CHECK (weekly_scope IN ('current', 'next')),
-      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
-    );
-  `);
+  CREATE TABLE cronjob_config (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL,
+    enabled INTEGER NOT NULL DEFAULT 1,
+    schedule_time TEXT NOT NULL,
+    webhook_url TEXT NOT NULL,
+    notification_days INTEGER NOT NULL DEFAULT 0,
+    notification_type TEXT NOT NULL DEFAULT 'daily' CHECK (notification_type IN ('daily', 'weekly')),
+    weekly_days TEXT,
+    weekly_scope TEXT DEFAULT 'current' CHECK (weekly_scope IN ('current', 'next')),
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+  );
+
+  CREATE TABLE company_holidays (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL,
+    date TEXT NOT NULL,
+    description TEXT,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+  );
+`);
 
   // Insert test data (only once)
   global.mockDatabase.exec(`
@@ -83,8 +92,12 @@ export function cleanupDatabase() {
   } catch (e) {}
 
   try {
+    db.run("DELETE FROM company_holidays");
+  } catch (e) {}
+
+  try {
     db.run(
-      "DELETE FROM sqlite_sequence WHERE name IN ('employees', 'events', 'cronjob_config')"
+      "DELETE FROM sqlite_sequence WHERE name IN ('employees', 'events', 'cronjob_config', 'company_holidays')"
     );
   } catch (e) {}
 

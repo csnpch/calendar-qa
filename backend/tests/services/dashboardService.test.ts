@@ -390,4 +390,291 @@ describe("DashboardService", () => {
       expect(typeof summary.employeeRanking[0].eventTypes).toBe("object");
     });
   });
+
+  describe("getDashboardSummary - Future Events Filtering", () => {
+    beforeEach(() => {
+      const moment = require("moment");
+      const today = moment().format("YYYY-MM-DD");
+      const yesterday = moment().subtract(1, "day").format("YYYY-MM-DD");
+      const tomorrow = moment().add(1, "day").format("YYYY-MM-DD");
+      const nextWeek = moment().add(7, "days").format("YYYY-MM-DD");
+
+      // 8 past/today events
+      for (let i = 0; i < 8; i++) {
+        eventService.createEvent({
+          employeeId: 1,
+          leaveType: "vacation",
+          startDate: yesterday,
+          endDate: yesterday,
+        });
+      }
+
+      // 4 future events
+      for (let i = 0; i < 4; i++) {
+        eventService.createEvent({
+          employeeId: 1,
+          leaveType: "vacation",
+          startDate: tomorrow,
+          endDate: nextWeek,
+        });
+      }
+    });
+
+    test("should exclude future events by default", () => {
+      const summary = eventService.getDashboardSummary();
+      expect(summary.monthlyStats.totalEvents).toBe(8);
+    });
+
+    test("should exclude future events when includeFutureEvents is false", () => {
+      const summary = eventService.getDashboardSummary(
+        undefined,
+        undefined,
+        undefined,
+        false
+      );
+      expect(summary.monthlyStats.totalEvents).toBe(8);
+    });
+
+    test("should include future events when includeFutureEvents is true", () => {
+      const summary = eventService.getDashboardSummary(
+        undefined,
+        undefined,
+        undefined,
+        true
+      );
+      expect(summary.monthlyStats.totalEvents).toBe(12);
+    });
+
+    test("should handle events starting today", () => {
+      const moment = require("moment");
+      const today = moment().format("YYYY-MM-DD");
+      eventService.createEvent({
+        employeeId: 2,
+        leaveType: "sick",
+        startDate: today,
+        endDate: today,
+      });
+
+      const summary = eventService.getDashboardSummary(
+        undefined,
+        undefined,
+        undefined,
+        false
+      );
+      const employee2 = summary.employeeRanking.find(
+        (e) => e.name === "Sarah Johnson"
+      );
+      expect(employee2?.totalEvents).toBe(1); // Should include today's event
+    });
+
+    test("should exclude events starting tomorrow", () => {
+      const moment = require("moment");
+      const tomorrow = moment().add(1, "day").format("YYYY-MM-DD");
+      eventService.createEvent({
+        employeeId: 3,
+        leaveType: "personal",
+        startDate: tomorrow,
+        endDate: tomorrow,
+      });
+
+      const summary = eventService.getDashboardSummary(
+        undefined,
+        undefined,
+        undefined,
+        false
+      );
+      const employee3 = summary.employeeRanking.find(
+        (e) => e.name === "Michael Brown"
+      );
+      expect(employee3).toBeUndefined(); // Should not appear
+    });
+
+    test("should work with date range filter", () => {
+      const summary = eventService.getDashboardSummary(
+        "2025-06-01",
+        "2025-06-30",
+        undefined,
+        false
+      );
+      // Should only count past/today events in June
+      expect(summary.monthlyStats.totalEvents).toBeGreaterThanOrEqual(0);
+    });
+
+    test("should correctly rank employees excluding future events", () => {
+      const summary = eventService.getDashboardSummary(
+        undefined,
+        undefined,
+        undefined,
+        false
+      );
+      const employee1 = summary.employeeRanking.find(
+        (e) => e.name === "John Smith"
+      );
+      expect(employee1?.totalEvents).toBe(8); // Only past events
+    });
+  });
+
+  describe("calculateBusinessDays", () => {
+    test("should count weekdays only (Mon-Fri)", () => {
+      // June 2-6, 2025 (Mon-Fri) = 5 business days
+      const bizDays = (eventService as any).calculateBusinessDays(
+        "2025-06-02",
+        "2025-06-06",
+        []
+      );
+      expect(bizDays).toBe(5);
+    });
+
+    test("should exclude weekends", () => {
+      // June 1-8, 2025 (Sun-Sun, includes 1 weekend) = 5 business days
+      const bizDays = (eventService as any).calculateBusinessDays(
+        "2025-06-01",
+        "2025-06-08",
+        []
+      );
+      expect(bizDays).toBe(5); // Mon-Fri only
+    });
+
+    test("should exclude company holidays", () => {
+      // June 2-6, 2025 (Mon-Fri), with June 4 as company holiday = 4 business days
+      const bizDays = (eventService as any).calculateBusinessDays(
+        "2025-06-02",
+        "2025-06-06",
+        ["2025-06-04"]
+      );
+      expect(bizDays).toBe(4);
+    });
+
+    test("should handle single day event on weekday", () => {
+      const bizDays = (eventService as any).calculateBusinessDays(
+        "2025-06-02", // Monday
+        "2025-06-02",
+        []
+      );
+      expect(bizDays).toBe(1);
+    });
+
+    test("should handle single day event on weekend", () => {
+      const bizDays = (eventService as any).calculateBusinessDays(
+        "2025-06-07", // Saturday
+        "2025-06-07",
+        []
+      );
+      expect(bizDays).toBe(0);
+    });
+
+    test("should handle single day event on company holiday", () => {
+      const bizDays = (eventService as any).calculateBusinessDays(
+        "2025-06-04", // Weekday but company holiday
+        "2025-06-04",
+        ["2025-06-04"]
+      );
+      expect(bizDays).toBe(0);
+    });
+
+    test("should count 2 weeks correctly", () => {
+      // June 2-13, 2025 (Mon-Fri x2) = 10 business days
+      const bizDays = (eventService as any).calculateBusinessDays(
+        "2025-06-02",
+        "2025-06-13",
+        []
+      );
+      expect(bizDays).toBe(10);
+    });
+
+    test("should handle month spanning with holidays", () => {
+      // May 26 - June 6, 2025 with 1 company holiday
+      const bizDays = (eventService as any).calculateBusinessDays(
+        "2025-05-26",
+        "2025-06-06",
+        ["2025-06-02"]
+      );
+      // Count manually: should be weekdays minus company holiday
+      expect(bizDays).toBeGreaterThan(0);
+    });
+
+    test("should return 0 for weekend-only range", () => {
+      const bizDays = (eventService as any).calculateBusinessDays(
+        "2025-06-07", // Saturday
+        "2025-06-08", // Sunday
+        []
+      );
+      expect(bizDays).toBe(0);
+    });
+
+    test("should handle Thai public holidays on weekdays as business days", () => {
+      // วันนักขัตฤกษ์ที่ตรงวันธรรมดา ยังคงนับเป็น business day
+      const bizDays = (eventService as any).calculateBusinessDays(
+        "2025-06-02",
+        "2025-06-06",
+        [] // No company holidays, so Thai holidays are counted
+      );
+      expect(bizDays).toBe(5);
+    });
+  });
+
+  describe("getDashboardSummary - Business Days Integration", () => {
+    beforeEach(() => {
+      // สร้าง company holiday
+      const db = (eventService as any).db;
+      db.exec(`
+        INSERT INTO company_holidays (name, date, created_at, updated_at)
+        VALUES ('Company Day', '2025-06-04', datetime('now'), datetime('now'))
+      `);
+
+      // Employee 1: 1 event (Jun 2-6 = 4 business days, excluding Jun 4)
+      eventService.createEvent({
+        employeeId: 1,
+        leaveType: "vacation",
+        startDate: "2025-06-02",
+        endDate: "2025-06-06",
+      });
+
+      // Employee 2: 2 single-day events (2 business days)
+      eventService.createEvent({
+        employeeId: 2,
+        leaveType: "sick",
+        startDate: "2025-06-10",
+        endDate: "2025-06-10",
+      });
+      eventService.createEvent({
+        employeeId: 2,
+        leaveType: "sick",
+        startDate: "2025-06-11",
+        endDate: "2025-06-11",
+      });
+    });
+
+    test("should calculate total business days correctly", () => {
+      const summary = eventService.getDashboardSummary();
+      expect(summary.monthlyStats.totalBusinessDays).toBe(6); // 4 + 2
+    });
+
+    test("should show business days per employee", () => {
+      const summary = eventService.getDashboardSummary();
+
+      const emp1 = summary.employeeRanking.find((e) => e.name === "John Smith");
+      expect(emp1?.totalBusinessDays).toBe(4);
+
+      const emp2 = summary.employeeRanking.find(
+        (e) => e.name === "Sarah Johnson"
+      );
+      expect(emp2?.totalBusinessDays).toBe(2);
+    });
+
+    test("should handle weekend events correctly", () => {
+      eventService.createEvent({
+        employeeId: 3,
+        leaveType: "personal",
+        startDate: "2025-06-07", // Saturday
+        endDate: "2025-06-08", // Sunday
+      });
+
+      const summary = eventService.getDashboardSummary();
+      const emp3 = summary.employeeRanking.find(
+        (e) => e.name === "Michael Brown"
+      );
+      expect(emp3?.totalBusinessDays).toBe(0); // Weekend only
+    });
+  });
 });

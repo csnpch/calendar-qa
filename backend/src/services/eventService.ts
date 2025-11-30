@@ -420,10 +420,38 @@ export class EventService {
     return { deletedCount: result.changes };
   }
 
+  private calculateBusinessDays(
+    startDate: string,
+    endDate: string,
+    companyHolidayDates: string[]
+  ): number {
+    let businessDays = 0;
+    let current = moment(startDate);
+    const end = moment(endDate);
+
+    while (current.isSameOrBefore(end)) {
+      const dayOfWeek = current.day();
+      const dateStr = current.format("YYYY-MM-DD");
+
+      // นับเฉพาะวันธรรมดา (Mon-Fri) ที่ไม่ใช่วันหยุดบริษัท
+      const isWeekday = dayOfWeek !== 0 && dayOfWeek !== 6; // Not Sun/Sat
+      const isCompanyHoliday = companyHolidayDates.includes(dateStr);
+
+      if (isWeekday && !isCompanyHoliday) {
+        businessDays++;
+      }
+
+      current.add(1, "day");
+    }
+
+    return businessDays;
+  }
+
   getDashboardSummary(
     startDate?: string,
     endDate?: string,
-    eventType?: string
+    eventType?: string,
+    includeFutureEvents?: boolean
   ) {
     let whereClause = "";
     let joinWhereClause = "";
@@ -439,6 +467,19 @@ export class EventService {
         "WHERE ((e.date >= ? AND e.date <= ?) OR (e.start_date <= ? AND e.end_date >= ?))";
       baseParams.push(startDate, endDate, endDate, startDate);
       joinParams.push(startDate, endDate, endDate, startDate);
+    }
+
+    // Feature 1: Filter future events
+    if (!includeFutureEvents) {
+      const today = moment().format("YYYY-MM-DD");
+      whereClause += whereClause
+        ? " AND (COALESCE(start_date, date) <= ?)"
+        : "WHERE (COALESCE(start_date, date) <= ?)";
+      joinWhereClause += joinWhereClause
+        ? " AND (COALESCE(e.start_date, e.date) <= ?)"
+        : "WHERE (COALESCE(e.start_date, e.date) <= ?)";
+      baseParams.push(today);
+      joinParams.push(today);
     }
 
     if (eventType && eventType !== "all") {
@@ -482,6 +523,17 @@ export class EventService {
       | undefined;
     const mostCommonType = mostCommonResult?.leave_type || "N/A";
 
+    // Feature 2: Get company holidays for business days calculation
+    const holidayStmt = this.db.prepare(`
+      SELECT date FROM company_holidays
+      WHERE date >= ? AND date <= ?
+    `);
+    const holidays = holidayStmt.all(
+      startDate || "1900-01-01",
+      endDate || "2100-12-31"
+    ) as Array<{ date: string }>;
+    const companyHolidayDates = holidays.map((h) => h.date);
+
     // Employee ranking with event breakdown
     const rankingStmt = this.db.prepare(`
       SELECT 
@@ -503,6 +555,41 @@ export class EventService {
       count: number;
     }>;
 
+    // Get all events for business days calculation
+    const allEventsStmt = this.db.prepare(`
+      SELECT 
+        id,
+        employee_id as employeeId,
+        start_date as startDate,
+        end_date as endDate,
+        date
+      FROM events
+      ${whereClause}
+    `);
+    const allEvents = allEventsStmt.all(...baseParams) as Array<{
+      id: number;
+      employeeId: number;
+      startDate: string | null;
+      endDate: string | null;
+      date: string | null;
+    }>;
+
+    // Calculate total business days
+    let totalBusinessDays = 0;
+    allEvents.forEach((event) => {
+      const eventStartDate = event.startDate || event.date;
+      const eventEndDate = event.endDate || event.date;
+
+      if (eventStartDate && eventEndDate) {
+        const bizDays = this.calculateBusinessDays(
+          eventStartDate,
+          eventEndDate,
+          companyHolidayDates
+        );
+        totalBusinessDays += bizDays;
+      }
+    });
+
     // Transform ranking data to match frontend format
     const employeeMap = new Map();
     rankingData.forEach((row) => {
@@ -510,6 +597,7 @@ export class EventService {
         employeeMap.set(row.employeeId, {
           name: row.employeeName || "ไม่ทราบชื่อ",
           totalEvents: 0,
+          totalBusinessDays: 0,
           eventTypes: {},
         });
       }
@@ -521,6 +609,24 @@ export class EventService {
       employee.eventTypes[row.leaveType] = row.count;
     });
 
+    // Calculate business days per employee
+    allEvents.forEach((event) => {
+      const employee = employeeMap.get(event.employeeId);
+      if (employee) {
+        const eventStartDate = event.startDate || event.date;
+        const eventEndDate = event.endDate || event.date;
+
+        if (eventStartDate && eventEndDate) {
+          const bizDays = this.calculateBusinessDays(
+            eventStartDate,
+            eventEndDate,
+            companyHolidayDates
+          );
+          employee.totalBusinessDays += bizDays;
+        }
+      }
+    });
+
     const employeeRanking = Array.from(employeeMap.values()).sort(
       (a, b) => b.totalEvents - a.totalEvents
     );
@@ -529,6 +635,7 @@ export class EventService {
       monthlyStats: {
         totalEvents,
         totalEmployees,
+        totalBusinessDays,
         mostCommonType,
       },
       employeeRanking,

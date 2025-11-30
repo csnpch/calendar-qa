@@ -469,9 +469,9 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({
 
                   // Today's styling (overrides previous settings for the current day)
                   if (isTodayDate) {
-                    bgColor = 'bg-green-50 dark:bg-green-900/20';
-                    borderColor = 'border-green-300 dark:border-green-600 ring-2 ring-green-200 dark:ring-green-700';
-                    textColor = 'text-green-800 dark:text-green-200 font-semibold';
+                    bgColor = 'bg-yellow-50 dark:bg-yellow-900/20';
+                    borderColor = 'border-yellow-400 dark:border-yellow-500 ring-2 ring-yellow-200 dark:ring-yellow-600';
+                    textColor = 'text-yellow-900 dark:text-yellow-200 font-semibold';
                   }
 
                   // Event styling (modifies border and bgColor if it's a plain day with events)
