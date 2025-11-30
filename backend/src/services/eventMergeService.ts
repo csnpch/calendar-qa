@@ -3,6 +3,7 @@ import { EventService } from "./eventService";
 import type { Event } from "../types";
 import moment from "moment";
 import Logger from "../utils/logger";
+import { CompanyHolidayService } from "./companyHolidayService";
 
 interface EventGroup {
   employeeId: number;
@@ -22,6 +23,52 @@ interface MergeResult {
 export class EventMergeService {
   private db = getDatabase();
   private eventService = new EventService();
+  private companyHolidayService = new CompanyHolidayService();
+
+  /**
+   * Check if a given date is a holiday (weekend or company holiday)
+   * National holidays NOT marked as company holidays are considered working days
+   */
+  private isHoliday(date: string): boolean {
+    const momentDate = moment(date);
+    const dayOfWeek = momentDate.day();
+
+    // Check weekend (Saturday=6, Sunday=0)
+    if (dayOfWeek === 0 || dayOfWeek === 6) {
+      return true;
+    }
+
+    // Check company holiday (synchronous check using db)
+    const stmt = this.db.prepare(`
+      SELECT COUNT(*) as count 
+      FROM company_holidays 
+      WHERE date = ?
+    `);
+    const result = stmt.get(date) as { count: number };
+    return result.count > 0;
+  }
+
+  /**
+   * Count working days between two dates (excluding the dates themselves)
+   * Skips weekends and company holidays
+   */
+  private countWorkingDaysBetween(startDate: string, endDate: string): number {
+    const start = moment(startDate);
+    const end = moment(endDate);
+
+    let workingDays = 0;
+    const current = start.clone().add(1, "day"); // Start from next day
+
+    while (current.isBefore(end)) {
+      const dateStr = current.format("YYYY-MM-DD");
+      if (!this.isHoliday(dateStr)) {
+        workingDays++;
+      }
+      current.add(1, "day");
+    }
+
+    return workingDays;
+  }
 
   /**
    * Find all single-day events and group consecutive ones by employee and leave type
@@ -83,14 +130,21 @@ export class EventMergeService {
 
         if (!prevEvent || !currEvent) continue; // Safety check
 
-        const prevDate = moment(prevEvent.startDate);
-        const currDate = moment(currEvent.startDate);
+        const prevDateStr = prevEvent.startDate;
+        const currDateStr = currEvent.startDate;
 
-        // Check if current date is exactly 1 day after previous
-        if (currDate.diff(prevDate, "days") === 1) {
+        // Merge if there are 0 working days between them
+        // (meaning all days in between are weekends/company holidays)
+        const workingDaysBetween = this.countWorkingDaysBetween(
+          prevDateStr,
+          currDateStr
+        );
+
+        if (workingDaysBetween === 0) {
           currentGroup.push(currEvent);
         } else {
-          // Sequence broken, save current group if it has 2+ events
+          // Working days in between, sequence broken
+          // Save current group if it has 2+ events
           if (currentGroup.length >= 2) {
             const groupFirst = currentGroup[0];
             if (groupFirst) {
