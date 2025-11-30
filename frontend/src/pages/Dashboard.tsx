@@ -339,7 +339,7 @@ const Dashboard = () => {
                         <div>
                           <div className="font-normal text-gray-900 dark:text-white">{employee.name}</div>
                           <div className="text-sm text-gray-500 dark:text-gray-400">
-                            {selectedEventType === 'all' ? employee.totalEvents : (employee.eventTypes[selectedEventType as keyof typeof employee.eventTypes] || 0)} เหตุการณ์ • {employee.totalBusinessDays} วันทำงาน
+                            {selectedEventType === 'all' ? employee.totalEvents : (employee.eventTypes[selectedEventType as keyof typeof employee.eventTypes] || 0)} เหตุการณ์
                           </div>
                         </div>
                       </div>
