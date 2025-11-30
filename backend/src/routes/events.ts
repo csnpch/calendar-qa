@@ -1,8 +1,10 @@
 import { Elysia, t } from 'elysia';
 import { EventService } from '../services/eventService';
+import { EventMergeService } from '../services/eventMergeService';
 import Logger from '../utils/logger';
 
 const eventService = new EventService();
+const eventMergeService = new EventMergeService();
 
 export const eventsRoutes = new Elysia({ prefix: '/events' })
   .get('/', () => {
@@ -323,4 +325,22 @@ export const eventsRoutes = new Elysia({ prefix: '/events' })
     body: t.Object({
       password: t.String()
     })
+  })
+  
+  // Manual trigger for event merge job
+  .post('/merge-consecutive', async () => {
+    try {
+      Logger.info('[EventMerge] Manual merge job triggered via API');
+      await eventMergeService.executeMergeJob();
+      return {
+        success: true,
+        message: 'Event merge job completed successfully'
+      };
+    } catch (error) {
+      Logger.error('[EventMerge] Error during manual merge job:', error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error'
+      };
+    }
   });

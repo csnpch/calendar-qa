@@ -85,6 +85,64 @@ describe("EventMergeService", () => {
       expect(moment(lastEvent?.startDate).format("DD/MM")).toBe("29/12");
     });
 
+    test("CRITICAL REAL CASE: Field's actual data - merge 22-26 Dec + 29 Dec (from screenshot)", () => {
+      // This replicates the EXACT bug from the screenshot
+      // Field has events on Dec 22, 23, 24, 25, 26 and 29
+      // Dec 27-28 are Sat-Sun (weekend)
+      // Expected: Should merge into ONE range event (22-29 Dec)
+      // Current bug: Shows as TWO events (22-26 and 29)
+
+      const field = employeeService.createEmployee({
+        name: "Field - Krittakorn.cha",
+      });
+
+      // Create the exact scenario from screenshot
+      // Single-day events: Dec 22, 23, 24, 25, 26
+      for (const day of [22, 23, 24, 25, 26]) {
+        eventService.createEvent({
+          employeeId: field.id,
+          leaveType: "vacation",
+          startDate: `2025-12-${day}`,
+          endDate: `2025-12-${day}`,
+        });
+      }
+
+      // Dec 27 = Saturday, Dec 28 = Sunday (weekend - not in DB)
+
+      // Single-day event: Dec 29
+      eventService.createEvent({
+        employeeId: field.id,
+        leaveType: "vacation",
+        startDate: "2025-12-29",
+        endDate: "2025-12-29",
+      });
+
+      // Verify the days of week
+      expect(moment("2025-12-26").format("dddd")).toBe("Friday");
+      expect(moment("2025-12-27").format("dddd")).toBe("Saturday");
+      expect(moment("2025-12-28").format("dddd")).toBe("Sunday");
+      expect(moment("2025-12-29").format("dddd")).toBe("Monday");
+
+      // Find groups to merge
+      const groups = eventMergeService.findConsecutiveEvents();
+
+      // CRITICAL TEST: Should find exactly 1 group containing all 6 events
+      expect(groups.length).toBe(1);
+      expect(groups[0]?.employeeName).toBe("Field - Krittakorn.cha");
+      expect(groups[0]?.events.length).toBe(6);
+
+      // Verify all dates are in the group
+      const dates = groups[0]?.events.map((e) =>
+        moment(e.startDate).format("YYYY-MM-DD")
+      );
+      expect(dates).toContain("2025-12-22");
+      expect(dates).toContain("2025-12-23");
+      expect(dates).toContain("2025-12-24");
+      expect(dates).toContain("2025-12-25");
+      expect(dates).toContain("2025-12-26");
+      expect(dates).toContain("2025-12-29");
+    });
+
     test("should NOT merge events separated by working days", () => {
       const employee = employeeService.createEmployee({
         name: "Test Employee 2",
@@ -283,6 +341,36 @@ describe("EventMergeService", () => {
   });
 
   describe("executeMergeJob", () => {
+    test("should NOT try to merge existing range events", () => {
+      // If Field's events are already range events (not single-day),
+      // they should NOT be picked up by findConsecutiveEvents
+      const field = employeeService.createEmployee({
+        name: "Field",
+      });
+
+      // Create a range event (already merged)
+      eventService.createEvent({
+        employeeId: field.id,
+        leaveType: "vacation",
+        startDate: "2025-12-22",
+        endDate: "2025-12-26", // This is a range, not single-day
+      });
+
+      // Create another range event
+      eventService.createEvent({
+        employeeId: field.id,
+        leaveType: "vacation",
+        startDate: "2025-12-29",
+        endDate: "2025-12-29", // Single-day
+      });
+
+      const groups = eventMergeService.findConsecutiveEvents();
+
+      // Should find 0 groups because one is already a range event
+      // Only single-day events should be considered
+      expect(groups.length).toBe(0);
+    });
+
     test("should merge multiple groups in one job execution", async () => {
       const emp1 = employeeService.createEmployee({
         name: "Employee 1",

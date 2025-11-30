@@ -13,8 +13,11 @@ export const Layout: React.FC<LayoutProps> = ({ children, currentPage = 'calenda
       <main className="flex-1">
         {children}
       </main>
-      <footer className="flex justify-end items-center pt-8 pb-4 px-6 text-xs text-gray-500 dark:text-gray-400">
-        ©2025 loveable x claude code x chitsanuphong.cha. All rights reserved
+      <footer className="-mt-3 -mr-3 flex flex-col items-end pt-8 pb-4 px-6 text-xs text-gray-500 dark:text-gray-400">
+        <p>Version 2.0</p>
+        <p>
+        ©2025 loveable x claude x cursor agent x chitsanuphong.cha. All rights reserved
+        </p>
       </footer>
     </div>
   );
